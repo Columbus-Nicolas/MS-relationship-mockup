@@ -35,15 +35,19 @@ account; it is here so all four roles can be shown in one sitting.
 
 ## What the mockup covers
 
-| Spec page | Route | Roles | State |
-|---|---|---|---|
-| Page 1 — Login | `#/login` | all | Placeholder, accepts anything |
-| Page 2 — Dashboard | `#/dashboard` | Admin, Moderator | **Intentionally empty** — in the menu, placeholder content |
-| Page 3 — Microsoft Profiles | `#/ms-profiles` | Admin, Moderator | Table, search, filters, sort, detail drawer, add/edit/delete |
-| Page 3.5 — Microsoft Domains | `#/ms-domains` | Admin | Table with aggregates, add/edit/delete |
-| Page 4 — Columbus Profiles | `#/columbus-profiles` | Admin, Moderator | Table, expandable relations, roles, surveys, add/delete |
-| Page 5 — Pending Submissions | `#/submissions` | Admin | Before/after diff, adjust, approve, reject |
-| Page 6 — My Relations | `#/my-relations` | all | Own relations, score picker, add/remove, submit |
+The left menu is grouped into three sections. A section disappears entirely when the current role has
+no pages in it — a Standard user only sees *Submissions & Relations*.
+
+| Menu section | Spec page | Route | Roles | State |
+|---|---|---|---|---|
+| — | Page 1 — Login | `#/login` | all | Placeholder, accepts anything |
+| Dashboards | Page 2 — Dashboard | `#/dashboard` | Admin, Moderator | **Intentionally empty** — in the menu, placeholder content |
+| Dashboards | Graphic View | `#/graphic-view` | Admin, Moderator | **Intentionally empty** — placeholder for the visual map |
+| Administration | Page 3 — Microsoft Profiles | `#/ms-profiles` | Admin, Moderator | Table, search, filters, sort, detail drawer, add/edit/delete |
+| Administration | Page 3.5 — Microsoft Domains | `#/ms-domains` | Admin | Table with aggregates, add/edit/delete |
+| Administration | Page 4 — Columbus Profiles | `#/columbus-profiles` | Admin, Moderator | Table, expandable relations, roles, surveys, add/delete |
+| Submissions & Relations | Page 5 — Pending Submissions | `#/submissions` | Admin | Before/after diff, adjust, approve, reject |
+| Submissions & Relations | Page 6 — My Relations | `#/my-relations` | all | Own relations, score picker, add/remove, submit |
 
 ### Relationship scale
 

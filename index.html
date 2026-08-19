@@ -117,7 +117,8 @@ a{color:var(--navy-600)}
 .sidebar__logo strong{display:block;color:#fff;font-size:16px;letter-spacing:.02em}
 .sidebar__logo small{display:block;color:#7e97b1;font-size:11px;margin-top:3px;letter-spacing:.06em;text-transform:uppercase}
 .nav{padding:14px 12px;display:grid;gap:2px;overflow-y:auto}
-.nav__label{font-size:10.5px;text-transform:uppercase;letter-spacing:.09em;color:#69809a;padding:12px 10px 6px}
+.nav__label{font-size:10.5px;text-transform:uppercase;letter-spacing:.09em;color:#69809a;padding:14px 10px 6px}
+.nav__label:first-child{padding-top:2px}
 .nav a{
   display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:6px;
   color:#c8d8e8;text-decoration:none;font-size:13.5px;border-left:3px solid transparent;
@@ -372,14 +373,18 @@ var ROLES = [
 ];
 function roleName(id){ for (var i=0;i<ROLES.length;i++){ if (ROLES[i].id===id) return ROLES[i].name; } return id; }
 
+// Menu sections, in the order they appear in the sidebar.
+var NAV_SECTIONS = ['Dashboards', 'Administration', 'Submissions & Relations'];
+
 // Which pages each role may open. Drives the left menu AND route guarding.
 var PAGES = [
-  { route:'dashboard',         title:'Dashboard',                 sub:'Overview',                    icon:'▦', roles:['superadmin','admin','moderator'] },
-  { route:'ms-profiles',       title:'Microsoft Profiles',        sub:'Approved Microsoft contacts', icon:'●', roles:['superadmin','admin','moderator'] },
-  { route:'ms-domains',        title:'Microsoft Domains',         sub:'Categories & mapping',        icon:'◆', roles:['superadmin','admin'] },
-  { route:'columbus-profiles', title:'Columbus Profiles',         sub:'Internal users & relations',  icon:'▲', roles:['superadmin','admin','moderator'] },
-  { route:'submissions',       title:'Pending Submissions',       sub:'Surveys awaiting approval',   icon:'■', roles:['superadmin','admin'] },
-  { route:'my-relations',      title:'My Relations',              sub:'Your own Microsoft contacts', icon:'★', roles:['superadmin','admin','moderator','standard'] }
+  { route:'dashboard',         title:'Dashboard',           sub:'Overview',                    icon:'▦', section:'Dashboards',             roles:['superadmin','admin','moderator'] },
+  { route:'graphic-view',      title:'Graphic View',        sub:'Visual relationship map',     icon:'◈', section:'Dashboards',             roles:['superadmin','admin','moderator'] },
+  { route:'ms-profiles',       title:'Microsoft Profiles',  sub:'Approved Microsoft contacts', icon:'●', section:'Administration',         roles:['superadmin','admin','moderator'] },
+  { route:'ms-domains',        title:'Microsoft Domains',   sub:'Categories & mapping',        icon:'◆', section:'Administration',         roles:['superadmin','admin'] },
+  { route:'columbus-profiles', title:'Columbus Profiles',   sub:'Internal users & relations',  icon:'▲', section:'Administration',         roles:['superadmin','admin','moderator'] },
+  { route:'submissions',       title:'Pending Submissions', sub:'Surveys awaiting approval',   icon:'■', section:'Submissions & Relations',roles:['superadmin','admin'] },
+  { route:'my-relations',      title:'My Relations',        sub:'Your own Microsoft contacts', icon:'★', section:'Submissions & Relations',roles:['superadmin','admin','moderator','standard'] }
 ];
 function pageFor(route){ for (var i=0;i<PAGES.length;i++){ if (PAGES[i].route===route) return PAGES[i]; } return null; }
 function canOpen(route, role){ var p = pageFor(route); return !!p && p.roles.indexOf(role) !== -1; }
@@ -654,6 +659,7 @@ function render(){
 
   var body = '';
   if (route === 'dashboard')              body = viewDashboard();
+  else if (route === 'graphic-view')      body = viewGraphicView();
   else if (route === 'ms-profiles')       body = viewMsProfiles();
   else if (route === 'ms-domains')        body = viewMsDomains();
   else if (route === 'columbus-profiles') body = viewColumbusProfiles();
@@ -669,16 +675,23 @@ function render(){
 
 function sidebar(route){
   var role = state.session.role;
-  var items = PAGES.filter(function(p){ return p.roles.indexOf(role) !== -1; }).map(function(p){
-    var pill = (p.route === 'submissions' && pendingCount())
-      ? '<span class="pill">' + pendingCount() + '</span>' : '';
-    return '<a href="#/' + p.route + '" class="' + (p.route === route ? 'active' : '') + '">' +
-           '<i class="ico">' + p.icon + '</i>' + esc(p.title) + pill + '</a>';
+
+  // One block per section; a section with no pages for this role is skipped entirely.
+  var nav = NAV_SECTIONS.map(function(section){
+    var items = PAGES.filter(function(p){
+      return p.section === section && p.roles.indexOf(role) !== -1;
+    }).map(function(p){
+      var pill = (p.route === 'submissions' && pendingCount())
+        ? '<span class="pill">' + pendingCount() + '</span>' : '';
+      return '<a href="#/' + p.route + '" class="' + (p.route === route ? 'active' : '') + '">' +
+             '<i class="ico">' + p.icon + '</i>' + esc(p.title) + pill + '</a>';
+    }).join('');
+    return items ? '<div class="nav__label">' + esc(section) + '</div>' + items : '';
   }).join('');
 
   return '<aside class="sidebar">' +
     '<div class="sidebar__logo"><strong>COLUMBUS</strong><small>Microsoft Relationship Map</small></div>' +
-    '<nav class="nav"><div class="nav__label">Menu</div>' + items + '</nav>' +
+    '<nav class="nav">' + nav + '</nav>' +
     '<div class="sidebar__foot">UI mockup &middot; fictional data<br>Version 0.1</div>' +
     '</aside>';
 }
@@ -752,6 +765,20 @@ function viewDashboard(){
     'coverage per Microsoft domain, strongest and weakest relationships, and the change over time. ' +
     'The other pages in the menu are fully clickable.</p></div>';
 }
+/* ------------------------------------------------------------
+   PAGE 2b - GRAPHIC VIEW  (deliberately empty for now)
+   ------------------------------------------------------------ */
+
+function viewGraphicView(){
+  return '' +
+  '<div class="page__head"><div><h2>Graphic View</h2>' +
+    '<p>Visual map of the Columbus - Microsoft relationships.</p></div></div>' +
+  '<div class="placeholder"><b>Graphic view is not part of this mockup yet</b>' +
+    '<p>This page will show the relationships as a picture rather than a table: Microsoft people ' +
+    'grouped by domain, Columbus employees around them, and the connection strength as the link ' +
+    'between them - so the gaps are visible at a glance.</p></div>';
+}
+
 /* ============================================================
    7. PAGE 3 - MICROSOFT PROFILES
    ============================================================ */
