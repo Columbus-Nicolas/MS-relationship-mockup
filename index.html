@@ -1,0 +1,1574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Columbus &middot; Microsoft Relationship Map</title>
+<style>
+/* ============================================================
+   Columbus - Microsoft Relationship Map (UI mockup)
+   Single-file mockup. No dependencies, no backend, fictional data.
+   ============================================================ */
+
+:root{
+  /* Columbus-inspired palette */
+  --navy-900:#07203a;
+  --navy-800:#0a2b4c;
+  --navy-700:#0f3a63;
+  --navy-600:#15507f;
+  --navy-100:#e7eef6;
+  --accent:#f2a33c;
+  --accent-dark:#d4861d;
+
+  --bg:#f4f6f9;
+  --surface:#ffffff;
+  --border:#dde3ec;
+  --border-strong:#c3cddb;
+  --text:#16232f;
+  --text-muted:#61728a;
+  --text-faint:#8b99ac;
+
+  --danger:#c0392b;
+  --danger-bg:#fdeceb;
+  --ok:#1e7a44;
+  --ok-bg:#e8f5ed;
+  --warn-bg:#fff5e5;
+
+  /* relation score ramp  -3 .. +3 */
+  --s-m3:#a01427;
+  --s-m2:#cf4436;
+  --s-m1:#e08055;
+  --s-0:#94a3b4;
+  --s-p1:#71ab6b;
+  --s-p2:#3d9457;
+  --s-p3:#1c7040;
+
+  --radius:8px;
+  --radius-lg:12px;
+  --shadow-sm:0 1px 2px rgba(16,35,55,.08);
+  --shadow:0 4px 14px rgba(16,35,55,.10);
+  --shadow-lg:0 18px 50px rgba(7,32,58,.28);
+  --sidebar-w:248px;
+  --topbar-h:62px;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:"Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;
+  font-size:14px;
+  color:var(--text);
+  background:var(--bg);
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{margin:0;font-weight:600;letter-spacing:-.01em}
+button{font:inherit;color:inherit}
+input,select,textarea{font:inherit;color:inherit}
+a{color:var(--navy-600)}
+
+/* ---------- login ---------- */
+.login{display:flex;min-height:100vh}
+.login__brand{
+  flex:1 1 46%;
+  background:linear-gradient(150deg,var(--navy-900) 0%,var(--navy-700) 60%,var(--navy-600) 100%);
+  color:#fff;padding:56px 60px;display:flex;flex-direction:column;justify-content:space-between;
+  position:relative;overflow:hidden;
+}
+.login__brand::after{
+  content:"";position:absolute;right:-120px;bottom:-140px;width:420px;height:420px;
+  border-radius:50%;background:rgba(242,163,60,.14);
+}
+.login__brand h1{font-size:34px;line-height:1.2;max-width:15ch;position:relative;z-index:1}
+.login__brand p{color:#bcd2e6;max-width:46ch;line-height:1.6;font-size:15px;position:relative;z-index:1}
+.login__points{list-style:none;padding:0;margin:26px 0 0;display:grid;gap:12px;position:relative;z-index:1}
+.login__points li{display:flex;gap:10px;align-items:flex-start;color:#d5e4f2;font-size:14px}
+.login__points i{color:var(--accent);font-weight:700;font-style:normal}
+.login__logo{position:relative;z-index:1}
+.login__logo strong{font-size:17px;letter-spacing:.06em}
+.login__logo small{display:block;color:#8fabc7;font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;margin-top:2px}
+.login__form{flex:1 1 54%;display:flex;align-items:center;justify-content:center;padding:40px}
+.login__card{width:100%;max-width:400px}
+.login__card h2{font-size:22px;margin-bottom:6px}
+.login__card>p{color:var(--text-muted);margin:0 0 26px}
+.entra{
+  width:100%;display:flex;align-items:center;justify-content:center;gap:10px;
+  background:var(--navy-800);color:#fff;border:0;border-radius:var(--radius);
+  padding:12px 16px;font-weight:600;cursor:pointer;
+}
+.entra:hover{background:var(--navy-700)}
+.msgrid{display:grid;grid-template-columns:1fr 1fr;gap:2px;width:16px;height:16px}
+.msgrid i{display:block}
+.login__divider{display:flex;align-items:center;gap:12px;color:var(--text-faint);margin:20px 0;font-size:12px}
+.login__divider::before,.login__divider::after{content:"";height:1px;background:var(--border);flex:1}
+.login__note{
+  margin-top:22px;padding:10px 12px;background:var(--warn-bg);border:1px solid #f2ddb5;
+  border-radius:var(--radius);color:#7a5a1c;font-size:12.5px;line-height:1.5;
+}
+
+/* ---------- shell ---------- */
+.shell{display:flex;min-height:100vh}
+.sidebar{
+  width:var(--sidebar-w);flex:0 0 var(--sidebar-w);
+  background:var(--navy-900);color:#c8d8e8;display:flex;flex-direction:column;
+  position:sticky;top:0;height:100vh;
+}
+.sidebar__logo{padding:20px 22px 18px;border-bottom:1px solid rgba(255,255,255,.09)}
+.sidebar__logo strong{display:block;color:#fff;font-size:16px;letter-spacing:.02em}
+.sidebar__logo small{display:block;color:#7e97b1;font-size:11px;margin-top:3px;letter-spacing:.06em;text-transform:uppercase}
+.nav{padding:14px 12px;display:grid;gap:2px;overflow-y:auto}
+.nav__label{font-size:10.5px;text-transform:uppercase;letter-spacing:.09em;color:#69809a;padding:12px 10px 6px}
+.nav a{
+  display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:6px;
+  color:#c8d8e8;text-decoration:none;font-size:13.5px;border-left:3px solid transparent;
+}
+.nav a:hover{background:rgba(255,255,255,.06);color:#fff}
+.nav a.active{background:rgba(242,163,60,.13);color:#fff;border-left-color:var(--accent);font-weight:600}
+.nav a .ico{width:18px;text-align:center;opacity:.85;font-style:normal}
+.nav a .pill{margin-left:auto;background:var(--accent);color:#3a2708;border-radius:20px;
+  font-size:11px;font-weight:700;padding:1px 7px}
+.sidebar__foot{margin-top:auto;padding:14px 18px;border-top:1px solid rgba(255,255,255,.09);font-size:11.5px;color:#6f88a3;line-height:1.5}
+
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{
+  height:var(--topbar-h);flex:0 0 var(--topbar-h);background:var(--surface);
+  border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;
+  padding:0 26px;position:sticky;top:0;z-index:30;
+}
+.topbar__title{font-size:15px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.topbar__title small{display:block;font-weight:400;color:var(--text-faint);font-size:11.5px}
+.topbar__spacer{flex:1}
+.rolepick{display:flex;align-items:center;gap:8px}
+.rolepick label{font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em}
+.rolepick select{
+  border:1px solid var(--border-strong);border-radius:6px;padding:6px 10px;background:#fff;
+  font-size:13px;cursor:pointer;
+}
+.who{display:flex;align-items:center;gap:10px;padding-left:16px;border-left:1px solid var(--border)}
+.who .avatar{width:32px;height:32px;border-radius:50%;background:var(--navy-700);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600}
+.who b{display:block;font-size:13px;font-weight:600}
+.who span{display:block;font-size:11.5px;color:var(--text-faint)}
+
+.page{padding:26px;max-width:1640px;width:100%}
+.page__head{display:flex;align-items:flex-start;gap:18px;margin-bottom:18px;flex-wrap:wrap}
+.page__head h2{font-size:20px}
+.page__head p{margin:5px 0 0;color:var(--text-muted);max-width:80ch;line-height:1.55}
+.page__actions{margin-left:auto;display:flex;gap:8px;align-items:center}
+
+/* ---------- generic bits ---------- */
+.btn{
+  display:inline-flex;align-items:center;gap:7px;border:1px solid var(--border-strong);
+  background:#fff;border-radius:6px;padding:8px 13px;font-size:13px;cursor:pointer;
+  white-space:nowrap;box-shadow:var(--shadow-sm);
+}
+.btn:hover:not(:disabled){border-color:var(--navy-600);color:var(--navy-700)}
+.btn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+.btn--primary{background:var(--navy-800);border-color:var(--navy-800);color:#fff}
+.btn--primary:hover:not(:disabled){background:var(--navy-700);border-color:var(--navy-700);color:#fff}
+.btn--accent{background:var(--accent);border-color:var(--accent);color:#3a2708;font-weight:600}
+.btn--accent:hover:not(:disabled){background:var(--accent-dark);border-color:var(--accent-dark);color:#fff}
+.btn--danger{color:var(--danger);border-color:#eec3bf}
+.btn--danger:hover:not(:disabled){background:var(--danger-bg);border-color:var(--danger);color:var(--danger)}
+.btn--sm{padding:5px 9px;font-size:12px}
+.btn--ghost{border-color:transparent;box-shadow:none;background:transparent}
+.btn--ghost:hover:not(:disabled){background:var(--navy-100)}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm)}
+.card__head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.card__head h3{font-size:14.5px}
+.card__head .spacer{flex:1}
+.card__body{padding:18px}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:18px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;box-shadow:var(--shadow-sm)}
+.stat b{display:block;font-size:24px;line-height:1.15;letter-spacing:-.02em}
+.stat span{display:block;font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em;margin-top:4px}
+.stat em{display:block;font-style:normal;font-size:12px;color:var(--text-muted);margin-top:6px}
+
+.toolbar{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid var(--border);background:#fbfcfe;border-radius:var(--radius-lg) var(--radius-lg) 0 0}
+.field{display:flex;flex-direction:column;gap:4px}
+.field>label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint)}
+input[type=text],input[type=email],input[type=search],select,textarea{
+  border:1px solid var(--border-strong);border-radius:6px;padding:8px 10px;background:#fff;font-size:13px;min-width:0;
+}
+input:focus,select:focus,textarea:focus{outline:2px solid rgba(21,80,127,.25);outline-offset:0;border-color:var(--navy-600)}
+.search input{width:270px}
+.toolbar .spacer{flex:1}
+.hint{font-size:12px;color:var(--text-faint)}
+
+table{width:100%;border-collapse:collapse}
+thead th{
+  text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--text-faint);
+  padding:10px 14px;border-bottom:1px solid var(--border);background:#fbfcfe;white-space:nowrap;font-weight:600;
+}
+thead th.sortable{cursor:pointer;user-select:none}
+thead th.sortable:hover{color:var(--navy-700)}
+thead th .arrow{opacity:.6;font-size:9px;margin-left:3px}
+tbody td{padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
+tbody tr:last-child td{border-bottom:0}
+tbody tr.clickable{cursor:pointer}
+tbody tr.clickable:hover{background:#f7fafd}
+tbody tr.is-open{background:#f3f8fd}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+td.actions{text-align:right;white-space:nowrap}
+.tablewrap{overflow-x:auto;border-radius:0 0 var(--radius-lg) var(--radius-lg)}
+.person{display:flex;align-items:center;gap:10px}
+.person .avatar{width:30px;height:30px;flex:0 0 30px;border-radius:50%;background:var(--navy-100);color:var(--navy-700);
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.person b{display:block;font-size:13.5px;font-weight:600}
+.person span{display:block;font-size:11.5px;color:var(--text-faint)}
+
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:20px;font-size:11.5px;
+  background:var(--navy-100);color:var(--navy-700);white-space:nowrap;font-weight:500}
+.chip--muted{background:#eef1f5;color:var(--text-muted)}
+.chip--role{background:#ece7fb;color:#5333b0}
+.chip--src{background:#e9f3ea;color:#2c6b3d}
+.chips{display:flex;flex-wrap:wrap;gap:4px}
+
+.score{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:24px;padding:0 8px;
+  border-radius:6px;color:#fff;font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums}
+.score[data-s="-3"]{background:var(--s-m3)} .score[data-s="-2"]{background:var(--s-m2)}
+.score[data-s="-1"]{background:var(--s-m1)} .score[data-s="0"]{background:var(--s-0)}
+.score[data-s="1"]{background:var(--s-p1)}  .score[data-s="2"]{background:var(--s-p2)}
+.score[data-s="3"]{background:var(--s-p3)}
+.score--lg{height:30px;min-width:44px;font-size:14px}
+.scoreline{display:flex;align-items:center;gap:8px}
+.scoreline small{color:var(--text-muted);font-size:12px}
+
+.legend{display:flex;flex-wrap:wrap;gap:8px}
+.legend div{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-muted);
+  border:1px solid var(--border);border-radius:20px;padding:4px 11px 4px 4px;background:#fff}
+.legend b{color:var(--text);font-weight:600}
+
+.bar{height:6px;border-radius:4px;background:#e8edf3;overflow:hidden;min-width:90px}
+.bar i{display:block;height:100%;border-radius:4px;background:var(--navy-600)}
+
+.empty{padding:52px 20px;text-align:center;color:var(--text-muted)}
+.empty b{display:block;font-size:15px;color:var(--text);margin-bottom:6px}
+.placeholder{
+  border:2px dashed var(--border-strong);border-radius:var(--radius-lg);
+  background:repeating-linear-gradient(45deg,#fafcfe,#fafcfe 12px,#f4f7fb 12px,#f4f7fb 24px);
+  padding:90px 24px;text-align:center;color:var(--text-muted);
+}
+.placeholder b{display:block;font-size:17px;color:var(--text);margin-bottom:8px}
+.placeholder p{max-width:54ch;margin:0 auto;line-height:1.6}
+
+.detailrow td{background:#f7fafd;padding:0}
+.detailrow .inner{padding:14px 18px 18px 56px}
+.detailrow h4{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);margin-bottom:10px}
+.minitable{width:100%;background:#fff;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.minitable td,.minitable th{padding:8px 12px;font-size:12.5px}
+
+/* drawer */
+.drawer{position:fixed;inset:0;z-index:60;display:flex;justify-content:flex-end}
+.drawer__bg{position:absolute;inset:0;background:rgba(7,32,58,.35)}
+.drawer__panel{position:relative;width:min(470px,94vw);background:#fff;height:100%;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.drawer__head{padding:20px 22px;border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:flex-start}
+.drawer__head h3{font-size:17px}
+.drawer__head p{margin:4px 0 0;color:var(--text-muted);font-size:13px}
+.drawer__body{padding:20px 22px;display:grid;gap:20px}
+.kv{display:grid;grid-template-columns:118px 1fr;gap:9px 14px;font-size:13px;margin:0}
+.kv dt{color:var(--text-faint);font-size:12px}
+.kv dd{margin:0}
+
+/* modal */
+.modal{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;padding:24px}
+.modal__bg{position:absolute;inset:0;background:rgba(7,32,58,.45)}
+.modal__panel{position:relative;background:#fff;border-radius:var(--radius-lg);width:min(580px,100%);
+  max-height:88vh;overflow-y:auto;box-shadow:var(--shadow-lg)}
+.modal__head{padding:18px 22px;border-bottom:1px solid var(--border)}
+.modal__head h3{font-size:16px}
+.modal__head p{margin:4px 0 0;color:var(--text-muted);font-size:12.5px}
+.modal__body{padding:20px 22px;display:grid;gap:14px}
+.modal__foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;background:#fbfcfe;
+  border-radius:0 0 var(--radius-lg) var(--radius-lg)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-grid .full{grid-column:1/-1}
+.checks{display:grid;grid-template-columns:1fr 1fr;gap:7px;border:1px solid var(--border);border-radius:var(--radius);padding:11px;max-height:180px;overflow-y:auto}
+.checks label{display:flex;gap:8px;align-items:center;font-size:13px;cursor:pointer}
+
+/* score picker */
+.picker{display:inline-flex;border:1px solid var(--border-strong);border-radius:8px;overflow:hidden;background:#fff}
+.picker button{border:0;background:#fff;padding:6px 10px;cursor:pointer;font-size:12.5px;font-weight:600;
+  color:var(--text-muted);border-right:1px solid var(--border);font-variant-numeric:tabular-nums}
+.picker button:last-child{border-right:0}
+.picker button:hover{background:#eef3f9}
+.picker button.on{color:#fff}
+.picker button.on[data-s="-3"]{background:var(--s-m3)} .picker button.on[data-s="-2"]{background:var(--s-m2)}
+.picker button.on[data-s="-1"]{background:var(--s-m1)} .picker button.on[data-s="0"]{background:var(--s-0)}
+.picker button.on[data-s="1"]{background:var(--s-p1)}  .picker button.on[data-s="2"]{background:var(--s-p2)}
+.picker button.on[data-s="3"]{background:var(--s-p3)}
+
+/* my relations */
+.rel{border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;background:#fff;display:grid;gap:12px}
+.rel.dirty{border-color:var(--accent);box-shadow:0 0 0 3px rgba(242,163,60,.14)}
+.rel__top{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.rel__top .spacer{flex:1}
+.rel__note{width:100%;resize:vertical;min-height:54px}
+.tag-new{background:var(--warn-bg);color:#8a6216;border-radius:20px;padding:2px 9px;font-size:11px;font-weight:600}
+
+/* submissions */
+.sub{border:1px solid var(--border);border-radius:var(--radius-lg);background:#fff;overflow:hidden}
+.sub__head{display:flex;gap:14px;align-items:center;padding:14px 16px;cursor:pointer;flex-wrap:wrap}
+.sub__head:hover{background:#f7fafd}
+.sub__head .spacer{flex:1}
+.sub__body{border-top:1px solid var(--border);padding:14px 16px;background:#fbfcfe}
+.diff{display:flex;align-items:center;gap:8px;color:var(--text-faint)}
+
+/* toast */
+#toasts{position:fixed;right:20px;bottom:20px;z-index:90;display:grid;gap:8px}
+.toast{background:var(--navy-900);color:#fff;padding:11px 15px;border-radius:var(--radius);box-shadow:var(--shadow);
+  font-size:13px;max-width:360px;animation:pop .18s ease-out}
+.toast.ok{background:var(--ok)}
+.toast.err{background:var(--danger)}
+@keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.mockflag{background:var(--warn-bg);border:1px solid #f2ddb5;color:#7a5a1c;border-radius:var(--radius);
+  padding:9px 13px;font-size:12.5px;line-height:1.5;margin-bottom:18px}
+.readonly-note{background:var(--navy-100);border:1px solid #cfdcea;color:var(--navy-700);border-radius:var(--radius);
+  padding:9px 13px;font-size:12.5px;margin-bottom:18px}
+
+@media (max-width:1100px){
+  .form-grid{grid-template-columns:1fr}
+  .search input{width:190px}
+}
+/* keep the top bar on one line on smaller screens / narrow preview panes */
+@media (max-width:1000px){
+  .who div{display:none}
+  .rolepick label{display:none}
+  .topbar{padding:0 16px;gap:10px}
+  .page{padding:18px}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="layer"></div>
+<div id="toasts"></div>
+<script>
+/* ============================================================
+   1. CONSTANTS
+   ============================================================ */
+
+// Relation score scale, -3 .. +3, with the description shown in
+// the legend and in every score picker.
+var SCORE_LEVELS = [
+  { v:  3, label: 'Trusted advisor', desc: 'They reach out to us proactively - we are a first call.' },
+  { v:  2, label: 'Strong',          desc: 'Regular contact, mutual trust, ongoing dialogue.' },
+  { v:  1, label: 'Positive',        desc: 'Occasional contact, good rapport.' },
+  { v:  0, label: 'Neutral',         desc: 'Aware of each other, no real working relationship.' },
+  { v: -1, label: 'Weak',            desc: 'Limited or one-sided contact.' },
+  { v: -2, label: 'Strained',        desc: 'Friction or lost momentum in the relationship.' },
+  { v: -3, label: 'Damaged',         desc: 'Actively avoids working with us.' }
+];
+function scoreLevel(v){ for (var i=0;i<SCORE_LEVELS.length;i++){ if (SCORE_LEVELS[i].v === v) return SCORE_LEVELS[i]; } return SCORE_LEVELS[3]; }
+
+var ROLES = [
+  { id:'superadmin', name:'Super Admin' },
+  { id:'admin',      name:'Admin' },
+  { id:'moderator',  name:'Moderator' },
+  { id:'standard',   name:'Standard' }
+];
+function roleName(id){ for (var i=0;i<ROLES.length;i++){ if (ROLES[i].id===id) return ROLES[i].name; } return id; }
+
+// Which pages each role may open. Drives the left menu AND route guarding.
+var PAGES = [
+  { route:'dashboard',         title:'Dashboard',                 sub:'Overview',                    icon:'▦', roles:['superadmin','admin','moderator'] },
+  { route:'ms-profiles',       title:'Microsoft Profiles',        sub:'Approved Microsoft contacts', icon:'●', roles:['superadmin','admin','moderator'] },
+  { route:'ms-domains',        title:'Microsoft Domains',         sub:'Categories & mapping',        icon:'◆', roles:['superadmin','admin'] },
+  { route:'columbus-profiles', title:'Columbus Profiles',         sub:'Internal users & relations',  icon:'▲', roles:['superadmin','admin','moderator'] },
+  { route:'submissions',       title:'Pending Submissions',       sub:'Surveys awaiting approval',   icon:'■', roles:['superadmin','admin'] },
+  { route:'my-relations',      title:'My Relations',              sub:'Your own Microsoft contacts', icon:'★', roles:['superadmin','admin','moderator','standard'] }
+];
+function pageFor(route){ for (var i=0;i<PAGES.length;i++){ if (PAGES[i].route===route) return PAGES[i]; } return null; }
+function canOpen(route, role){ var p = pageFor(route); return !!p && p.roles.indexOf(role) !== -1; }
+// Only Admin / Super Admin may change data. Moderator is read-only (spec, page 3+4).
+function canEdit(){ return state.session.role === 'admin' || state.session.role === 'superadmin'; }
+
+var MS_GROUPS  = ['Leadership','Account Team','Technical Specialist','Partner Development','Marketing'];
+var MS_SOURCES = ['Survey','LinkedIn','Event','Manual entry','Partner portal'];
+var CB_DEPARTMENTS = ['Executive','Alliances','Data & AI','Business Applications','Cloud & Infrastructure','Modern Work','Sales','Marketing','Delivery'];
+
+/* ============================================================
+   2. SEED DATA  -  every person below is fictional
+   ============================================================ */
+
+var state = {
+  session: { userId:'c1', role:'admin' },
+
+  // Domains live separately from the profiles so the mapping is easy to restructure.
+  domains: [
+    { id:'d1', name:'Data & AI',            owner:'Mette Kirkegaard', desc:'Microsoft Fabric, Azure AI Foundry, Copilot and analytics workloads.' },
+    { id:'d2', name:'Azure Infrastructure', owner:'Jonas Ravn',       desc:'Migration, landing zones, hybrid and platform engineering.' },
+    { id:'d3', name:'Business Applications',owner:'Sofie Bang',       desc:'Dynamics 365, Power Platform and ERP/CRM motions.' },
+    { id:'d4', name:'Modern Work',          owner:'Anders Holmgaard', desc:'Microsoft 365, Teams and Copilot for Microsoft 365 adoption.' },
+    { id:'d5', name:'Security',             owner:'Rikke Dalsgaard',  desc:'Defender, Entra, Purview and compliance.' },
+    { id:'d6', name:'Partner & Channel',    owner:'Mette Kirkegaard', desc:'Partner development, co-sell motions and incentives.' },
+    { id:'d7', name:'Public Sector',        owner:'Sofie Bang',       desc:'Government, municipalities and healthcare accounts.' }
+  ],
+
+  msProfiles: [
+    { id:'m1',  name:'Astrid Lindqvist',    title:'Country Lead, Data & AI',              domainIds:['d1'],      group:'Leadership',           source:'Event',         email:'astrid.lindqvist@microsoft.example',    notes:'Sponsors the Danish Data & AI agenda. Prefers quarterly business reviews.', updatedAt:'2026-06-11' },
+    { id:'m2',  name:'Kasper Vinther',      title:'Solution Specialist, Fabric',          domainIds:['d1'],      group:'Technical Specialist', source:'Survey',        email:'kasper.vinther@microsoft.example',      notes:'Very hands-on. Happy to co-present at customer workshops.',                updatedAt:'2026-07-02' },
+    { id:'m3',  name:'Nanna Bjerre',        title:'Cloud Solution Architect, AI',         domainIds:['d1','d2'], group:'Technical Specialist', source:'Survey',        email:'nanna.bjerre@microsoft.example',        notes:'Split between AI and platform engagements.',                               updatedAt:'2026-05-28' },
+    { id:'m4',  name:'Emil Krogh',          title:'Data & AI Sales Manager',              domainIds:['d1'],      group:'Account Team',         source:'LinkedIn',      email:'emil.krogh@microsoft.example',          notes:'Owns the Data & AI number for the enterprise segment.',                    updatedAt:'2026-06-30' },
+    { id:'m5',  name:'Sigrid Holm',         title:'Azure Infrastructure Lead',            domainIds:['d2'],      group:'Leadership',           source:'Event',         email:'sigrid.holm@microsoft.example',         notes:'New in role since March 2026 - relation needs rebuilding.',                updatedAt:'2026-07-14' },
+    { id:'m6',  name:'Tobias Lund',         title:'Cloud Solution Architect, Azure',      domainIds:['d2'],      group:'Technical Specialist', source:'Survey',        email:'tobias.lund@microsoft.example',         notes:'Runs joint architecture design sessions with our practice.',               updatedAt:'2026-07-08' },
+    { id:'m7',  name:'Frederikke Als',      title:'Migration Specialist',                 domainIds:['d2'],      group:'Technical Specialist', source:'Manual entry',  email:'frederikke.als@microsoft.example',      notes:'Identified via the partner portal. No contact established yet.',           updatedAt:'2026-04-19' },
+    { id:'m8',  name:'Mikkel Storm',        title:'Business Applications Director',       domainIds:['d3'],      group:'Leadership',           source:'Event',         email:'mikkel.storm@microsoft.example',        notes:'Long-standing relationship, keynote speaker at our 2025 summit.',          updatedAt:'2026-06-05' },
+    { id:'m9',  name:'Camilla Vestergaard', title:'D365 Finance & Operations Specialist', domainIds:['d3'],      group:'Technical Specialist', source:'Survey',        email:'camilla.vestergaard@microsoft.example', notes:'Main technical contact for F&O opportunities.',                            updatedAt:'2026-07-01' },
+    { id:'m10', name:'Oliver Bak',          title:'Power Platform Specialist',            domainIds:['d3','d4'], group:'Technical Specialist', source:'Survey',        email:'oliver.bak@microsoft.example',          notes:'Moved from Modern Work to Business Applications in May.',                  updatedAt:'2026-07-19' },
+    { id:'m11', name:'Josefine Rask',       title:'Account Executive, Business Apps',     domainIds:['d3','d7'], group:'Account Team',         source:'LinkedIn',      email:'josefine.rask@microsoft.example',       notes:'Covers three of our shared public sector accounts.',                       updatedAt:'2026-05-12' },
+    { id:'m12', name:'Villads Høeg',   title:'Modern Work Lead',                     domainIds:['d4'],      group:'Leadership',           source:'Manual entry',  email:'villads.hoeg@microsoft.example',        notes:'Relation is thin - mostly event small talk so far.',                       updatedAt:'2026-06-22' },
+    { id:'m13', name:'Ida Munk',            title:'Copilot Adoption Specialist',          domainIds:['d4'],      group:'Technical Specialist', source:'Survey',        email:'ida.munk@microsoft.example',            notes:'Drives Copilot adoption programmes with partners.',                        updatedAt:'2026-07-16' },
+    { id:'m14', name:'Rasmus Dahl',         title:'Security Solution Lead',               domainIds:['d5'],      group:'Leadership',           source:'Event',         email:'rasmus.dahl@microsoft.example',         notes:'Several attempts at a meeting have gone unanswered.',                      updatedAt:'2026-03-27' },
+    { id:'m15', name:'Laura Kjær',     title:'Security Specialist, Entra & Purview', domainIds:['d5'],      group:'Technical Specialist', source:'Partner portal',email:'laura.kjaer@microsoft.example',         notes:'Named in the partner portal. Nobody at Columbus knows her yet.',           updatedAt:'2026-04-02' },
+    { id:'m16', name:'Andreas Bruun',       title:'Partner Development Manager',          domainIds:['d6'],      group:'Partner Development',  source:'Survey',        email:'andreas.bruun@microsoft.example',       notes:'Our primary partner contact - weekly cadence.',                            updatedAt:'2026-07-21' },
+    { id:'m17', name:'Maja Toft',           title:'Partner Marketing Manager',            domainIds:['d6'],      group:'Marketing',            source:'LinkedIn',      email:'maja.toft@microsoft.example',           notes:'Co-funds campaigns, responds quickly.',                                    updatedAt:'2026-06-18' },
+    { id:'m18', name:'Henrik Falk',         title:'Public Sector Director',               domainIds:['d7'],      group:'Leadership',           source:'Event',         email:'henrik.falk@microsoft.example',         notes:'Relationship damaged after the 2025 tender escalation.',                   updatedAt:'2026-05-06' },
+    { id:'m19', name:'Sara Nørgaard',  title:'Account Executive, Public Sector',     domainIds:['d7','d3'], group:'Account Team',         source:'Manual entry',  email:'sara.noergaard@microsoft.example',      notes:'Took over the accounts when the previous AE left.',                        updatedAt:'2026-06-27' },
+    { id:'m20', name:'Thomas Ejlersen',     title:'Co-sell & Incentives Manager',         domainIds:['d6'],      group:'Partner Development',  source:'Partner portal',email:'thomas.ejlersen@microsoft.example',     notes:'Owns co-sell registration and incentive claims.',                          updatedAt:'2026-07-09' }
+  ],
+
+  columbusProfiles: [
+    { id:'c1',  name:'Mette Kirkegaard',      title:'Partner Alliance Manager',    department:'Alliances',                skills:['Alliances','Co-sell','Governance'],       role:'admin',      email:'mette.kirkegaard@columbusglobal.example', lastSurvey:'2026-07-15' },
+    { id:'c2',  name:'Jesper Winther',        title:'Managing Director, Denmark',  department:'Executive',                skills:['Strategy','Executive sponsor'],           role:'superadmin', email:'jesper.winther@columbusglobal.example',   lastSurvey:'2026-06-02' },
+    { id:'c3',  name:'Sofie Bang',            title:'Business Applications Director', department:'Business Applications', skills:['D365 F&O','ERP','Presales'],              role:'admin',      email:'sofie.bang@columbusglobal.example',       lastSurvey:'2026-07-15' },
+    { id:'c4',  name:'Jonas Ravn',            title:'Cloud Practice Lead',         department:'Cloud & Infrastructure',   skills:['Azure','Migration','Architecture'],       role:'moderator',  email:'jonas.ravn@columbusglobal.example',       lastSurvey:'2026-07-15' },
+    { id:'c5',  name:'Rikke Dalsgaard',       title:'Security Lead',               department:'Cloud & Infrastructure',   skills:['Security','Entra','Compliance'],          role:'moderator',  email:'rikke.dalsgaard@columbusglobal.example',  lastSurvey:'2026-05-20' },
+    { id:'c6',  name:'Anders Holmgaard',      title:'Modern Work Consultant',      department:'Modern Work',              skills:['M365','Teams','Adoption'],                role:'standard',   email:'anders.holmgaard@columbusglobal.example', lastSurvey:'2026-07-15' },
+    { id:'c7',  name:'Line Aagaard',          title:'Data & AI Consultant',        department:'Data & AI',                skills:['Fabric','Power BI','Data platform'],      role:'standard',   email:'line.aagaard@columbusglobal.example',     lastSurvey:'2026-07-15' },
+    { id:'c8',  name:'Peter Sandholm',        title:'Enterprise Account Manager',  department:'Sales',                    skills:['Sales','Public sector'],                  role:'standard',   email:'peter.sandholm@columbusglobal.example',   lastSurvey:'2026-07-15' },
+    { id:'c9',  name:'Amalie Friis',          title:'Marketing Manager',           department:'Marketing',                skills:['Campaigns','Events'],                     role:'standard',   email:'amalie.friis@columbusglobal.example',     lastSurvey:'2026-04-08' },
+    { id:'c10', name:'Christian Bloch',       title:'Solution Architect',          department:'Cloud & Infrastructure',   skills:['Azure','Landing zones'],                  role:'standard',   email:'christian.bloch@columbusglobal.example',  lastSurvey:'2026-07-15' },
+    { id:'c11', name:'Louise Damgaard',       title:'D365 CE Consultant',          department:'Business Applications',    skills:['D365 CE','Power Platform'],               role:'standard',   email:'louise.damgaard@columbusglobal.example',  lastSurvey:'2026-07-15' },
+    { id:'c12', name:'Martin Østergaard',title:'Delivery Manager',            department:'Delivery',                 skills:['Delivery','PMO'],                         role:'standard',   email:'martin.oestergaard@columbusglobal.example',lastSurvey:'2026-03-11' },
+    { id:'c13', name:'Sara Lykke',            title:'Presales Lead, Data & AI',    department:'Data & AI',                skills:['Presales','AI','Copilot'],                role:'standard',   email:'sara.lykke@columbusglobal.example',       lastSurvey:'2026-07-15' },
+    { id:'c14', name:'Daniel Hvid',           title:'Bid Manager',                 department:'Sales',                    skills:['Bids','Public tenders'],                  role:'standard',   email:'daniel.hvid@columbusglobal.example',      lastSurvey:'2026-06-02' }
+  ],
+
+  // The many-to-many join: one Columbus person can know many Microsoft people and vice versa.
+  relations: [
+    { id:'r1',  columbusId:'c1',  msProfileId:'m1',  score: 2, note:'Quarterly alliance sync, open dialogue.',            updatedAt:'2026-06-11' },
+    { id:'r2',  columbusId:'c1',  msProfileId:'m16', score: 3, note:'Weekly partner cadence - our main entry point.',     updatedAt:'2026-07-21' },
+    { id:'r3',  columbusId:'c1',  msProfileId:'m20', score: 2, note:'Aligned on the co-sell pipeline every month.',       updatedAt:'2026-07-09' },
+    { id:'r4',  columbusId:'c1',  msProfileId:'m5',  score: 1, note:'Met at Azure partner day, follow-up pending.',       updatedAt:'2026-07-14' },
+    { id:'r5',  columbusId:'c1',  msProfileId:'m8',  score: 2, note:'Joint Business Applications planning.',              updatedAt:'2026-06-05' },
+    { id:'r6',  columbusId:'c2',  msProfileId:'m1',  score: 2, note:'Executive sponsor relationship.',                    updatedAt:'2026-06-11' },
+    { id:'r7',  columbusId:'c2',  msProfileId:'m18', score: 1, note:'Introduced at the public sector roundtable.',        updatedAt:'2026-05-06' },
+    { id:'r8',  columbusId:'c2',  msProfileId:'m12', score: 0, note:'Met once at an event, nothing since.',               updatedAt:'2026-06-22' },
+    { id:'r9',  columbusId:'c3',  msProfileId:'m8',  score: 3, note:'Long-standing, speaks at our customer events.',      updatedAt:'2026-06-05' },
+    { id:'r10', columbusId:'c3',  msProfileId:'m9',  score: 2, note:'Frequent solution reviews together.',                updatedAt:'2026-07-01' },
+    { id:'r11', columbusId:'c3',  msProfileId:'m11', score: 1, note:'Occasional deal alignment.',                         updatedAt:'2026-05-12' },
+    { id:'r12', columbusId:'c4',  msProfileId:'m5',  score: 2, note:'Rebuilding after her role change - going well.',     updatedAt:'2026-07-14' },
+    { id:'r13', columbusId:'c4',  msProfileId:'m6',  score: 3, note:'Runs joint architecture sessions with the team.',    updatedAt:'2026-07-08' },
+    { id:'r14', columbusId:'c5',  msProfileId:'m14', score:-1, note:'Several meeting requests unanswered.',               updatedAt:'2026-03-27' },
+    { id:'r15', columbusId:'c6',  msProfileId:'m12', score: 1, note:'Good chat at the Modern Work briefing.',             updatedAt:'2026-06-22' },
+    { id:'r16', columbusId:'c6',  msProfileId:'m13', score: 2, note:'Co-running a Copilot adoption pilot.',               updatedAt:'2026-07-16' },
+    { id:'r17', columbusId:'c7',  msProfileId:'m2',  score: 2, note:'Regular Fabric sparring.',                           updatedAt:'2026-07-02' },
+    { id:'r18', columbusId:'c7',  msProfileId:'m3',  score: 1, note:'Worked together on one architecture review.',        updatedAt:'2026-05-28' },
+    { id:'r19', columbusId:'c8',  msProfileId:'m4',  score: 1, note:'Pipeline reviews, still fairly formal.',             updatedAt:'2026-06-30' },
+    { id:'r20', columbusId:'c8',  msProfileId:'m19', score:-1, note:'Relation lost when the previous AE left.',           updatedAt:'2026-06-27' },
+    { id:'r21', columbusId:'c8',  msProfileId:'m11', score: 0, note:'Introduced by e-mail, no meeting yet.',              updatedAt:'2026-05-12' },
+    { id:'r22', columbusId:'c9',  msProfileId:'m17', score: 2, note:'Two co-marketing campaigns delivered.',              updatedAt:'2026-06-18' },
+    { id:'r23', columbusId:'c10', msProfileId:'m6',  score: 1, note:'Technical sparring on landing zones.',               updatedAt:'2026-07-08' },
+    { id:'r24', columbusId:'c10', msProfileId:'m3',  score: 0, note:'Same customer project, little direct contact.',      updatedAt:'2026-05-28' },
+    { id:'r25', columbusId:'c11', msProfileId:'m9',  score: 1, note:'Escalation support on an F&O case.',                 updatedAt:'2026-07-01' },
+    { id:'r26', columbusId:'c11', msProfileId:'m10', score: 2, note:'Power Platform community work together.',            updatedAt:'2026-07-19' },
+    { id:'r27', columbusId:'c12', msProfileId:'m9',  score: 0, note:'Only project status meetings.',                      updatedAt:'2026-07-01' },
+    { id:'r28', columbusId:'c13', msProfileId:'m2',  score: 3, note:'Co-presented at the Fabric event - very strong.',    updatedAt:'2026-07-02' },
+    { id:'r29', columbusId:'c13', msProfileId:'m1',  score: 1, note:'Briefed her on our AI offering once.',               updatedAt:'2026-06-11' },
+    { id:'r30', columbusId:'c13', msProfileId:'m4',  score: 2, note:'Joint account planning on two accounts.',            updatedAt:'2026-06-30' },
+    { id:'r31', columbusId:'c14', msProfileId:'m18', score:-2, note:'Bid escalation in 2025 left a bad impression.',      updatedAt:'2026-05-06' },
+    { id:'r32', columbusId:'c14', msProfileId:'m19', score: 0, note:'Only tender correspondence so far.',                 updatedAt:'2026-06-27' }
+  ],
+
+  // Survey responses / edits waiting for an Admin to approve them.
+  submissions: [
+    { id:'s1', columbusId:'c7',  type:'survey', submittedAt:'2026-08-14', items:[
+        { msProfileId:'m2',  oldScore: 2, newScore: 3, note:'We now run a shared workshop series.' },
+        { msProfileId:'m3',  oldScore: 1, newScore: 2, note:'Weekly contact on the current project.' },
+        { msProfileId:'m13', oldScore:null, newScore: 1, note:'Met at the Copilot bootcamp in August.' }
+      ] },
+    { id:'s2', columbusId:'c6',  type:'survey', submittedAt:'2026-08-13', items:[
+        { msProfileId:'m12', oldScore: 1, newScore: 2, note:'Monthly Modern Work sync established.' },
+        { msProfileId:'m13', oldScore: 2, newScore: 3, note:'She now brings us into her adoption programmes.' }
+      ] },
+    { id:'s3', columbusId:'c11', type:'edit',   submittedAt:'2026-08-12', items:[
+        { msProfileId:'m10', oldScore: 2, newScore: 1, note:'He changed area - far less contact now.' }
+      ] },
+    { id:'s4', columbusId:'c8',  type:'survey', submittedAt:'2026-08-11', items:[
+        { msProfileId:'m19', oldScore:-1, newScore: 0, note:'Handover meeting held, starting over.' },
+        { msProfileId:'m4',  oldScore: 1, newScore: 2, note:'Now in a monthly pipeline cadence.' }
+      ] },
+    { id:'s5', columbusId:'c14', type:'edit',   submittedAt:'2026-08-08', items:[
+        { msProfileId:'m18', oldScore:-2, newScore:-1, note:'Cleared the air at the tender debrief.' }
+      ] }
+  ],
+
+  // Transient UI state - survives re-renders, not reloads.
+  ui: {
+    route:'login',
+    msSearch:'', msDomain:'', msGroup:'', msSource:'', msBand:'', msSort:'name', msDir:1, msDetail:null,
+    cbSearch:'', cbDept:'', cbRole:'', cbSort:'name', cbDir:1, cbOpen:null,
+    subOpen:null,
+    myDraft:null, myPicker:''
+  }
+};
+
+/* ============================================================
+   3. SMALL HELPERS
+   ============================================================ */
+
+function esc(s){
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function uid(prefix){ uid.n = (uid.n || 0) + 1; return prefix + '_' + uid.n + '_' + (uid.n * 7919 % 9973); }
+function today(){ return '2026-08-19'; }
+function initials(name){
+  var parts = String(name).trim().split(/\s+/);
+  return ((parts[0]||'')[0] || '') + ((parts[parts.length-1]||'')[0] || '');
+}
+function byId(list, id){ for (var i=0;i<list.length;i++){ if (list[i].id === id) return list[i]; } return null; }
+function ms(id){ return byId(state.msProfiles, id); }
+function cb(id){ return byId(state.columbusProfiles, id); }
+function dom(id){ return byId(state.domains, id); }
+function me(){ return cb(state.session.userId) || state.columbusProfiles[0]; }
+function fmtDate(d){
+  if (!d) return '<span class="hint">Never</span>';
+  var p = String(d).split('-');
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return esc(p[2] + ' ' + months[parseInt(p[1],10)-1] + ' ' + p[0]);
+}
+function signed(n){ return (n > 0 ? '+' : '') + n; }
+function clampScore(n){ return Math.max(-3, Math.min(3, n)); }
+
+/* --- derived numbers (never stored twice) --- */
+function relationsForMs(msId){
+  return state.relations.filter(function(r){ return r.msProfileId === msId; });
+}
+function relationsForCb(cbId){
+  return state.relations.filter(function(r){ return r.columbusId === cbId; });
+}
+function msStats(msId){
+  var rs = relationsForMs(msId), sum = 0, best = null;
+  rs.forEach(function(r){ sum += r.score; if (best === null || r.score > best) best = r.score; });
+  return { count: rs.length, sum: sum, best: best, avg: rs.length ? sum / rs.length : 0 };
+}
+function cbStats(cbId){
+  var rs = relationsForCb(cbId), sum = 0;
+  rs.forEach(function(r){ sum += r.score; });
+  return { count: rs.length, sum: sum, avg: rs.length ? Math.round(sum / rs.length) : 0 };
+}
+function domainStats(dId){
+  var profiles = state.msProfiles.filter(function(p){ return p.domainIds.indexOf(dId) !== -1; });
+  var conns = 0, sum = 0, covered = 0;
+  profiles.forEach(function(p){
+    var s = msStats(p.id);
+    conns += s.count; sum += s.sum;
+    if (s.count > 0 && s.best >= 1) covered++;
+  });
+  return {
+    profiles: profiles.length,
+    connections: conns,
+    sum: sum,
+    avg: conns ? Math.round(sum / conns) : 0,
+    coverage: profiles.length ? Math.round(covered / profiles.length * 100) : 0
+  };
+}
+function pendingCount(){ return state.submissions.length; }
+
+/* --- reusable markup --- */
+function scoreChip(v, big){
+  if (v === null || v === undefined) return '<span class="chip chip--muted">none</span>';
+  return '<span class="score' + (big ? ' score--lg' : '') + '" data-s="' + v + '" title="' +
+         esc(scoreLevel(v).label + ' - ' + scoreLevel(v).desc) + '">' + signed(v) + '</span>';
+}
+function scoreLegend(){
+  return '<div class="legend">' + SCORE_LEVELS.map(function(l){
+    return '<div title="' + esc(l.desc) + '">' + scoreChip(l.v) + '<b>' + esc(l.label) + '</b></div>';
+  }).join('') + '</div>';
+}
+function scorePicker(value, action, extraAttr){
+  return '<div class="picker">' + SCORE_LEVELS.slice().reverse().map(function(l){
+    return '<button type="button" data-action="' + action + '" data-score="' + l.v + '" data-s="' + l.v +
+           '" class="' + (value === l.v ? 'on' : '') + '" title="' + esc(l.label + ' - ' + l.desc) + '" ' +
+           (extraAttr || '') + '>' + signed(l.v) + '</button>';
+  }).join('') + '</div>';
+}
+function personCell(name, sub){
+  return '<div class="person"><span class="avatar">' + esc(initials(name)) + '</span><div><b>' +
+         esc(name) + '</b><span>' + esc(sub || '') + '</span></div></div>';
+}
+function domainChips(ids){
+  if (!ids || !ids.length) return '<span class="hint">Unmapped</span>';
+  return '<div class="chips">' + ids.map(function(id){
+    var d = dom(id); return d ? '<span class="chip">' + esc(d.name) + '</span>' : '';
+  }).join('') + '</div>';
+}
+function sortArrow(active, dir){ return active ? '<span class="arrow">' + (dir === 1 ? '▲' : '▼') + '</span>' : ''; }
+function sortBy(list, key, dir){
+  return list.slice().sort(function(a, b){
+    var x = a[key], y = b[key];
+    if (typeof x === 'string') { x = x.toLowerCase(); y = String(y).toLowerCase(); }
+    if (x < y) return -dir;
+    if (x > y) return dir;
+    return 0;
+  });
+}
+function toast(msg, kind){
+  var el = document.createElement('div');
+  el.className = 'toast' + (kind ? ' ' + kind : '');
+  el.textContent = msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(function(){ el.remove(); }, 3600);
+}
+/* ============================================================
+   4. ROUTER + SHELL
+   ============================================================ */
+
+function go(route){
+  if (location.hash !== '#/' + route) { location.hash = '#/' + route; }
+  else { state.ui.route = route; render(); }
+}
+function readHash(){
+  var r = (location.hash || '').replace(/^#\/?/, '') || 'login';
+  state.ui.route = r;
+}
+window.addEventListener('hashchange', function(){ readHash(); render(); });
+
+function render(){
+  var route = state.ui.route;
+
+  if (route === 'login') { document.getElementById('app').innerHTML = viewLogin(); return; }
+
+  // Fall back to the first page the current role is allowed to see.
+  if (!canOpen(route, state.session.role)) {
+    var allowed = PAGES.filter(function(p){ return p.roles.indexOf(state.session.role) !== -1; })[0];
+    route = state.ui.route = allowed ? allowed.route : 'my-relations';
+    if (location.hash !== '#/' + route) { location.hash = '#/' + route; return; }
+  }
+
+  var body = '';
+  if (route === 'dashboard')              body = viewDashboard();
+  else if (route === 'ms-profiles')       body = viewMsProfiles();
+  else if (route === 'ms-domains')        body = viewMsDomains();
+  else if (route === 'columbus-profiles') body = viewColumbusProfiles();
+  else if (route === 'submissions')       body = viewSubmissions();
+  else if (route === 'my-relations')      body = viewMyRelations();
+
+  document.getElementById('app').innerHTML =
+    '<div class="shell">' + sidebar(route) + '<div class="main">' + topbar(route) +
+    '<div class="page">' + body + '</div></div></div>';
+
+  restoreFocus();
+}
+
+function sidebar(route){
+  var role = state.session.role;
+  var items = PAGES.filter(function(p){ return p.roles.indexOf(role) !== -1; }).map(function(p){
+    var pill = (p.route === 'submissions' && pendingCount())
+      ? '<span class="pill">' + pendingCount() + '</span>' : '';
+    return '<a href="#/' + p.route + '" class="' + (p.route === route ? 'active' : '') + '">' +
+           '<i class="ico">' + p.icon + '</i>' + esc(p.title) + pill + '</a>';
+  }).join('');
+
+  return '<aside class="sidebar">' +
+    '<div class="sidebar__logo"><strong>COLUMBUS</strong><small>Microsoft Relationship Map</small></div>' +
+    '<nav class="nav"><div class="nav__label">Menu</div>' + items + '</nav>' +
+    '<div class="sidebar__foot">UI mockup &middot; fictional data<br>Version 0.1</div>' +
+    '</aside>';
+}
+
+function topbar(route){
+  var p = pageFor(route) || { title:'', sub:'' };
+  var user = me();
+  var roleOpts = ROLES.map(function(r){
+    return '<option value="' + r.id + '"' + (state.session.role === r.id ? ' selected' : '') + '>' + esc(r.name) + '</option>';
+  }).join('');
+
+  return '<header class="topbar">' +
+    '<div class="topbar__title">' + esc(p.title) + '<small>' + esc(p.sub) + '</small></div>' +
+    '<div class="topbar__spacer"></div>' +
+    '<div class="rolepick"><label for="rolesel">Viewing as</label>' +
+      '<select id="rolesel" data-action="set-role">' + roleOpts + '</select></div>' +
+    '<div class="who"><span class="avatar">' + esc(initials(user.name)) + '</span>' +
+      '<div><b>' + esc(user.name) + '</b><span>' + esc(user.email) + '</span></div></div>' +
+    '<button class="btn btn--sm" data-action="logout">Sign out</button>' +
+    '</header>';
+}
+
+/* ============================================================
+   5. PAGE 1 - LOGIN  (placeholder: any input signs you in)
+   ============================================================ */
+
+function viewLogin(){
+  return '' +
+  '<div class="login">' +
+    '<div class="login__brand">' +
+      '<div class="login__logo"><strong>COLUMBUS</strong><small>Microsoft Relationship Map</small></div>' +
+      '<div>' +
+        '<h1>Know exactly where we stand with Microsoft.</h1>' +
+        '<p>One shared, always-current picture of the relationships between Columbus and the key people at Microsoft Denmark.</p>' +
+        '<ul class="login__points">' +
+          '<li><i>&#9679;</i><span>Score every relationship from -3 to +3 and see the gaps at a glance.</span></li>' +
+          '<li><i>&#9679;</i><span>Map contacts per Microsoft domain and per person.</span></li>' +
+          '<li><i>&#9679;</i><span>Keep the knowledge when people change roles or leave.</span></li>' +
+        '</ul>' +
+      '</div>' +
+      '<div style="position:relative;z-index:1;color:#7e97b1;font-size:12px">Mockup &middot; fictional data &middot; not connected to any system</div>' +
+    '</div>' +
+    '<div class="login__form"><form class="login__card" data-action="login">' +
+      '<h2>Sign in</h2>' +
+      '<p>Use your Columbus account to continue.</p>' +
+      '<button type="submit" class="entra">' +
+        '<span class="msgrid"><i style="background:#f25022"></i><i style="background:#7fba00"></i>' +
+        '<i style="background:#00a4ef"></i><i style="background:#ffb900"></i></span>' +
+        'Sign in with Microsoft Entra ID</button>' +
+      '<div class="login__divider">or</div>' +
+      '<div class="field"><label for="loginmail">Work e-mail</label>' +
+        '<input id="loginmail" type="email" placeholder="firstname.lastname@columbusglobal.com" autocomplete="off"></div>' +
+      '<div style="height:14px"></div>' +
+      '<button type="submit" class="btn btn--primary" style="width:100%;justify-content:center">Continue</button>' +
+      '<div class="login__note"><b>Mockup:</b> authentication is not implemented. Any e-mail - or none at all - signs you in as ' +
+        esc(me().name) + ' with the <b>Admin</b> role. In the real app this is Microsoft Entra ID, restricted to Columbus mail addresses.</div>' +
+    '</form></div>' +
+  '</div>';
+}
+
+/* ============================================================
+   6. PAGE 2 - DASHBOARD  (deliberately empty for now)
+   ============================================================ */
+
+function viewDashboard(){
+  return '' +
+  '<div class="page__head"><div><h2>Dashboard</h2>' +
+    '<p>Aggregated overview of the Columbus - Microsoft relationship map.</p></div></div>' +
+  '<div class="placeholder"><b>Dashboard is not part of this mockup yet</b>' +
+    '<p>This page will mirror slide 1 of the Microsoft Denmark stakeholder map deck: ' +
+    'coverage per Microsoft domain, strongest and weakest relationships, and the change over time. ' +
+    'The other pages in the menu are fully clickable.</p></div>';
+}
+/* ============================================================
+   7. PAGE 3 - MICROSOFT PROFILES
+   ============================================================ */
+
+var BANDS = [
+  { id:'',         label:'All relationship levels' },
+  { id:'strong',   label:'Strong (+2 / +3)' },
+  { id:'positive', label:'Positive (+1)' },
+  { id:'neutral',  label:'Neutral (0)' },
+  { id:'negative', label:'Negative (-1 to -3)' },
+  { id:'none',     label:'No connection yet' }
+];
+function bandOf(s){
+  if (!s.count) return 'none';
+  if (s.best >= 2) return 'strong';
+  if (s.best === 1) return 'positive';
+  if (s.best === 0) return 'neutral';
+  return 'negative';
+}
+
+function msRows(){
+  var u = state.ui, q = u.msSearch.trim().toLowerCase();
+  var rows = state.msProfiles.map(function(p){
+    var s = msStats(p.id);
+    return {
+      id:p.id, name:p.name, title:p.title, group:p.group, source:p.source,
+      domainIds:p.domainIds, updatedAt:p.updatedAt, email:p.email,
+      count:s.count, sum:s.sum, best:s.best, band:bandOf(s)
+    };
+  });
+  rows = rows.filter(function(r){
+    if (q && (r.name + ' ' + r.title + ' ' + r.email).toLowerCase().indexOf(q) === -1) return false;
+    if (u.msDomain && r.domainIds.indexOf(u.msDomain) === -1) return false;
+    if (u.msGroup  && r.group  !== u.msGroup)  return false;
+    if (u.msSource && r.source !== u.msSource) return false;
+    if (u.msBand   && r.band   !== u.msBand)   return false;
+    return true;
+  });
+  return sortBy(rows, u.msSort, u.msDir);
+}
+
+function selectField(label, action, value, options, allLabel){
+  var opts = (allLabel ? '<option value="">' + esc(allLabel) + '</option>' : '') + options.map(function(o){
+    var v = typeof o === 'string' ? o : o.id, t = typeof o === 'string' ? o : o.label;
+    return '<option value="' + esc(v) + '"' + (value === v ? ' selected' : '') + '>' + esc(t) + '</option>';
+  }).join('');
+  return '<div class="field"><label>' + esc(label) + '</label><select data-action="' + action + '">' + opts + '</select></div>';
+}
+function th(label, key, sortKey, dir, cls){
+  return '<th class="sortable ' + (cls||'') + '" data-action="sort-ms" data-key="' + key + '">' +
+         esc(label) + sortArrow(sortKey === key, dir) + '</th>';
+}
+
+function viewMsProfiles(){
+  var u = state.ui, rows = msRows(), editable = canEdit();
+  var noConnection = state.msProfiles.filter(function(p){ return msStats(p.id).count === 0; }).length;
+  var strong = state.msProfiles.filter(function(p){ return bandOf(msStats(p.id)) === 'strong'; }).length;
+
+  var head =
+    '<div class="page__head"><div><h2>Microsoft Profiles</h2>' +
+      '<p>Approved Microsoft Denmark contacts with their domains, group, source and the summed relationship score across all Columbus employees.</p></div>' +
+      '<div class="page__actions">' +
+        '<button class="btn btn--primary" data-action="ms-new"' + (editable ? '' : ' disabled') + '>+ Add Microsoft profile</button>' +
+      '</div></div>' +
+    (editable ? '' : '<div class="readonly-note"><b>Moderator view:</b> you can see and filter everything, but adding, editing and deleting is reserved for Admin.</div>');
+
+  var stats =
+    '<div class="stats">' +
+      '<div class="stat"><b>' + state.msProfiles.length + '</b><span>Microsoft profiles</span><em>across ' + state.domains.length + ' domains</em></div>' +
+      '<div class="stat"><b>' + state.relations.length + '</b><span>Mapped relations</span><em>Columbus &rarr; Microsoft</em></div>' +
+      '<div class="stat"><b>' + strong + '</b><span>Strong coverage</span><em>at least one +2 or +3</em></div>' +
+      '<div class="stat"><b>' + noConnection + '</b><span>No connection yet</span><em>nobody at Columbus knows them</em></div>' +
+    '</div>';
+
+  var toolbar =
+    '<div class="toolbar">' +
+      '<div class="field search"><label>Search</label>' +
+        '<input type="search" id="ms-search" data-action="ms-search" placeholder="Name, title or e-mail" value="' + esc(u.msSearch) + '"></div>' +
+      selectField('Domain', 'ms-domain', u.msDomain, state.domains.map(function(d){ return { id:d.id, label:d.name }; }), 'All domains') +
+      selectField('Group',  'ms-group',  u.msGroup,  MS_GROUPS,  'All groups') +
+      selectField('Source', 'ms-source', u.msSource, MS_SOURCES, 'All sources') +
+      selectField('Relationship', 'ms-band', u.msBand, BANDS.slice(1), 'All relationship levels') +
+      '<div class="spacer"></div>' +
+      '<button class="btn btn--sm" data-action="ms-reset">Clear filters</button>' +
+      '<div class="hint">' + rows.length + ' of ' + state.msProfiles.length + '</div>' +
+    '</div>';
+
+  var body = rows.length ? rows.map(function(r){
+    return '<tr class="clickable" data-action="ms-open" data-id="' + r.id + '">' +
+      '<td>' + personCell(r.name, r.email) + '</td>' +
+      '<td>' + esc(r.title) + '</td>' +
+      '<td>' + domainChips(r.domainIds) + '</td>' +
+      '<td><span class="chip chip--muted">' + esc(r.group) + '</span></td>' +
+      '<td><span class="chip chip--src">' + esc(r.source) + '</span></td>' +
+      '<td class="num">' + r.count + '</td>' +
+      '<td>' + (r.count ? scoreChip(clampScore(r.sum)) + ' <small class="hint">sum ' + signed(r.sum) + '</small>'
+                        : '<span class="chip chip--muted">no connection</span>') + '</td>' +
+      '<td>' + fmtDate(r.updatedAt) + '</td>' +
+      '<td class="actions">' +
+        '<button class="btn btn--sm" data-action="ms-edit" data-id="' + r.id + '"' + (editable ? '' : ' disabled') + '>Edit</button> ' +
+        '<button class="btn btn--sm btn--danger" data-action="ms-delete" data-id="' + r.id + '"' + (editable ? '' : ' disabled') + '>Delete</button>' +
+      '</td></tr>';
+  }).join('') : '<tr><td colspan="9"><div class="empty"><b>No profiles match your filters</b>Try clearing the search or filters.</div></td></tr>';
+
+  var table =
+    '<div class="card">' + toolbar + '<div class="tablewrap"><table><thead><tr>' +
+      th('Name','name',u.msSort,u.msDir) + th('Title','title',u.msSort,u.msDir) +
+      '<th>Domains</th>' + th('Group','group',u.msSort,u.msDir) + th('Source','source',u.msSort,u.msDir) +
+      th('Conn.','count',u.msSort,u.msDir) + th('Total score','sum',u.msSort,u.msDir) +
+      th('Updated','updatedAt',u.msSort,u.msDir) + '<th></th>' +
+    '</tr></thead><tbody>' + body + '</tbody></table></div></div>';
+
+  var legend = '<div class="card" style="margin-top:18px"><div class="card__body">' +
+    '<h3 style="font-size:13px;margin-bottom:10px">Relationship scale</h3>' + scoreLegend() +
+    '<p class="hint" style="margin:12px 0 0">The table shows the <b>sum</b> of all Columbus relationships to that person - the "vector with a sum" from the requirements. Click a row for the individual scores.</p>' +
+    '</div></div>';
+
+  return head + stats + table + legend;
+}
+
+/* ============================================================
+   8. PAGE 3.5 - MICROSOFT DOMAINS  (Admin only)
+   ============================================================ */
+
+function viewMsDomains(){
+  var editable = canEdit();
+  var rows = state.domains.map(function(d){
+    var s = domainStats(d.id);
+    return '<tr>' +
+      '<td><b>' + esc(d.name) + '</b></td>' +
+      '<td style="max-width:360px;color:var(--text-muted)">' + esc(d.desc) + '</td>' +
+      '<td>' + esc(d.owner) + '</td>' +
+      '<td class="num">' + s.profiles + '</td>' +
+      '<td class="num">' + s.connections + '</td>' +
+      '<td>' + (s.connections ? scoreChip(s.avg) : '<span class="chip chip--muted">n/a</span>') + '</td>' +
+      '<td><div class="scoreline"><span class="bar"><i style="width:' + s.coverage + '%"></i></span>' +
+          '<small>' + s.coverage + '%</small></div></td>' +
+      '<td class="actions">' +
+        '<button class="btn btn--sm" data-action="dom-edit" data-id="' + d.id + '"' + (editable ? '' : ' disabled') + '>Edit</button> ' +
+        '<button class="btn btn--sm btn--danger" data-action="dom-delete" data-id="' + d.id + '"' + (editable ? '' : ' disabled') + '>Delete</button>' +
+      '</td></tr>';
+  }).join('');
+
+  return '' +
+    '<div class="page__head"><div><h2>Microsoft Domains</h2>' +
+      '<p>Domains are stored separately from the profiles, so Microsoft people can be re-mapped when their organisation changes without touching the relationship data.</p></div>' +
+      '<div class="page__actions"><button class="btn btn--primary" data-action="dom-new"' + (editable ? '' : ' disabled') + '>+ Add domain</button></div></div>' +
+    '<div class="card"><div class="tablewrap"><table><thead><tr>' +
+      '<th>Domain</th><th>Description</th><th>Process owner</th><th>Profiles</th><th>Connections</th>' +
+      '<th>Avg. score</th><th>Coverage</th><th></th>' +
+    '</tr></thead><tbody>' + rows + '</tbody></table></div></div>' +
+    '<p class="hint" style="margin-top:12px">Coverage = share of the domain\'s Microsoft profiles where at least one Columbus employee has a score of +1 or better.</p>';
+}
+/* ============================================================
+   9. PAGE 4 - COLUMBUS / INTERNAL PROFILES
+   ============================================================ */
+
+function cbRows(){
+  var u = state.ui, q = u.cbSearch.trim().toLowerCase();
+  var rows = state.columbusProfiles.map(function(p){
+    var s = cbStats(p.id);
+    return {
+      id:p.id, name:p.name, title:p.title, department:p.department, skills:p.skills,
+      role:p.role, email:p.email, lastSurvey:p.lastSurvey, count:s.count, avg:s.avg, sum:s.sum
+    };
+  });
+  rows = rows.filter(function(r){
+    if (q && (r.name + ' ' + r.title + ' ' + r.skills.join(' ') + ' ' + r.email).toLowerCase().indexOf(q) === -1) return false;
+    if (u.cbDept && r.department !== u.cbDept) return false;
+    if (u.cbRole && r.role !== u.cbRole) return false;
+    return true;
+  });
+  return sortBy(rows, u.cbSort, u.cbDir);
+}
+
+function cbDetail(cbId){
+  var rs = relationsForCb(cbId);
+  if (!rs.length) {
+    return '<div class="inner"><h4>Approved relations</h4>' +
+      '<p class="hint">No approved relations yet. Send a survey to get this person mapped.</p></div>';
+  }
+  rs = rs.slice().sort(function(a,b){ return b.score - a.score; });
+  var body = rs.map(function(r){
+    var p = ms(r.msProfileId);
+    if (!p) return '';
+    return '<tr><td style="width:32%">' + personCell(p.name, p.title) + '</td>' +
+      '<td style="width:22%">' + domainChips(p.domainIds) + '</td>' +
+      '<td style="width:10%">' + scoreChip(r.score) + '</td>' +
+      '<td style="color:var(--text-muted)">' + esc(r.note) + '</td>' +
+      '<td style="width:12%">' + fmtDate(r.updatedAt) + '</td></tr>';
+  }).join('');
+  return '<div class="inner"><h4>Approved relations (' + rs.length + ')</h4>' +
+    '<table class="minitable"><thead><tr><th>Microsoft contact</th><th>Domain</th><th>Score</th><th>Note</th><th>Updated</th></tr></thead>' +
+    '<tbody>' + body + '</tbody></table></div>';
+}
+
+function viewColumbusProfiles(){
+  var u = state.ui, rows = cbRows(), editable = canEdit();
+
+  var head =
+    '<div class="page__head"><div><h2>Columbus Profiles</h2>' +
+      '<p>Internal users, their skills and the Microsoft relationships they own. Expand a row to see the approved relations behind the score.</p></div>' +
+      '<div class="page__actions">' +
+        '<button class="btn" data-action="cb-survey-all"' + (editable ? '' : ' disabled') + '>Send survey to all</button>' +
+        '<button class="btn btn--primary" data-action="cb-new"' + (editable ? '' : ' disabled') + '>+ Add user</button>' +
+      '</div></div>' +
+    (editable ? '' : '<div class="readonly-note"><b>Moderator view:</b> read-only. Role changes, surveys and user management are Admin actions.</div>');
+
+  var toolbar =
+    '<div class="toolbar">' +
+      '<div class="field search"><label>Search</label>' +
+        '<input type="search" id="cb-search" data-action="cb-search" placeholder="Name, title or skill" value="' + esc(u.cbSearch) + '"></div>' +
+      selectField('Department', 'cb-dept', u.cbDept, CB_DEPARTMENTS, 'All departments') +
+      selectField('Role', 'cb-role-filter', u.cbRole, ROLES.map(function(r){ return { id:r.id, label:r.name }; }), 'All roles') +
+      '<div class="spacer"></div>' +
+      '<button class="btn btn--sm" data-action="cb-reset">Clear filters</button>' +
+      '<div class="hint">' + rows.length + ' of ' + state.columbusProfiles.length + '</div>' +
+    '</div>';
+
+  var body = rows.length ? rows.map(function(r){
+    var locked = r.role === 'superadmin';
+    var open = u.cbOpen === r.id;
+    var roleCell = editable && !locked
+      ? '<select data-action="cb-set-role" data-id="' + r.id + '">' + ROLES.map(function(x){
+          return '<option value="' + x.id + '"' + (r.role === x.id ? ' selected' : '') + '>' + esc(x.name) + '</option>';
+        }).join('') + '</select>'
+      : '<span class="chip chip--role">' + (locked ? '&#128274; ' : '') + esc(roleName(r.role)) + '</span>';
+
+    var tr = '<tr class="clickable ' + (open ? 'is-open' : '') + '" data-action="cb-toggle" data-id="' + r.id + '">' +
+      '<td>' + personCell(r.name, r.email) + '</td>' +
+      '<td>' + esc(r.title) + '</td>' +
+      '<td><span class="chip chip--muted">' + esc(r.department) + '</span></td>' +
+      '<td><div class="chips">' + r.skills.map(function(s){ return '<span class="chip">' + esc(s) + '</span>'; }).join('') + '</div></td>' +
+      '<td>' + roleCell + '</td>' +
+      '<td class="num">' + r.count + '</td>' +
+      '<td>' + (r.count ? scoreChip(r.avg) + ' <small class="hint">sum ' + signed(r.sum) + '</small>' : '<span class="chip chip--muted">none</span>') + '</td>' +
+      '<td>' + fmtDate(r.lastSurvey) + '</td>' +
+      '<td class="actions">' +
+        '<button class="btn btn--sm" data-action="cb-survey" data-id="' + r.id + '"' + (editable ? '' : ' disabled') + '>Send survey</button> ' +
+        '<button class="btn btn--sm btn--danger" data-action="cb-delete" data-id="' + r.id + '"' +
+          (editable && !locked ? '' : ' disabled') + ' title="' + (locked ? 'The Super Admin profile cannot be deleted' : 'Delete user') + '">Delete</button>' +
+      '</td></tr>';
+
+    return tr + (open ? '<tr class="detailrow"><td colspan="9">' + cbDetail(r.id) + '</td></tr>' : '');
+  }).join('') : '<tr><td colspan="9"><div class="empty"><b>No users match your filters</b>Try clearing the search or filters.</div></td></tr>';
+
+  function thc(label, key, cls){
+    return '<th class="sortable ' + (cls||'') + '" data-action="sort-cb" data-key="' + key + '">' +
+           esc(label) + sortArrow(u.cbSort === key, u.cbDir) + '</th>';
+  }
+
+  return head +
+    '<div class="card">' + toolbar + '<div class="tablewrap"><table><thead><tr>' +
+      thc('Name','name') + thc('Title','title') + thc('Department','department') + '<th>Skills</th>' +
+      thc('Role','role') + thc('Relations','count') + thc('Avg. score','avg') + thc('Last survey','lastSurvey') + '<th></th>' +
+    '</tr></thead><tbody>' + body + '</tbody></table></div></div>' +
+    '<div class="card" style="margin-top:18px"><div class="card__body">' + scoreLegend() + '</div></div>';
+}
+
+/* ============================================================
+   10. PAGE 5 - PENDING SUBMISSIONS & SURVEYS  (Admin only)
+   ============================================================ */
+
+function viewSubmissions(){
+  if (!state.submissions.length) {
+    return '<div class="page__head"><div><h2>Pending Submissions &amp; Surveys</h2>' +
+      '<p>Survey responses and manual edits from Columbus employees, waiting for approval.</p></div></div>' +
+      '<div class="card"><div class="empty"><b>Nothing is waiting for approval</b>' +
+      'New survey responses and edits will land here. Switch to the <b>Standard</b> role and submit a change from <b>My Relations</b> to see it in action.</div></div>';
+  }
+
+  var list = state.submissions.map(function(s){
+    var person = cb(s.columbusId);
+    var open = state.ui.subOpen === s.id;
+    var items = s.items.map(function(it, idx){
+      var p = ms(it.msProfileId);
+      var removal = it.newScore === null;
+      return '<tr>' +
+        '<td style="width:30%">' + (p ? personCell(p.name, p.title) : '<i>Unknown profile</i>') + '</td>' +
+        '<td style="width:18%">' + (p ? domainChips(p.domainIds) : '') + '</td>' +
+        '<td style="width:22%"><div class="diff">' + scoreChip(it.oldScore) + '<span>&rarr;</span>' +
+          (removal ? '<span class="chip" style="background:var(--danger-bg);color:var(--danger)">remove</span>' : scoreChip(it.newScore)) +
+        '</div></td>' +
+        '<td>' + (removal ? '' :
+          scorePicker(it.newScore, 'sub-score', 'data-sub="' + s.id + '" data-idx="' + idx + '"')) + '</td>' +
+        '<td style="color:var(--text-muted)">' + esc(it.note) + '</td></tr>';
+    }).join('');
+
+    return '<div class="sub" style="margin-bottom:12px">' +
+      '<div class="sub__head" data-action="sub-toggle" data-id="' + s.id + '">' +
+        personCell(person ? person.name : 'Unknown', person ? person.title : '') +
+        '<span class="chip ' + (s.type === 'survey' ? 'chip--src' : 'chip--muted') + '">' +
+          (s.type === 'survey' ? 'Survey response' : 'Manual edit') + '</span>' +
+        '<span class="chip chip--muted">' + s.items.length + ' change' + (s.items.length === 1 ? '' : 's') + '</span>' +
+        '<span class="hint">Submitted ' + fmtDate(s.submittedAt) + '</span>' +
+        '<div class="spacer"></div>' +
+        '<button class="btn btn--sm btn--danger" data-action="sub-reject" data-id="' + s.id + '">Reject</button> ' +
+        '<button class="btn btn--sm btn--accent" data-action="sub-approve" data-id="' + s.id + '">Approve</button> ' +
+        '<span class="hint">' + (open ? '&#9650;' : '&#9660;') + '</span>' +
+      '</div>' +
+      (open ? '<div class="sub__body">' +
+        '<table class="minitable"><thead><tr><th>Microsoft contact</th><th>Domain</th><th>Change</th>' +
+        '<th>Adjust before approving</th><th>Comment from submitter</th></tr></thead><tbody>' + items + '</tbody></table>' +
+        '<p class="hint" style="margin:10px 0 0">Approving writes these scores to the approved relations. Rejecting discards the submission.</p>' +
+      '</div>' : '') +
+    '</div>';
+  }).join('');
+
+  return '<div class="page__head"><div><h2>Pending Submissions &amp; Surveys</h2>' +
+      '<p>Survey responses and manual edits from Columbus employees. Expand a submission to review the before/after, adjust a score if needed, then approve or reject.</p></div>' +
+      '<div class="page__actions"><span class="chip">' + state.submissions.length + ' waiting</span></div></div>' +
+    list;
+}
+
+/* ============================================================
+   11. PAGE 6 - MY RELATIONS  (the Standard-role page)
+   ============================================================ */
+
+function buildDraft(){
+  state.ui.myDraft = relationsForCb(state.session.userId).map(function(r){
+    return { msProfileId:r.msProfileId, score:r.score, note:r.note,
+             origScore:r.score, origNote:r.note, removed:false, pending:false };
+  });
+}
+function draftDirty(d){
+  if (d.pending) return false;
+  if (d.removed) return true;
+  if (d.origScore === null) return true;
+  return d.score !== d.origScore || d.note !== d.origNote;
+}
+function draftItem(msId){
+  var list = state.ui.myDraft || [];
+  for (var i=0;i<list.length;i++){ if (list[i].msProfileId === msId) return list[i]; }
+  return null;
+}
+
+function viewMyRelations(){
+  if (!state.ui.myDraft) buildDraft();
+  var draft = state.ui.myDraft, user = me();
+  var dirtyCount = draft.filter(draftDirty).length;
+
+  var available = state.msProfiles.filter(function(p){ return !draftItem(p.id); })
+    .sort(function(a,b){ return a.name < b.name ? -1 : 1; });
+
+  var cards = draft.filter(function(d){ return !d.removed; }).map(function(d){
+    var p = ms(d.msProfileId);
+    if (!p) return '';
+    var dirty = draftDirty(d);
+    return '<div class="rel ' + (dirty ? 'dirty' : '') + '">' +
+      '<div class="rel__top">' + personCell(p.name, p.title) +
+        '<div>' + domainChips(p.domainIds) + '</div>' +
+        '<div class="spacer"></div>' +
+        (d.pending ? '<span class="tag-new">Waiting for approval</span>' : '') +
+        (dirty && d.origScore === null ? '<span class="tag-new">New</span>' : '') +
+        (dirty && d.origScore !== null ? '<span class="tag-new">Unsaved</span>' : '') +
+        scorePicker(d.score, 'my-score', 'data-id="' + p.id + '"') +
+        '<button class="btn btn--sm btn--danger" data-action="my-remove" data-id="' + p.id + '">Remove</button>' +
+      '</div>' +
+      '<textarea class="rel__note" data-action="my-note" data-id="' + p.id + '" id="note-' + p.id + '" ' +
+        'placeholder="How do you know them? Latest contact?">' + esc(d.note) + '</textarea>' +
+    '</div>';
+  }).join('');
+
+  var removed = draft.filter(function(d){ return d.removed; }).map(function(d){
+    var p = ms(d.msProfileId);
+    return '<div class="rel" style="opacity:.65">' +
+      '<div class="rel__top">' + personCell(p ? p.name : '?', p ? p.title : '') +
+        '<div class="spacer"></div>' +
+        '<span class="chip" style="background:var(--danger-bg);color:var(--danger)">Marked for removal</span>' +
+        '<button class="btn btn--sm" data-action="my-undo" data-id="' + d.msProfileId + '">Undo</button>' +
+      '</div></div>';
+  }).join('');
+
+  var picker = '<div class="card"><div class="card__body">' +
+    '<div class="toolbar" style="border:0;background:transparent;padding:0">' +
+      '<div class="field" style="flex:1;min-width:280px"><label>Add a Microsoft contact you know</label>' +
+        '<select data-action="my-pick" id="my-pick">' +
+          '<option value="">Select a Microsoft profile...</option>' +
+          available.map(function(p){
+            return '<option value="' + p.id + '"' + (state.ui.myPicker === p.id ? ' selected' : '') + '>' +
+                   esc(p.name + ' - ' + p.title) + '</option>';
+          }).join('') +
+        '</select></div>' +
+      '<button class="btn btn--primary" data-action="my-add"' + (state.ui.myPicker ? '' : ' disabled') + '>+ Add relation</button>' +
+    '</div></div></div>';
+
+  return '' +
+    '<div class="page__head"><div><h2>My Relations</h2>' +
+      '<p>Your own Microsoft contacts, ' + esc(user.name) + '. Adjust the scores, add or remove people, then submit the whole thing for approval.</p></div>' +
+      '<div class="page__actions">' +
+        '<span class="hint">' + (dirtyCount ? dirtyCount + ' unsaved change' + (dirtyCount === 1 ? '' : 's') : 'No unsaved changes') + '</span>' +
+        '<button class="btn" data-action="my-reset"' + (dirtyCount ? '' : ' disabled') + '>Discard changes</button>' +
+        '<button class="btn btn--accent" data-action="my-submit"' + (dirtyCount ? '' : ' disabled') + '>Submit for approval</button>' +
+      '</div></div>' +
+    '<div class="mockflag">Your submission does not change the approved data directly - it lands on <b>Pending Submissions</b> where an Admin reviews it. Switch role in the top bar to see it arrive.</div>' +
+    '<div class="card" style="margin-bottom:18px"><div class="card__body">' + scoreLegend() + '</div></div>' +
+    picker +
+    '<div style="display:grid;gap:12px;margin-top:18px">' + (cards || '<div class="card"><div class="empty"><b>You have no relations yet</b>Add a Microsoft contact above to get started.</div></div>') + removed + '</div>';
+}
+/* ============================================================
+   12. DRAWER + MODALS
+   ============================================================ */
+
+var pendingConfirm = null;
+
+function renderLayer(){
+  var out = '';
+  if (state.ui.msDetail) out += drawerMs(state.ui.msDetail);
+  if (state.ui.modal)    out += modalMarkup(state.ui.modal);
+  document.getElementById('layer').innerHTML = out;
+  var first = document.querySelector('#layer input, #layer select, #layer textarea');
+  if (first) first.focus();
+}
+function openModal(m){ state.ui.modal = m; renderLayer(); }
+function closeLayer(){ state.ui.modal = null; state.ui.msDetail = null; pendingConfirm = null; renderLayer(); }
+
+function drawerMs(id){
+  var p = ms(id);
+  if (!p) return '';
+  var s = msStats(id);
+  var rs = relationsForMs(id).slice().sort(function(a,b){ return b.score - a.score; });
+  var conns = rs.length ? rs.map(function(r){
+    var person = cb(r.columbusId);
+    return '<tr><td>' + personCell(person ? person.name : '?', person ? person.title : '') + '</td>' +
+           '<td style="width:60px">' + scoreChip(r.score) + '</td>' +
+           '<td style="color:var(--text-muted)">' + esc(r.note) + '</td></tr>';
+  }).join('') : '<tr><td colspan="3"><div class="empty" style="padding:22px"><b>No connections yet</b>Nobody at Columbus has registered a relationship with this person.</div></td></tr>';
+
+  return '<div class="drawer"><div class="drawer__bg" data-action="close-layer"></div><div class="drawer__panel">' +
+    '<div class="drawer__head"><div>' + personCell(p.name, p.title) +
+      '<p>' + esc(p.email) + '</p></div>' +
+      '<div style="margin-left:auto"><button class="btn btn--sm btn--ghost" data-action="close-layer">&#10005;</button></div></div>' +
+    '<div class="drawer__body">' +
+      '<div class="stats" style="margin:0;grid-template-columns:1fr 1fr">' +
+        '<div class="stat"><b>' + s.count + '</b><span>Columbus connections</span></div>' +
+        '<div class="stat"><b>' + signed(s.sum) + '</b><span>Summed score</span></div>' +
+      '</div>' +
+      '<dl class="kv">' +
+        '<dt>Domains</dt><dd>' + domainChips(p.domainIds) + '</dd>' +
+        '<dt>Group</dt><dd>' + esc(p.group) + '</dd>' +
+        '<dt>Source</dt><dd><span class="chip chip--src">' + esc(p.source) + '</span></dd>' +
+        '<dt>Last updated</dt><dd>' + fmtDate(p.updatedAt) + '</dd>' +
+        '<dt>Notes</dt><dd style="color:var(--text-muted)">' + esc(p.notes) + '</dd>' +
+      '</dl>' +
+      '<div><h4 style="font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);margin-bottom:10px">Who knows them at Columbus</h4>' +
+        '<table class="minitable"><tbody>' + conns + '</tbody></table></div>' +
+      '<div><button class="btn btn--primary" data-action="ms-edit" data-id="' + p.id + '"' + (canEdit() ? '' : ' disabled') + '>Edit profile</button></div>' +
+    '</div></div></div>';
+}
+
+function modalMarkup(m){
+  if (m.type === 'confirm') {
+    return shellModal(m.title, m.sub,
+      '<p style="margin:0;line-height:1.6">' + m.body + '</p>',
+      '<button class="btn" data-action="close-layer">Cancel</button>' +
+      '<button class="btn ' + (m.danger ? 'btn--danger' : 'btn--primary') + '" data-action="confirm-yes">' + esc(m.okLabel || 'Confirm') + '</button>');
+  }
+  if (m.type === 'ms') {
+    var p = m.id ? ms(m.id) : { name:'', title:'', email:'', group:MS_GROUPS[2], source:MS_SOURCES[3], domainIds:[], notes:'' };
+    return shellModal(m.id ? 'Edit Microsoft profile' : 'Add Microsoft profile',
+      'Microsoft Denmark contact. Domains can be changed later without touching the relationships.',
+      '<div class="form-grid">' +
+        inputField('f-name', 'Full name', p.name, 'full') +
+        inputField('f-title', 'Title / role', p.title) +
+        inputField('f-email', 'E-mail', p.email) +
+        selField('f-group', 'Group', MS_GROUPS, p.group) +
+        selField('f-source', 'Source', MS_SOURCES, p.source) +
+        '<div class="field full"><label>Domains</label><div class="checks">' + state.domains.map(function(d){
+          return '<label><input type="checkbox" class="f-dom" value="' + d.id + '"' +
+                 (p.domainIds.indexOf(d.id) !== -1 ? ' checked' : '') + '>' + esc(d.name) + '</label>';
+        }).join('') + '</div></div>' +
+        '<div class="field full"><label>Notes</label><textarea id="f-notes" rows="3">' + esc(p.notes) + '</textarea></div>' +
+      '</div>',
+      '<button class="btn" data-action="close-layer">Cancel</button>' +
+      '<button class="btn btn--primary" data-action="ms-save" data-id="' + (m.id || '') + '">Save profile</button>');
+  }
+  if (m.type === 'dom') {
+    var d = m.id ? dom(m.id) : { name:'', owner:'', desc:'' };
+    return shellModal(m.id ? 'Edit domain' : 'Add domain',
+      'Domains group the Microsoft profiles. Process owner is a role, not necessarily a single person.',
+      '<div class="form-grid">' +
+        inputField('f-dname', 'Domain name', d.name, 'full') +
+        inputField('f-downer', 'Process owner', d.owner, 'full') +
+        '<div class="field full"><label>Description</label><textarea id="f-ddesc" rows="3">' + esc(d.desc) + '</textarea></div>' +
+      '</div>',
+      '<button class="btn" data-action="close-layer">Cancel</button>' +
+      '<button class="btn btn--primary" data-action="dom-save" data-id="' + (m.id || '') + '">Save domain</button>');
+  }
+  if (m.type === 'cb') {
+    var c = m.id ? cb(m.id) : { name:'', title:'', email:'', department:CB_DEPARTMENTS[2], role:'standard', skills:[] };
+    return shellModal(m.id ? 'Edit Columbus user' : 'Add Columbus user',
+      'Internal user. A survey can be sent as soon as the user exists.',
+      '<div class="form-grid">' +
+        inputField('f-cname', 'Full name', c.name, 'full') +
+        inputField('f-ctitle', 'Title', c.title) +
+        inputField('f-cmail', 'E-mail', c.email) +
+        selField('f-cdept', 'Department', CB_DEPARTMENTS, c.department) +
+        selField('f-crole', 'Role', ROLES.map(function(r){ return r.name; }), roleName(c.role)) +
+        inputField('f-cskills', 'Skills (comma separated)', c.skills.join(', '), 'full') +
+      '</div>',
+      '<button class="btn" data-action="close-layer">Cancel</button>' +
+      '<button class="btn btn--primary" data-action="cb-save" data-id="' + (m.id || '') + '">Save user</button>');
+  }
+  return '';
+}
+function shellModal(title, sub, body, foot){
+  return '<div class="modal"><div class="modal__bg" data-action="close-layer"></div><div class="modal__panel">' +
+    '<div class="modal__head"><h3>' + esc(title) + '</h3><p>' + esc(sub) + '</p></div>' +
+    '<div class="modal__body">' + body + '</div>' +
+    '<div class="modal__foot">' + foot + '</div></div></div>';
+}
+function inputField(id, label, value, cls){
+  return '<div class="field ' + (cls||'') + '"><label for="' + id + '">' + esc(label) + '</label>' +
+         '<input type="text" id="' + id + '" value="' + esc(value) + '"></div>';
+}
+function selField(id, label, options, value){
+  return '<div class="field"><label for="' + id + '">' + esc(label) + '</label><select id="' + id + '">' +
+    options.map(function(o){ return '<option' + (o === value ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') +
+    '</select></div>';
+}
+function val(id){ var el = document.getElementById(id); return el ? el.value.trim() : ''; }
+
+/* ============================================================
+   13. MUTATIONS
+   ============================================================ */
+
+function deleteMsProfile(id){
+  var p = ms(id);
+  state.msProfiles = state.msProfiles.filter(function(x){ return x.id !== id; });
+  state.relations  = state.relations.filter(function(r){ return r.msProfileId !== id; });
+  state.submissions.forEach(function(s){ s.items = s.items.filter(function(i){ return i.msProfileId !== id; }); });
+  state.submissions = state.submissions.filter(function(s){ return s.items.length; });
+  state.ui.myDraft = null;
+  toast('Deleted ' + (p ? p.name : 'profile') + ' and their relations', 'ok');
+}
+function deleteColumbusUser(id){
+  var c = cb(id);
+  state.columbusProfiles = state.columbusProfiles.filter(function(x){ return x.id !== id; });
+  state.relations   = state.relations.filter(function(r){ return r.columbusId !== id; });
+  state.submissions = state.submissions.filter(function(s){ return s.columbusId !== id; });
+  toast('Deleted ' + (c ? c.name : 'user') + '. Their relations were removed with them.', 'ok');
+}
+function approveSubmission(id){
+  var s = byId(state.submissions, id);
+  if (!s) return;
+  s.items.forEach(function(it){
+    var existing = null;
+    state.relations.forEach(function(r){
+      if (r.columbusId === s.columbusId && r.msProfileId === it.msProfileId) existing = r;
+    });
+    if (it.newScore === null) {
+      if (existing) state.relations = state.relations.filter(function(r){ return r !== existing; });
+    } else if (existing) {
+      existing.score = it.newScore;
+      if (it.note) existing.note = it.note;
+      existing.updatedAt = today();
+    } else {
+      state.relations.push({ id:uid('r'), columbusId:s.columbusId, msProfileId:it.msProfileId,
+                             score:it.newScore, note:it.note || '', updatedAt:today() });
+    }
+    var p = ms(it.msProfileId);
+    if (p) p.updatedAt = today();
+  });
+  state.submissions = state.submissions.filter(function(x){ return x.id !== id; });
+  if (s.columbusId === state.session.userId) state.ui.myDraft = null;
+  var person = cb(s.columbusId);
+  toast('Approved ' + s.items.length + ' change' + (s.items.length === 1 ? '' : 's') +
+        ' from ' + (person ? person.name : 'user'), 'ok');
+}
+function submitMyRelations(){
+  var dirty = (state.ui.myDraft || []).filter(draftDirty);
+  if (!dirty.length) return;
+  state.submissions.unshift({
+    id: uid('s'), columbusId: state.session.userId, type: 'edit', submittedAt: today(),
+    items: dirty.map(function(d){
+      return { msProfileId:d.msProfileId, oldScore:d.origScore,
+               newScore: d.removed ? null : d.score, note:d.note };
+    })
+  });
+  dirty.forEach(function(d){ d.pending = true; d.origScore = d.score; d.origNote = d.note; });
+  toast('Submitted ' + dirty.length + ' change' + (dirty.length === 1 ? '' : 's') + ' for approval', 'ok');
+}
+
+/* ============================================================
+   14. EVENTS
+   ============================================================ */
+
+function restoreFocus(){
+  var f = state.ui.focus;
+  if (!f) return;
+  var el = document.getElementById(f.id);
+  if (el) {
+    el.focus();
+    try { el.setSelectionRange(f.pos, f.pos); } catch (err) { /* type=search on some browsers */ }
+  }
+  state.ui.focus = null;
+}
+
+document.addEventListener('submit', function(e){
+  if (e.target.getAttribute('data-action') === 'login') {
+    e.preventDefault();
+    state.session = { userId:'c1', role:'admin' };
+    state.ui.myDraft = null;
+    go('dashboard');
+  }
+});
+
+document.addEventListener('input', function(e){
+  var a = e.target.getAttribute('data-action');
+  if (a === 'ms-search') {
+    state.ui.msSearch = e.target.value;
+    state.ui.focus = { id:'ms-search', pos:e.target.value.length };
+    render();
+  } else if (a === 'cb-search') {
+    state.ui.cbSearch = e.target.value;
+    state.ui.focus = { id:'cb-search', pos:e.target.value.length };
+    render();
+  } else if (a === 'my-note') {
+    var d = draftItem(e.target.getAttribute('data-id'));
+    if (d) { d.note = e.target.value; d.pending = false; }
+  }
+});
+
+document.addEventListener('change', function(e){
+  var el = e.target, a = el.getAttribute('data-action');
+  if (!a) return;
+  if (a === 'set-role') {
+    state.session.role = el.value;
+    toast('Now viewing the app as ' + roleName(el.value));
+    render();
+  }
+  else if (a === 'ms-domain') { state.ui.msDomain = el.value; render(); }
+  else if (a === 'ms-group')  { state.ui.msGroup  = el.value; render(); }
+  else if (a === 'ms-source') { state.ui.msSource = el.value; render(); }
+  else if (a === 'ms-band')   { state.ui.msBand   = el.value; render(); }
+  else if (a === 'cb-dept')   { state.ui.cbDept   = el.value; render(); }
+  else if (a === 'cb-role-filter') { state.ui.cbRole = el.value; render(); }
+  else if (a === 'cb-set-role') {
+    var person = cb(el.getAttribute('data-id'));
+    if (person) { person.role = el.value; toast(person.name + ' is now ' + roleName(el.value), 'ok'); }
+    render();
+  }
+  else if (a === 'my-pick') { state.ui.myPicker = el.value; render(); }
+  else if (a === 'my-note') { render(); }
+});
+
+document.addEventListener('click', function(e){
+  // never let a click inside a form control trigger a row-level action
+  var tag = e.target.tagName;
+  if (tag === 'SELECT' || tag === 'TEXTAREA' || (tag === 'INPUT' && e.target.type !== 'checkbox')) return;
+
+  var el = e.target.closest ? e.target.closest('[data-action]') : null;
+  if (!el) return;
+  var a = el.getAttribute('data-action'), id = el.getAttribute('data-id');
+  if (a === 'login') return;
+
+  switch (a) {
+    /* --- shell --- */
+    case 'logout':
+      state.ui.msDetail = null; state.ui.modal = null; state.ui.myDraft = null;
+      state.session.role = 'admin';
+      renderLayer();
+      location.hash = '#/login';
+      break;
+    case 'close-layer': closeLayer(); break;
+    case 'confirm-yes':
+      var fn = pendingConfirm; closeLayer();
+      if (fn) fn();
+      render();
+      break;
+
+    /* --- Microsoft profiles --- */
+    case 'ms-open':   state.ui.msDetail = id; renderLayer(); break;
+    case 'sort-ms':
+      var k = el.getAttribute('data-key');
+      state.ui.msDir = state.ui.msSort === k ? -state.ui.msDir : 1;
+      state.ui.msSort = k; render(); break;
+    case 'ms-reset':
+      state.ui.msSearch = ''; state.ui.msDomain = ''; state.ui.msGroup = '';
+      state.ui.msSource = ''; state.ui.msBand = ''; render(); break;
+    case 'ms-new':  openModal({ type:'ms' }); break;
+    case 'ms-edit': state.ui.msDetail = null; openModal({ type:'ms', id:id }); break;
+    case 'ms-delete':
+      var mp = ms(id);
+      pendingConfirm = function(){ deleteMsProfile(id); };
+      openModal({ type:'confirm', title:'Delete Microsoft profile', sub:'This cannot be undone in the mockup.',
+        body:'Delete <b>' + esc(mp ? mp.name : '') + '</b>? ' + msStats(id).count +
+             ' registered relation(s) will be removed as well.', okLabel:'Delete', danger:true });
+      break;
+    case 'ms-save':
+      var name = val('f-name');
+      if (!name) { toast('A name is required', 'err'); return; }
+      var doms = Array.prototype.slice.call(document.querySelectorAll('.f-dom:checked')).map(function(x){ return x.value; });
+      var payload = { name:name, title:val('f-title'), email:val('f-email'), group:val('f-group'),
+                      source:val('f-source'), domainIds:doms, notes:val('f-notes'), updatedAt:today() };
+      if (id) { var t = ms(id); for (var key in payload) t[key] = payload[key]; toast('Updated ' + name, 'ok'); }
+      else { payload.id = uid('m'); state.msProfiles.push(payload); toast('Added ' + name, 'ok'); }
+      closeLayer(); render();
+      break;
+
+    /* --- Microsoft domains --- */
+    case 'dom-new':  openModal({ type:'dom' }); break;
+    case 'dom-edit': openModal({ type:'dom', id:id }); break;
+    case 'dom-delete':
+      var used = domainStats(id).profiles;
+      if (used) { toast('Cannot delete: ' + used + ' Microsoft profile(s) are still mapped to this domain', 'err'); return; }
+      pendingConfirm = function(){
+        var d = dom(id);
+        state.domains = state.domains.filter(function(x){ return x.id !== id; });
+        toast('Deleted domain ' + (d ? d.name : ''), 'ok');
+      };
+      openModal({ type:'confirm', title:'Delete domain', sub:'No profiles are mapped to it.',
+        body:'Delete <b>' + esc((dom(id)||{}).name) + '</b>?', okLabel:'Delete', danger:true });
+      break;
+    case 'dom-save':
+      var dn = val('f-dname');
+      if (!dn) { toast('A domain name is required', 'err'); return; }
+      if (id) { var dd = dom(id); dd.name = dn; dd.owner = val('f-downer'); dd.desc = val('f-ddesc'); toast('Updated ' + dn, 'ok'); }
+      else { state.domains.push({ id:uid('d'), name:dn, owner:val('f-downer'), desc:val('f-ddesc') }); toast('Added ' + dn, 'ok'); }
+      closeLayer(); render();
+      break;
+
+    /* --- Columbus profiles --- */
+    case 'sort-cb':
+      var ck = el.getAttribute('data-key');
+      state.ui.cbDir = state.ui.cbSort === ck ? -state.ui.cbDir : 1;
+      state.ui.cbSort = ck; render(); break;
+    case 'cb-reset': state.ui.cbSearch = ''; state.ui.cbDept = ''; state.ui.cbRole = ''; render(); break;
+    case 'cb-toggle': state.ui.cbOpen = state.ui.cbOpen === id ? null : id; render(); break;
+    case 'cb-new':  openModal({ type:'cb' }); break;
+    case 'cb-save':
+      var cn = val('f-cname');
+      if (!cn) { toast('A name is required', 'err'); return; }
+      var roleId = 'standard';
+      ROLES.forEach(function(r){ if (r.name === val('f-crole')) roleId = r.id; });
+      var skills = val('f-cskills').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+      state.columbusProfiles.push({ id:uid('c'), name:cn, title:val('f-ctitle'), department:val('f-cdept'),
+        skills:skills, role:roleId, email:val('f-cmail'), lastSurvey:null });
+      toast('Added ' + cn, 'ok');
+      closeLayer(); render();
+      break;
+    case 'cb-delete':
+      var cp = cb(id);
+      pendingConfirm = function(){ deleteColumbusUser(id); };
+      openModal({ type:'confirm', title:'Delete Columbus user', sub:'This cannot be undone in the mockup.',
+        body:'Delete <b>' + esc(cp ? cp.name : '') + '</b>? ' + cbStats(id).count +
+             ' relation(s) will be removed with them.', okLabel:'Delete', danger:true });
+      break;
+    case 'cb-survey':
+      var sp = cb(id);
+      if (sp) { sp.lastSurvey = today(); toast('Survey sent to ' + sp.name, 'ok'); }
+      render(); break;
+    case 'cb-survey-all':
+      pendingConfirm = function(){
+        state.columbusProfiles.forEach(function(p){ p.lastSurvey = today(); });
+        toast('Survey sent to all ' + state.columbusProfiles.length + ' users', 'ok');
+      };
+      openModal({ type:'confirm', title:'Send survey to everyone', sub:'Mockup - no mail is actually sent.',
+        body:'Send a new relationship survey to all <b>' + state.columbusProfiles.length + '</b> Columbus users?',
+        okLabel:'Send survey' });
+      break;
+
+    /* --- submissions --- */
+    case 'sub-toggle': state.ui.subOpen = state.ui.subOpen === id ? null : id; render(); break;
+    case 'sub-score':
+      var sub = byId(state.submissions, el.getAttribute('data-sub'));
+      if (sub) sub.items[parseInt(el.getAttribute('data-idx'), 10)].newScore = parseInt(el.getAttribute('data-score'), 10);
+      render(); break;
+    case 'sub-approve': approveSubmission(id); render(); break;
+    case 'sub-reject':
+      var rs = byId(state.submissions, id), rp = rs ? cb(rs.columbusId) : null;
+      pendingConfirm = function(){
+        state.submissions = state.submissions.filter(function(x){ return x.id !== id; });
+        toast('Rejected the submission from ' + (rp ? rp.name : 'user'));
+      };
+      openModal({ type:'confirm', title:'Reject submission', sub:'The submitter keeps their current approved scores.',
+        body:'Reject the submission from <b>' + esc(rp ? rp.name : '') + '</b>?', okLabel:'Reject', danger:true });
+      break;
+
+    /* --- my relations --- */
+    case 'my-score':
+      var di = draftItem(id);
+      if (di) { di.score = parseInt(el.getAttribute('data-score'), 10); di.pending = false; }
+      render(); break;
+    case 'my-remove':
+      var dr = draftItem(id);
+      if (dr) { dr.removed = true; dr.pending = false; }
+      render(); break;
+    case 'my-undo':
+      var du = draftItem(id);
+      if (du) du.removed = false;
+      render(); break;
+    case 'my-add':
+      var pick = state.ui.myPicker;
+      if (pick && !draftItem(pick)) {
+        state.ui.myDraft.push({ msProfileId:pick, score:0, note:'', origScore:null, origNote:'', removed:false, pending:false });
+        state.ui.myPicker = '';
+        toast('Added ' + (ms(pick) || {}).name + ' - set a score and submit');
+      }
+      render(); break;
+    case 'my-reset': state.ui.myDraft = null; toast('Discarded your unsaved changes'); render(); break;
+    case 'my-submit': submitMyRelations(); render(); break;
+  }
+});
+
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape' && (state.ui.modal || state.ui.msDetail)) closeLayer();
+});
+
+/* ============================================================
+   15. INIT
+   ============================================================ */
+
+readHash();
+if (state.ui.route !== 'login' && !location.hash) location.hash = '#/login';
+render();
+renderLayer();
+</script>
+</body>
+</html>
