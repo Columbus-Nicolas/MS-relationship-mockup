@@ -341,6 +341,235 @@ td.actions{text-align:right;white-space:nowrap}
   .topbar{padding:0 16px;gap:10px}
   .page{padding:18px}
 }
+
+/* ============================================================
+   ECOSYSTEM MAP DASHBOARD
+   Hub-and-spoke board. Everything is rendered from the ECO
+   config object - nothing about the layout lives in markup.
+   Own token set so the board can be lifted out on its own.
+   ============================================================ */
+
+.eco-root{
+  --e-navy:#16243f;
+  --e-ink:#1e293b;
+  --e-muted:#64748b;
+  --e-surface:#ffffff;
+  --e-canvas:#fdfdfd;
+
+  /* group accents - one per panel, no repeats */
+  --e-violet:#7c4dff; --e-blue:#2563eb;   --e-green:#16a34a;  --e-teal:#0891b2;
+  --e-rose:#be123c;   --e-orange:#ea580c; --e-amber:#d97706;  --e-slate:#475569;
+
+  /* strength scale */
+  --e-s-p3:#15803d; --e-s-p2:#22c55e; --e-s-p1:#86efac;
+  --e-s-0:#94a3b8;
+  --e-s-m1:#f97316; --e-s-m2:#dc2626;
+
+  color:var(--e-ink);
+  font-family:Inter,"Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif;
+}
+
+/* ---------- toolbar (app chrome, deliberately outside the board) ---------- */
+.eco-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.eco-tools .sp{flex:1}
+.eco-chip{
+  display:inline-flex;align-items:center;gap:7px;border:1px solid var(--border-strong);
+  background:#fff;border-radius:999px;padding:6px 13px;font-size:12.5px;cursor:pointer;color:var(--e-ink);
+}
+.eco-chip:hover{border-color:var(--e-navy)}
+.eco-chip[aria-pressed=true]{background:var(--e-navy);border-color:var(--e-navy);color:#fff}
+.eco-tools .note{font-size:11.5px;color:var(--text-faint)}
+
+/* ---------- canvas ---------- */
+.eco-frame{position:relative;width:100%}
+.eco-canvas{
+  background:var(--e-canvas);border:1px solid #eef1f5;border-radius:16px;transform-origin:0 0;
+}
+.eco--ring .eco-canvas{width:1150px;height:862px;position:relative}
+.eco--flow .eco-canvas{width:100%;padding:18px;border-radius:14px}
+
+/* ---------- header strip ---------- */
+.eco-head{max-width:740px}
+.eco--ring .eco-head{position:absolute;left:20px;top:20px}
+.eco-head h3{font-size:26px;line-height:1.15;font-weight:700;color:var(--e-navy);margin:0}
+.eco-head p{margin:7px 0 0;font-size:12px;line-height:1.5;color:var(--e-muted)}
+
+/* ---------- legend ---------- */
+.eco-legend{
+  background:var(--e-surface);border:1px solid #e6eaf0;border-radius:12px;padding:10px 14px 11px;
+  box-shadow:0 2px 10px rgba(22,36,63,.06);
+}
+.eco--ring .eco-legend{position:absolute;right:20px;top:20px;width:298px}
+.eco--flow .eco-legend{margin:14px 0 0;max-width:340px}
+.eco-legend > b{
+  display:block;font-size:9.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--e-muted);margin-bottom:7px;
+}
+.eco-legend ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(3,auto);grid-auto-flow:column;gap:3px 14px}
+.eco-legend li{display:flex;align-items:center;gap:7px;font-size:10px;color:var(--e-muted);line-height:1.35}
+.eco-legend li span{width:10px;height:10px;border-radius:50%;flex:0 0 10px}
+
+/* ---------- connector layer ---------- */
+.eco-links{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+.eco--flow .eco-links{display:none}
+.eco-links line{stroke-width:2;stroke-dasharray:3 5;stroke-linecap:round;opacity:.42;transition:opacity .15s,stroke-width .15s}
+.eco-links line.is-hot{opacity:1;stroke-width:3}
+.eco-links line.is-dim{opacity:.14}
+
+/* ---------- hub ---------- */
+.eco-hub{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+  background:var(--e-navy);color:#fff;box-shadow:0 6px 22px rgba(22,36,63,.28);
+}
+.eco--ring .eco-hub{
+  position:absolute;left:510px;top:301px;width:130px;height:130px;border-radius:50%;z-index:3;
+  outline:9px solid rgba(253,253,253,.92);
+}
+.eco--flow .eco-hub{
+  border-radius:14px;padding:16px;margin-bottom:16px;flex-direction:row;gap:10px;
+  justify-content:flex-start;align-items:baseline;text-align:left;
+}
+.eco-hub b{display:block;font-size:15px;font-weight:700;letter-spacing:.01em}
+.eco-hub span{display:block;font-size:10.5px;font-weight:400;color:#a9bcd4;margin-top:2px}
+.eco--flow .eco-hub b{font-size:18px}
+.eco--flow .eco-hub span{margin-top:0}
+
+/* ---------- group panels ---------- */
+.eco--flow .eco-board{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+.eco--flow .eco-hub{grid-column:1/-1}
+.eco--narrow .eco-board{grid-template-columns:1fr}
+
+.eco-panel{
+  background:color-mix(in srgb,var(--a) 7%,#fff);
+  border:1px solid color-mix(in srgb,var(--a) 22%,#fff);
+  border-radius:14px;padding:12px;z-index:2;transition:opacity .15s;
+}
+.eco--ring .eco-panel{position:absolute}
+.eco--flow .eco-panel{width:auto!important;min-height:0!important;left:auto!important;top:auto!important}
+.eco-panel.is-dim{opacity:.7}
+
+.eco-panel__head{display:flex;align-items:flex-start;gap:9px;margin-bottom:9px}
+.eco-ico{
+  flex:0 0 34px;width:34px;height:34px;border-radius:9px;background:var(--a);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+}
+.eco-ico svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.eco-panel__head h4{margin:1px 0 0;font-size:14px;font-weight:650;line-height:1.2;color:var(--a-dark)}
+.eco-panel__head small{display:block;font-size:10px;font-weight:400;color:var(--e-muted);margin-top:2px;line-height:1.3}
+
+/* ---------- panel bodies ---------- */
+.eco-body{display:grid;gap:7px}
+.eco-body--grid-2{grid-template-columns:1fr 1fr}
+.eco-body--rows,.eco-body--bare{grid-template-columns:1fr}
+
+/* ---------- person card ---------- */
+.pcard{
+  position:relative;background:var(--e-surface);border:1px solid #edf0f4;border-radius:10px;padding:7px;
+  transition:transform .12s,box-shadow .12s,opacity .15s;
+}
+.pcard.is-muted{opacity:.26}
+.pcard:hover{transform:translateY(-1px);box-shadow:0 3px 10px rgba(22,36,63,.10);z-index:5}
+.eco-body--bare .pcard{background:none;border:0;padding:2px 0;box-shadow:none}
+.eco-body--bare .pcard:hover{transform:none;box-shadow:none}
+
+/* stacked variant: avatar top-left, meta beside it, strength below the avatar */
+.eco-body--grid-2 .pcard{display:grid;grid-template-columns:34px 1fr;gap:4px 8px}
+.eco-body--grid-2 .pdot{grid-column:1/-1}
+
+/* row variant: one line, strength pinned far right */
+.eco-body--rows .pcard,.eco-body--bare .pcard{display:flex;align-items:center;gap:8px}
+.eco-body--rows .pcard{padding:4px 7px}
+.eco-body--rows .pav{width:26px;height:26px;flex:0 0 26px;font-size:10px}
+.eco-body--bare .pav{width:30px;height:30px;flex:0 0 30px}
+.eco-body--rows .pmeta,.eco-body--bare .pmeta{flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:0 5px}
+.eco-body--rows .pmid,.eco-body--bare .pmid{display:inline;color:#b8c1cf}
+.eco-body--rows .pdot,.eco-body--bare .pdot{margin-left:auto}
+
+/* below 700px every body becomes the row variant */
+.eco--narrow .eco-body{grid-template-columns:1fr}
+.eco--narrow .eco-body .pcard{display:flex;align-items:center;gap:8px}
+.eco--narrow .eco-body .pmeta{flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:0 5px}
+.eco--narrow .eco-body .pmid{display:inline;color:#b8c1cf}
+.eco--narrow .eco-body .pdot{margin-left:auto;grid-column:auto}
+
+.pav{
+  width:34px;height:34px;border-radius:50%;flex:0 0 34px;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  background:color-mix(in srgb,var(--a) 15%,#fff);color:var(--a-dark);
+  font-size:11px;font-weight:650;letter-spacing:.02em;
+}
+.pav img{width:100%;height:100%;object-fit:cover;display:block}
+.pmeta{min-width:0}
+.pname{display:block;font-size:12px;font-weight:600;line-height:1.2;color:var(--a-dark)}
+.prole{display:block;font-size:10px;font-weight:400;line-height:1.22;color:var(--e-muted)}
+.prole em{font-style:normal;color:#9aa6b6}
+.pmid{display:none}
+
+/* strength indicator */
+.pdot{
+  display:inline-flex;align-items:center;gap:5px;background:none;border:0;padding:1px 2px;margin:0;
+  font:inherit;font-size:10px;color:var(--e-muted);cursor:pointer;border-radius:6px;line-height:1;white-space:nowrap;
+}
+.pdot b{
+  width:16px;height:16px;border-radius:50%;flex:0 0 16px;display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:700;letter-spacing:-.02em;background:var(--d-bg);color:var(--d-fg);
+}
+.pdot--none b{background:#fff;border:1.5px dashed #b9c3d1;color:#93a1b3}
+.pdot:hover{background:#f1f4f8;color:var(--e-ink)}
+
+/* strength picker popover */
+.ppick{
+  position:absolute;left:6px;top:calc(100% - 4px);z-index:40;background:#fff;border:1px solid #dfe4ec;
+  border-radius:10px;box-shadow:0 12px 30px rgba(22,36,63,.20);padding:5px;display:grid;gap:2px;min-width:160px;
+}
+.ppick button{
+  display:flex;align-items:center;gap:8px;width:100%;border:0;background:none;padding:4px 6px;border-radius:6px;
+  font:inherit;font-size:11px;color:var(--e-ink);cursor:pointer;text-align:left;
+}
+.ppick button:hover{background:#f2f5f9}
+.ppick button i{width:14px;height:14px;border-radius:50%;flex:0 0 14px;border:1px solid rgba(0,0,0,.06)}
+.ppick button.is-on{background:#eef2f7;font-weight:600}
+
+/* hover tooltip with the full, untruncated role */
+.ptip{
+  position:absolute;left:8px;bottom:calc(100% + 6px);z-index:30;background:var(--e-navy);color:#fff;
+  font-size:10.5px;line-height:1.35;padding:6px 9px;border-radius:7px;max-width:220px;width:max-content;
+  opacity:0;visibility:hidden;transition:opacity .12s;pointer-events:none;
+}
+.pcard:hover .ptip,.pcard:focus-within .ptip{opacity:1;visibility:visible}
+
+/* ---------- "how we work together" card ---------- */
+.eco-modes{
+  background:var(--e-surface);border:1px solid #e6eaf0;border-radius:14px;padding:12px 14px;
+  box-shadow:0 2px 10px rgba(22,36,63,.06);z-index:2;
+}
+.eco--ring .eco-modes{position:absolute}
+.eco--flow .eco-modes{width:auto!important;min-height:0!important;left:auto!important;top:auto!important}
+.eco-modes > b{display:block;font-size:12px;font-weight:650;color:var(--e-navy);margin-bottom:12px}
+.eco-modes ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.eco-modes li{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.eco-modes li span{
+  width:30px;height:30px;border-radius:50%;background:#f1f4f8;color:#7c8798;
+  display:flex;align-items:center;justify-content:center;
+}
+.eco-modes li span svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.eco-modes li small{font-size:9px;line-height:1.25;color:var(--e-muted)}
+
+/* ---------- print: the board and nothing else ---------- */
+@page{size:landscape;margin:10mm}
+@media print{
+  .sidebar,.topbar,.eco-tools,#toasts,.drawer,.modal{display:none!important}
+  .page{padding:0;max-width:none}
+  .eco-canvas{border:0;background:#fff}
+  .pcard:hover{transform:none;box-shadow:none}
+}
+
+/* ---------- focus + motion ---------- */
+.eco-root :focus-visible{outline:2px solid var(--e-navy);outline-offset:2px;border-radius:6px}
+@media (prefers-reduced-motion:reduce){
+  .eco-root *,.eco-links line{transition:none!important}
+  .pcard:hover{transform:none}
+}
 </style>
 </head>
 <body>
@@ -518,7 +747,8 @@ var state = {
     msSearch:'', msDomain:'', msGroup:'', msSource:'', msBand:'', msSort:'name', msDir:1, msDetail:null,
     cbSearch:'', cbDept:'', cbRole:'', cbSort:'name', cbDir:1, cbOpen:null,
     subOpen:null,
-    myDraft:null, myPicker:''
+    myDraft:null, myPicker:'',
+    ecoFilter:'', ecoPick:null
   }
 };
 
@@ -671,6 +901,7 @@ function render(){
     '<div class="page">' + body + '</div></div></div>';
 
   restoreFocus();
+  ecoMount();
 }
 
 function sidebar(route){
@@ -753,18 +984,465 @@ function viewLogin(){
 }
 
 /* ============================================================
-   6. PAGE 2 - DASHBOARD  (deliberately empty for now)
+   6. PAGE 2 - DASHBOARD  (ecosystem map)
+
+   A hub-and-spoke board: one central organisation node, eight
+   colour-coded stakeholder groups around it, dotted spokes in
+   between. Everything - panels, people, positions, accents,
+   icons - comes out of the ECO config below, so the board can
+   be re-arranged without touching markup or CSS.
    ============================================================ */
 
-function viewDashboard(){
-  return '' +
-  '<div class="page__head"><div><h2>Dashboard</h2>' +
-    '<p>Aggregated overview of the Columbus - Microsoft relationship map.</p></div></div>' +
-  '<div class="placeholder"><b>Dashboard is not part of this mockup yet</b>' +
-    '<p>This page will mirror slide 1 of the Microsoft Denmark stakeholder map deck: ' +
-    'coverage per Microsoft domain, strongest and weakest relationships, and the change over time. ' +
-    'The other pages in the menu are fully clickable.</p></div>';
+/* Named slots on the ring, in design units on a 1150 x 700 canvas.
+   Panels declare a slot name; nothing positions itself. */
+var ECO_SLOTS = {
+  'left-1':        { x: 20, y:124, w:388, h:222 },
+  'left-2':        { x: 20, y:378, w:388, h:222 },
+  'centre-top':    { x:425, y:104, w:300, h:158 },
+  'centre-bottom': { x:425, y:470, w:300, h:171 },
+  'right-1':       { x:742, y:124, w:388, h:222 },
+  'right-2':       { x:742, y:378, w:388, h:222 },
+  'bottom-1':      { x: 20, y:656, w:356, h:183 },
+  'bottom-2':      { x:397, y:656, w:356, h:183 },
+  'bottom-3':      { x:774, y:656, w:356, h:183 }
+};
+var ECO_W = 1150, ECO_H = 862;
+var ECO_HUB = { x:575, y:366, r:65 };   /* centre + radius, in design units */
+
+/* Group accents. The dark shade is what titles and names use, so the
+   text keeps AA contrast against the 7% tint behind it. */
+var ECO_ACCENTS = {
+  violet:{ c:'#7c4dff', d:'#5b21b6' }, blue:  { c:'#2563eb', d:'#1d4ed8' },
+  green: { c:'#16a34a', d:'#15803d' }, teal:  { c:'#0891b2', d:'#0e7490' },
+  rose:  { c:'#be123c', d:'#9f1239' }, orange:{ c:'#ea580c', d:'#c2410c' },
+  amber: { c:'#d97706', d:'#b45309' }, slate: { c:'#475569', d:'#334155' }
+};
+
+/* The -3..+3 scale. fg is picked per step so the number on the dot stays readable. */
+var ECO_STRENGTH = [
+  { v: 3, bg:'#15803d', fg:'#ffffff', label:'Strong' },
+  { v: 2, bg:'#22c55e', fg:'#062e12', label:'Good' },
+  { v: 1, bg:'#86efac', fg:'#062e12', label:'Mildly positive' },
+  { v: 0, bg:'#94a3b8', fg:'#0f172a', label:'Neutral' },
+  { v:-1, bg:'#f97316', fg:'#2b1000', label:'Mildly negative' },
+  { v:-2, bg:'#dc2626', fg:'#ffffff', label:'Negative' },
+  { v:-3, bg:'#dc2626', fg:'#ffffff', label:'Negative' }
+];
+function ecoLevel(v){
+  for (var i=0;i<ECO_STRENGTH.length;i++){ if (ECO_STRENGTH[i].v === v) return ECO_STRENGTH[i]; }
+  return null;
 }
+
+/* Line icons, drawn inline so the file stays dependency-free. */
+var ECO_ICONS = {
+  'trending-up':'<polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/>',
+  'cpu':'<rect x="7" y="7" width="10" height="10" rx="2"/><path d="M10 3v4M14 3v4M10 17v4M14 17v4M3 10h4M3 14h4M17 10h4M17 14h4"/>',
+  'link':'<path d="M10 14a4 4 0 0 0 6 0l3-3a4 4 0 1 0-6-6l-1 1"/><path d="M14 10a4 4 0 0 0-6 0l-3 3a4 4 0 1 0 6 6l1-1"/>',
+  'briefcase':'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 12h18"/>',
+  'heart':'<path d="M12 20S5 15.5 5 11a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 4.5-7 9-7 9z"/>',
+  'crown':'<path d="M4 18h16M4 18l-1-9 5 3.5L12 5l4 7.5L21 9l-1 9z"/>',
+  'gift':'<rect x="3" y="9" width="18" height="11" rx="2"/><path d="M3 13h18M12 9v11M12 9S9.6 9 8.6 8a2 2 0 0 1 3-2.7C12.5 6 12 9 12 9zM12 9s2.4 0 3.4-1a2 2 0 0 0-3-2.7C11.5 6 12 9 12 9z"/>',
+  'users':'<circle cx="9" cy="9" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/><path d="M16 7a3 3 0 0 1 0 6M18 20a6 6 0 0 0-2.2-4.4"/>',
+  'target':'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/>',
+  'coins':'<path d="M12 3v18M16.5 7.5A3.5 3.5 0 0 0 13 5h-2a3 3 0 0 0 0 6h2a3 3 0 0 1 0 6h-2a3.5 3.5 0 0 1-3.5-2.5"/>',
+  'wrench':'<path d="M14.5 3.5a5 5 0 0 0-4.1 7.6L4 17.5 6.5 20l6.4-6.4a5 5 0 0 0 7.6-4.1l-3.1 3.1-3-.6-.6-3z"/>',
+  'flag':'<path d="M5 21V4M5 5h11l-1.6 3.5L16 12H5"/>',
+  'smile':'<circle cx="12" cy="12" r="9"/><path d="M8.5 14a4.5 4.5 0 0 0 7 0"/><path d="M9 9.5h.01M15 9.5h.01"/>'
+};
+function ecoIcon(name){
+  return '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+         (ECO_ICONS[name] || ECO_ICONS.users) + '</svg>';
+}
+
+/* ------------------------------------------------------------
+   The board config. This is the whole data model from the brief:
+   org, meta, groups[] (with people[]) and collaborationModes[].
+   ------------------------------------------------------------ */
+var ECO = {
+  org:  { name:'Columbus', domain:'Data & AI' },
+  meta: {
+    subtitle:'Who we know at Microsoft Denmark, and how well',
+    updated:'August 2026', version:'v0.3 draft', owner:'owner not yet assigned'
+  },
+  groups: [
+    { id:'azure-ai-sales', title:'Azure & AI', subtitle:'Sales', accent:'violet',
+      icon:'trending-up', layout:'grid-2', position:'left-1', connect:true, people:[
+        { name:'Astrid Lindqvist', role:'Country Lead, Data & AI',      avatar:null, strength: 3, tentative:false },
+        { name:'Emil Krogh',       role:'Data & AI Sales Manager',      avatar:null, strength: 2, tentative:false },
+        { name:'Kasper Vinther',   role:'Solution Specialist, Fabric',  avatar:null, strength: 1, tentative:false },
+        { name:'Sigrid Holm',      role:'Azure Infrastructure Lead',    avatar:null, strength: 0, tentative:false }
+      ] },
+
+    { id:'technical', title:'Technical & Architecture', subtitle:'CSA and GBB community', accent:'blue',
+      icon:'cpu', layout:'grid-2', position:'left-2', connect:true, people:[
+        { name:'Nanna Bjerre',     role:'Cloud Solution Architect, AI',    avatar:null, strength: 2, tentative:false },
+        { name:'Tobias Lund',      role:'Cloud Solution Architect, Azure', avatar:null, strength: 1, tentative:false },
+        { name:'Ida Munk',         role:'Copilot Adoption Specialist',     avatar:null, strength: 1, tentative:false },
+        { name:'Frederikke Als',   role:'Migration Specialist',            avatar:null, strength: null, tentative:false }
+      ] },
+
+    { id:'partner', title:'Partner Management', subtitle:'Our formal route into Microsoft', accent:'green',
+      icon:'link', layout:'rows', position:'centre-top', connect:true, people:[
+        { name:'Andreas Bruun',    role:'Partner Development Manager', avatar:null, strength: 3, tentative:false },
+        { name:'Maja Toft',        role:'Partner Marketing Manager',   avatar:null, strength: 1, tentative:false }
+      ] },
+
+    { id:'industry', title:'Industry & Segment Sales', subtitle:'Small, medium & corporate segment', accent:'teal',
+      icon:'briefcase', layout:'grid-2', position:'right-1', connect:true, people:[
+        { name:'Mikkel Storm',        role:'Business Applications Director',       avatar:null, strength: 2, tentative:false },
+        { name:'Josefine Rask',       role:'Account Executive, Business Apps',     avatar:null, strength: 1, tentative:false },
+        { name:'Camilla Vestergaard', role:'D365 Finance & Operations Specialist', avatar:null, strength: 0, tentative:false },
+        { name:'Sara Norgaard',       role:'Account Executive, Public Sector',     avatar:null, strength:-1, tentative:false }
+      ] },
+
+    { id:'customer-success', title:'Customer Success', subtitle:'CSU & FastTrack', accent:'rose',
+      icon:'heart', layout:'grid-2', position:'right-2', connect:true, people:[
+        { name:'Oliver Bak',       role:'Power Platform Specialist',           avatar:null, strength: 2, tentative:false },
+        { name:'Villads Hoeg',     role:'Modern Work Lead',                    avatar:null, strength: 1, tentative:false },
+        { name:'Rasmus Dahl',      role:'Security Solution Lead',              avatar:null, strength:-2, tentative:false },
+        { name:'Laura Kjaer',      role:'Security Specialist, Entra & Purview', avatar:null, strength: null, tentative:false }
+      ] },
+
+    { id:'leadership', title:'Leadership', subtitle:'Microsoft Denmark', accent:'orange',
+      icon:'crown', layout:'rows', position:'centre-bottom', connect:true, people:[
+        { name:'Henrik Falk',      role:'Public Sector Director',    avatar:null, strength: 0, tentative:false },
+        { name:'Trine Bak-Hansen', role:'General Manager, Denmark',  avatar:null, strength: null, tentative:true }
+      ] },
+
+    { id:'funding', title:'Funding & Programs', subtitle:null, accent:'amber',
+      icon:'gift', layout:'bare', position:'bottom-1', connect:false, people:[
+        { name:'Thomas Ejlersen',  role:'Co-sell & Incentives Manager', avatar:null, strength: 2, tentative:false },
+        { name:'Simon Overgaard',  role:'MCI & partner funding',        avatar:null, strength: null, tentative:false },
+        { name:'Line Krabbe',      role:'ECIF / AMM programme',         avatar:null, strength: null, tentative:true }
+      ] },
+
+    { id:'wider', title:'Wider network', subtitle:null, accent:'slate',
+      icon:'users', layout:'bare', position:'bottom-2', connect:false, people:[
+        { name:'Pernille Dam',     role:'Marketplace & cloud GTM',     avatar:null, strength: 1, tentative:false },
+        { name:'Jonas Bruhn',      role:'ISV partner lead',            avatar:null, strength: 0, tentative:false },
+        { name:'Martin Steens',    role:'Alumni, now at a customer',   avatar:null, strength: null, tentative:true }
+      ] }
+  ],
+  collaborationModes: [
+    { icon:'target',    label:'Strategic alignment' },
+    { icon:'coins',     label:'Co-sell & pipeline' },
+    { icon:'wrench',    label:'Technical collaboration' },
+    { icon:'flag',      label:'Program & funding' },
+    { icon:'smile',     label:'Customer success' }
+  ]
+};
+
+/* ------------------------------------------------------------
+   Rendering
+   ------------------------------------------------------------ */
+
+function ecoSlotStyle(pos){
+  var s = ECO_SLOTS[pos];
+  if (!s) return '';
+  /* min-height rather than height: a panel grows instead of truncating text */
+  return 'left:' + s.x + 'px;top:' + s.y + 'px;width:' + s.w + 'px;min-height:' + s.h + 'px;';
+}
+
+/* One dotted spoke per connected panel, in the group's own accent.
+   The geometry is filled in by ecoDrawLinks() once the panels have been laid
+   out, so a spoke still lands on the right edge when a panel grows. */
+function ecoConnectors(){
+  var lines = ECO.groups.map(function(g){
+    if (!g.connect) return '';
+    var a = ECO_ACCENTS[g.accent] || ECO_ACCENTS.slate;
+    var pt = ecoSpoke(ECO_SLOTS[g.position]);
+    return '<line data-link="' + g.id + '" x1="' + pt[0] + '" y1="' + pt[1] +
+           '" x2="' + pt[2] + '" y2="' + pt[3] + '" stroke="' + a.c + '"/>';
+  }).join('');
+
+  return '<svg class="eco-links" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + ECO_W + ' ' + ECO_H +
+         '" aria-hidden="true">' + lines + '</svg>';
+}
+
+/* Hub edge -> nearest edge of a box, as [x1,y1,x2,y2]. */
+function ecoSpoke(box){
+  if (!box) return [0,0,0,0];
+  var tx = Math.max(box.x, Math.min(ECO_HUB.x, box.x + box.w));
+  var ty = Math.max(box.y, Math.min(ECO_HUB.y, box.y + box.h));
+  var dx = tx - ECO_HUB.x, dy = ty - ECO_HUB.y;
+  var len = Math.sqrt(dx*dx + dy*dy) || 1;
+  var ux = dx/len, uy = dy/len;
+  return [
+    (ECO_HUB.x + ux * (ECO_HUB.r + 11)).toFixed(1),
+    (ECO_HUB.y + uy * (ECO_HUB.r + 11)).toFixed(1),
+    (tx - ux * 4).toFixed(1),
+    (ty - uy * 4).toFixed(1)
+  ];
+}
+
+/* Re-aim every spoke at where its panel actually ended up. */
+function ecoDrawLinks(){
+  var root = document.getElementById('eco');
+  if (!root || root.className.indexOf('eco--ring') === -1) return;
+  var links = root.querySelectorAll('[data-link]');
+  for (var i = 0; i < links.length; i++) {
+    var el = links[i];
+    var p = root.querySelector('[data-panel="' + el.getAttribute('data-link') + '"]');
+    if (!p) continue;
+    var pt = ecoSpoke({ x:p.offsetLeft, y:p.offsetTop, w:p.offsetWidth, h:p.offsetHeight });
+    el.setAttribute('x1', pt[0]); el.setAttribute('y1', pt[1]);
+    el.setAttribute('x2', pt[2]); el.setAttribute('y2', pt[3]);
+  }
+}
+
+function ecoLegend(){
+  var order = [3, 2, 1, 0, -1, -2];
+  var items = order.map(function(v){
+    var l = ecoLevel(v);
+    var text = v === -2 ? '-2 to -3 Negative' : (v > 0 ? '+' + v : String(v)) + ' ' + l.label;
+    return '<li><span style="background:' + l.bg + '"></span>' + esc(text) + '</li>';
+  }).join('');
+  return '<div class="eco-legend"><b>Relationship strength</b><ul>' + items + '</ul></div>';
+}
+
+/* One person. The same markup in every layout - CSS decides whether it
+   reads as a stacked card, a full-width row or a bare line. */
+function ecoPerson(g, p, i){
+  var key = g.id + ':' + i;
+  var lvl = p.strength === null || p.strength === undefined ? null : ecoLevel(p.strength);
+  var av  = p.avatar
+    ? '<span class="pav"><img src="' + esc(p.avatar) + '" alt=""/></span>'
+    : '<span class="pav">' + esc(initials(p.name)) + '</span>';
+
+  var dotStyle = lvl ? 'style="--d-bg:' + lvl.bg + ';--d-fg:' + lvl.fg + '"' : '';
+  var dotFace  = lvl ? (p.strength > 0 ? '+' + p.strength : String(p.strength)) : '?';
+  var dotText  = lvl ? lvl.label : 'Not scored';
+  var dot =
+    '<button type="button" class="pdot' + (lvl ? '' : ' pdot--none') + '" ' + dotStyle +
+      ' data-action="eco-dot" data-id="' + esc(key) + '" aria-haspopup="true"' +
+      ' aria-expanded="' + (state.ui.ecoPick === key ? 'true' : 'false') + '"' +
+      ' aria-label="' + esc(p.name + ' - relationship strength: ' + dotText + '. Change') + '">' +
+      '<b>' + dotFace + '</b>' + esc(dotText) + '</button>';
+
+  var pick = state.ui.ecoPick === key ? ecoPicker(key, p.strength) : '';
+
+  /* dim rather than hide, so the shape of the map never changes */
+  var muted = '';
+  if (state.ui.ecoFilter === 'unscored' && lvl) muted = ' is-muted';
+  if (state.ui.ecoFilter === 'strong' && !(p.strength >= 2)) muted = ' is-muted';
+
+  var role = esc(p.role) + (p.tentative ? ' <em>(to confirm)</em>' : '');
+
+  return '<div class="pcard' + muted + '" data-person="' + esc(key) + '">' +
+    av +
+    '<span class="pmeta"><b class="pname">' + esc(p.name) + '</b>' +
+      '<span class="pmid">&middot;</span><span class="prole">' + role + '</span></span>' +
+    dot +
+    '<span class="ptip" role="tooltip">' + esc(p.name) + ' &middot; ' + role + '</span>' +
+    pick +
+  '</div>';
+}
+
+function ecoPicker(key, current){
+  var opts = ECO_STRENGTH.map(function(l){
+    var on = current === l.v ? ' is-on' : '';
+    var face = l.v > 0 ? '+' + l.v : String(l.v);
+    return '<button type="button" class="' + on.slice(1) + '" data-action="eco-set" data-id="' + esc(key) +
+           '" data-v="' + l.v + '"><i style="background:' + l.bg + '"></i>' + face + ' ' + esc(l.label) + '</button>';
+  }).join('');
+  var none = '<button type="button" class="' + (current === null || current === undefined ? 'is-on' : '') +
+             '" data-action="eco-set" data-id="' + esc(key) + '" data-v="none">' +
+             '<i style="background:#fff;border:1.5px dashed #b9c3d1"></i>Not scored</button>';
+  return '<div class="ppick">' + opts + none + '</div>';
+}
+
+function ecoPanel(g){
+  var a = ECO_ACCENTS[g.accent] || ECO_ACCENTS.slate;
+  var people = g.people.map(function(p, i){ return ecoPerson(g, p, i); }).join('');
+  var sub = g.subtitle ? '<small>' + esc(g.subtitle) + '</small>' : '';
+
+  return '<section class="eco-panel" data-panel="' + esc(g.id) + '" aria-labelledby="ecoh-' + esc(g.id) + '"' +
+      ' style="--a:' + a.c + ';--a-dark:' + a.d + ';' + ecoSlotStyle(g.position) + '">' +
+    '<div class="eco-panel__head"><span class="eco-ico">' + ecoIcon(g.icon) + '</span>' +
+      '<div><h4 id="ecoh-' + esc(g.id) + '">' + esc(g.title) + '</h4>' + sub + '</div></div>' +
+    '<div class="eco-body eco-body--' + esc(g.layout) + '">' + people + '</div>' +
+  '</section>';
+}
+
+function ecoModes(){
+  var items = ECO.collaborationModes.map(function(m){
+    return '<li><span>' + ecoIcon(m.icon) + '</span><small>' + esc(m.label) + '</small></li>';
+  }).join('');
+  return '<div class="eco-modes" style="' + ecoSlotStyle('bottom-3') + '">' +
+    '<b>How we work together</b><ul>' + items + '</ul></div>';
+}
+
+function viewDashboard(){
+  var f = state.ui.ecoFilter;
+  var subtitle = ECO.meta.subtitle + ' · Updated ' + ECO.meta.updated +
+                 ' · ' + ECO.meta.version + ' · ' + ECO.meta.owner;
+
+  var tools =
+    '<div class="eco-tools">' +
+      '<button type="button" class="eco-chip" data-action="eco-filter" data-v="unscored" aria-pressed="' +
+        (f === 'unscored') + '"><i></i>Only unscored</button>' +
+      '<button type="button" class="eco-chip" data-action="eco-filter" data-v="strong" aria-pressed="' +
+        (f === 'strong') + '"><i></i>Only +2 and stronger</button>' +
+      '<span class="sp"></span>' +
+      '<span class="note">Click a strength dot to score a relationship</span>' +
+      '<button type="button" class="eco-chip" data-action="eco-export">Export SVG</button>' +
+      '<button type="button" class="eco-chip" data-action="eco-print">Print</button>' +
+    '</div>';
+
+  var board =
+    '<div class="eco-board">' +
+      '<div class="eco-hub"><b>' + esc(ECO.org.name) + '</b><span>' + esc(ECO.org.domain) + '</span></div>' +
+      ECO.groups.map(ecoPanel).join('') +
+      ecoModes() +
+    '</div>';
+
+  return '<div class="eco-root eco--ring" id="eco">' + tools +
+    '<div class="eco-frame" id="ecoframe"><div class="eco-canvas" id="ecocanvas">' +
+      '<div class="eco-head"><h3>' + esc(ECO.org.name + ' · ' + ECO.org.domain) + '</h3>' +
+        '<p>' + esc(subtitle) + '</p></div>' +
+      ecoLegend() +
+      ecoConnectors() +
+      board +
+    '</div></div></div>';
+}
+
+/* ------------------------------------------------------------
+   Fit the fixed-ratio canvas to whatever width it has been given,
+   and drop to the reflowed layouts on narrow screens.
+   ------------------------------------------------------------ */
+var ecoRO = null, ecoLastW = -1;
+
+function ecoFit(){
+  var root = document.getElementById('eco');
+  if (!root) return;
+  var frame = document.getElementById('ecoframe');
+  var canvas = document.getElementById('ecocanvas');
+  var w = frame.clientWidth;
+  if (w === ecoLastW) return;            // our own height change must not re-trigger this
+  ecoLastW = w;
+
+  if (w < 700)       root.className = 'eco-root eco--flow eco--narrow';
+  else if (w < 1100) root.className = 'eco-root eco--flow';
+  else               root.className = 'eco-root eco--ring';
+
+  if (w < 1100) { canvas.style.transform = ''; frame.style.height = ''; return; }
+  var k = Math.min(w / ECO_W, 1.25);
+  canvas.style.transform = 'scale(' + k + ')';
+  frame.style.height = Math.round(ECO_H * k) + 'px';
+  ecoDrawLinks();
+}
+
+function ecoMount(){
+  if (ecoRO) { ecoRO.disconnect(); ecoRO = null; }
+  var frame = document.getElementById('ecoframe');
+  if (!frame) return;
+  ecoLastW = -1;
+  ecoFit();
+  ecoDrawLinks();
+  if (window.ResizeObserver) { ecoRO = new ResizeObserver(ecoFit); ecoRO.observe(frame); }
+}
+window.addEventListener('resize', ecoFit);
+
+/* ------------------------------------------------------------
+   Hover: brighten this panel's spoke, dim everything else.
+   ------------------------------------------------------------ */
+function ecoHover(id){
+  var root = document.getElementById('eco');
+  if (!root) return;
+  var panels = root.querySelectorAll('[data-panel]');
+  var links  = root.querySelectorAll('[data-link]');
+  var i;
+  for (i=0;i<panels.length;i++){
+    panels[i].classList.toggle('is-dim', !!id && panels[i].getAttribute('data-panel') !== id);
+  }
+  for (i=0;i<links.length;i++){
+    var mine = links[i].getAttribute('data-link') === id;
+    links[i].classList.toggle('is-hot', !!id && mine);
+    links[i].classList.toggle('is-dim', !!id && !mine);
+  }
+}
+
+/* ------------------------------------------------------------
+   Export. The board is plain HTML, so it is wrapped in an SVG
+   foreignObject with its own stylesheet inlined; PNG is that SVG
+   painted onto a canvas, with a fall back to SVG if the browser
+   refuses to export a tainted canvas.
+   ------------------------------------------------------------ */
+function ecoCss(){
+  var out = [], sheets = document.styleSheets, i, j;
+  for (i=0;i<sheets.length;i++){
+    var rules;
+    try { rules = sheets[i].cssRules; } catch (err) { continue; }
+    if (!rules) continue;
+    for (j=0;j<rules.length;j++){
+      var t = rules[j].cssText || '';
+      if (/\.eco|\.pcard|\.pdot|\.pav|\.pname|\.prole|\.pmeta|\.pmid|\.ptip|\.ppick/.test(t)) out.push(t);
+    }
+  }
+  return '*{box-sizing:border-box;margin:0}' + out.join('\n');
+}
+
+function ecoSvgString(){
+  var canvas = document.getElementById('ecocanvas');
+  var clone = canvas.cloneNode(true);
+  clone.style.transform = '';
+  var picks = clone.querySelectorAll('.ppick, .ptip');
+  for (var i=0;i<picks.length;i++) picks[i].parentNode.removeChild(picks[i]);
+  var dim = clone.querySelectorAll('.is-dim, .is-hot');
+  for (i=0;i<dim.length;i++) dim[i].classList.remove('is-dim', 'is-hot');
+
+  return '<svg xmlns="http://www.w3.org/2000/svg" width="' + ECO_W + '" height="' + ECO_H +
+      '" viewBox="0 0 ' + ECO_W + ' ' + ECO_H + '">' +
+      '<foreignObject x="0" y="0" width="100%" height="100%">' +
+      '<div xmlns="http://www.w3.org/1999/xhtml" class="eco-root eco--ring">' +
+      '<style>' + ecoCss() + '</style>' + clone.outerHTML +
+      '</div></foreignObject></svg>';
+}
+
+function ecoDownload(blob, filename){
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+}
+
+/* SVG only. Rasterising to PNG in the browser means painting the board into a
+   canvas through an SVG foreignObject, and every engine taints the canvas when
+   you do that, so toBlob() is refused - it needs a rendering library we do not
+   want in a single-file mockup. The SVG is a real vector file; Print gives a
+   PDF for anyone who wants one. */
+function ecoExport(){
+  ecoDownload(new Blob([ecoSvgString()], { type:'image/svg+xml;charset=utf-8' }), 'ecosystem-map.svg');
+  toast('Board exported as SVG', 'ok');
+}
+
+/* Print the board on its own, scaled to a landscape page. */
+function ecoPrint(){
+  var root = document.getElementById('eco');
+  var frame = document.getElementById('ecoframe');
+  var canvas = document.getElementById('ecocanvas');
+  if (!root) return;
+  var before = { cls:root.className, tf:canvas.style.transform, h:frame.style.height };
+
+  root.className = 'eco-root eco--ring';
+  var k = 1040 / ECO_W;                       // A4 landscape at 96dpi, 10mm margins
+  canvas.style.transform = 'scale(' + k + ')';
+  frame.style.height = Math.round(ECO_H * k) + 'px';
+  ecoDrawLinks();
+
+  var restore = function(){
+    root.className = before.cls;
+    canvas.style.transform = before.tf;
+    frame.style.height = before.h;
+    ecoLastW = -1; ecoFit(); ecoDrawLinks();
+    window.removeEventListener('afterprint', restore);
+  };
+  window.addEventListener('afterprint', restore);
+  window.print();
+  restore();
+}
+
 /* ------------------------------------------------------------
    PAGE 2b - GRAPHIC VIEW  (deliberately empty for now)
    ------------------------------------------------------------ */
@@ -1362,6 +2040,21 @@ function submitMyRelations(){
   toast('Submitted ' + dirty.length + ' change' + (dirty.length === 1 ? '' : 's') + ' for approval', 'ok');
 }
 
+/* Set (or clear) one person's relationship strength on the ecosystem map. */
+function ecoSetStrength(key, v){
+  var parts = String(key).split(':'), g = null, i;
+  for (i = 0; i < ECO.groups.length; i++) { if (ECO.groups[i].id === parts[0]) g = ECO.groups[i]; }
+  if (!g) return;
+  var p = g.people[Number(parts[1])];
+  if (!p) return;
+  p.strength = v === 'none' ? null : Number(v);
+  state.ui.ecoPick = null;
+  render();
+  toast(p.strength === null
+    ? p.name + ' is no longer scored'
+    : p.name + ' set to ' + (p.strength > 0 ? '+' : '') + p.strength + ' - ' + ecoLevel(p.strength).label, 'ok');
+}
+
 /* ============================================================
    14. EVENTS
    ============================================================ */
@@ -1426,6 +2119,12 @@ document.addEventListener('change', function(e){
 });
 
 document.addEventListener('click', function(e){
+  // an open strength picker closes on any click outside itself
+  if (state.ui.ecoPick && e.target.closest &&
+      !e.target.closest('.ppick') && !e.target.closest('[data-action="eco-dot"]')) {
+    state.ui.ecoPick = null; render();
+  }
+
   // never let a click inside a form control trigger a row-level action
   var tag = e.target.tagName;
   if (tag === 'SELECT' || tag === 'TEXTAREA' || (tag === 'INPUT' && e.target.type !== 'checkbox')) return;
@@ -1449,6 +2148,19 @@ document.addEventListener('click', function(e){
       if (fn) fn();
       render();
       break;
+
+    /* --- dashboard: ecosystem map --- */
+    case 'eco-dot':
+      state.ui.ecoPick = state.ui.ecoPick === id ? null : id;
+      render(); break;
+    case 'eco-set':
+      ecoSetStrength(id, el.getAttribute('data-v')); break;
+    case 'eco-filter':
+      var fv = el.getAttribute('data-v');
+      state.ui.ecoFilter = state.ui.ecoFilter === fv ? '' : fv;
+      render(); break;
+    case 'eco-export': ecoExport(); break;
+    case 'eco-print':  ecoPrint();  break;
 
     /* --- Microsoft profiles --- */
     case 'ms-open':   state.ui.msDetail = id; renderLayer(); break;
@@ -1585,7 +2297,20 @@ document.addEventListener('click', function(e){
 });
 
 document.addEventListener('keydown', function(e){
-  if (e.key === 'Escape' && (state.ui.modal || state.ui.msDetail)) closeLayer();
+  if (e.key !== 'Escape') return;
+  if (state.ui.ecoPick) { state.ui.ecoPick = null; render(); return; }
+  if (state.ui.modal || state.ui.msDetail) closeLayer();
+});
+
+// Hovering a group panel highlights its spoke and dims the rest of the board.
+var ecoHot = null;
+document.addEventListener('mouseover', function(e){
+  if (state.ui.route !== 'dashboard' || !e.target.closest) return;
+  var p = e.target.closest('[data-panel]');
+  var id = p ? p.getAttribute('data-panel') : null;
+  if (id === ecoHot) return;
+  ecoHot = id;
+  ecoHover(id);
 });
 
 /* ============================================================
