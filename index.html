@@ -633,36 +633,37 @@ var state = {
 
   // Domains live separately from the profiles so the mapping is easy to restructure.
   domains: [
-    { id:'d1', name:'Data & AI',            owner:'Mette Kirkegaard', desc:'Microsoft Fabric, Azure AI Foundry, Copilot and analytics workloads.' },
-    { id:'d2', name:'Azure Infrastructure', owner:'Jonas Ravn',       desc:'Migration, landing zones, hybrid and platform engineering.' },
-    { id:'d3', name:'Business Applications',owner:'Sofie Bang',       desc:'Dynamics 365, Power Platform and ERP/CRM motions.' },
-    { id:'d4', name:'Modern Work',          owner:'Anders Holmgaard', desc:'Microsoft 365, Teams and Copilot for Microsoft 365 adoption.' },
-    { id:'d5', name:'Security',             owner:'Rikke Dalsgaard',  desc:'Defender, Entra, Purview and compliance.' },
-    { id:'d6', name:'Partner & Channel',    owner:'Mette Kirkegaard', desc:'Partner development, co-sell motions and incentives.' },
-    { id:'d7', name:'Public Sector',        owner:'Sofie Bang',       desc:'Government, municipalities and healthcare accounts.' }
+    { id:'d1', name:'Azure & AI - Sales',             owner:'Mette Kirkegaard', desc:'Cloud & AI platform sales, Azure and Data & AI sales specialists.' },
+    { id:'d2', name:'Strategic & Partner Leadership', owner:'Mette Kirkegaard', desc:'Enterprise partner solutions and partner development - our formal route in.' },
+    { id:'d3', name:'Azure & AI - Specialist',        owner:'Jonas Ravn',       desc:'Cloud solution architects, AI solution engineers and Azure specialists.' },
+    { id:'d4', name:'Business Applications',          owner:'Sofie Bang',       desc:'Dynamics 365, Power Platform and Copilot motions.' },
+    { id:'d5', name:'SMC & SMB',                      owner:'Anders Holmgaard', desc:'Small, medium and corporate segment across DK / NO.' },
+    { id:'d6', name:'Fabric Partner Success',         owner:'Rikke Dalsgaard',  desc:'Microsoft Fabric partner ecosystem and joint success motions.' },
+    { id:'d7', name:'Funding & Programs',             owner:'Sofie Bang',       desc:'Co-sell, incentives, MCI and Azure Accelerate deployment funding.' },
+    { id:'d8', name:'Wider network',                  owner:'Jonas Ravn',       desc:'Contacts we hold but have not yet placed against a domain.' }
   ],
 
   msProfiles: [
-    { id:'m1',  name:'Astrid Lindqvist',    title:'Country Lead, Data & AI',              domainIds:['d1'],      group:'Leadership',           source:'Event',         email:'astrid.lindqvist@microsoft.example',    notes:'Sponsors the Danish Data & AI agenda. Prefers quarterly business reviews.', updatedAt:'2026-06-11' },
-    { id:'m2',  name:'Kasper Vinther',      title:'Solution Specialist, Fabric',          domainIds:['d1'],      group:'Technical Specialist', source:'Survey',        email:'kasper.vinther@microsoft.example',      notes:'Very hands-on. Happy to co-present at customer workshops.',                updatedAt:'2026-07-02' },
-    { id:'m3',  name:'Nanna Bjerre',        title:'Cloud Solution Architect, AI',         domainIds:['d1','d2'], group:'Technical Specialist', source:'Survey',        email:'nanna.bjerre@microsoft.example',        notes:'Split between AI and platform engagements.',                               updatedAt:'2026-05-28' },
+    { id:'m1',  name:'Astrid Lindqvist',    title:'Country Lead, Data & AI',              domainIds:['d1','d2'], group:'Leadership',           source:'Event',         email:'astrid.lindqvist@microsoft.example',    notes:'Sponsors the Danish Data & AI agenda. Prefers quarterly business reviews.', updatedAt:'2026-06-11' },
+    { id:'m2',  name:'Kasper Vinther',      title:'Solution Specialist, Fabric',          domainIds:['d6'],      group:'Technical Specialist', source:'Survey',        email:'kasper.vinther@microsoft.example',      notes:'Very hands-on. Happy to co-present at customer workshops.',                updatedAt:'2026-07-02' },
+    { id:'m3',  name:'Nanna Bjerre',        title:'Cloud Solution Architect, AI',         domainIds:['d3'],      group:'Technical Specialist', source:'Survey',        email:'nanna.bjerre@microsoft.example',        notes:'Split between AI and platform engagements.',                               updatedAt:'2026-05-28' },
     { id:'m4',  name:'Emil Krogh',          title:'Data & AI Sales Manager',              domainIds:['d1'],      group:'Account Team',         source:'LinkedIn',      email:'emil.krogh@microsoft.example',          notes:'Owns the Data & AI number for the enterprise segment.',                    updatedAt:'2026-06-30' },
-    { id:'m5',  name:'Sigrid Holm',         title:'Azure Infrastructure Lead',            domainIds:['d2'],      group:'Leadership',           source:'Event',         email:'sigrid.holm@microsoft.example',         notes:'New in role since March 2026 - relation needs rebuilding.',                updatedAt:'2026-07-14' },
-    { id:'m6',  name:'Tobias Lund',         title:'Cloud Solution Architect, Azure',      domainIds:['d2'],      group:'Technical Specialist', source:'Survey',        email:'tobias.lund@microsoft.example',         notes:'Runs joint architecture design sessions with our practice.',               updatedAt:'2026-07-08' },
-    { id:'m7',  name:'Frederikke Als',      title:'Migration Specialist',                 domainIds:['d2'],      group:'Technical Specialist', source:'Manual entry',  email:'frederikke.als@microsoft.example',      notes:'Identified via the partner portal. No contact established yet.',           updatedAt:'2026-04-19' },
-    { id:'m8',  name:'Mikkel Storm',        title:'Business Applications Director',       domainIds:['d3'],      group:'Leadership',           source:'Event',         email:'mikkel.storm@microsoft.example',        notes:'Long-standing relationship, keynote speaker at our 2025 summit.',          updatedAt:'2026-06-05' },
-    { id:'m9',  name:'Camilla Vestergaard', title:'D365 Finance & Operations Specialist', domainIds:['d3'],      group:'Technical Specialist', source:'Survey',        email:'camilla.vestergaard@microsoft.example', notes:'Main technical contact for F&O opportunities.',                            updatedAt:'2026-07-01' },
-    { id:'m10', name:'Oliver Bak',          title:'Power Platform Specialist',            domainIds:['d3','d4'], group:'Technical Specialist', source:'Survey',        email:'oliver.bak@microsoft.example',          notes:'Moved from Modern Work to Business Applications in May.',                  updatedAt:'2026-07-19' },
-    { id:'m11', name:'Josefine Rask',       title:'Account Executive, Business Apps',     domainIds:['d3','d7'], group:'Account Team',         source:'LinkedIn',      email:'josefine.rask@microsoft.example',       notes:'Covers three of our shared public sector accounts.',                       updatedAt:'2026-05-12' },
-    { id:'m12', name:'Villads Høeg',   title:'Modern Work Lead',                     domainIds:['d4'],      group:'Leadership',           source:'Manual entry',  email:'villads.hoeg@microsoft.example',        notes:'Relation is thin - mostly event small talk so far.',                       updatedAt:'2026-06-22' },
+    { id:'m5',  name:'Sigrid Holm',         title:'Azure Infrastructure Lead',            domainIds:['d3'],      group:'Leadership',           source:'Event',         email:'sigrid.holm@microsoft.example',         notes:'New in role since March 2026 - relation needs rebuilding.',                updatedAt:'2026-07-14' },
+    { id:'m6',  name:'Tobias Lund',         title:'Cloud Solution Architect, Azure',      domainIds:['d3'],      group:'Technical Specialist', source:'Survey',        email:'tobias.lund@microsoft.example',         notes:'Runs joint architecture design sessions with our practice.',               updatedAt:'2026-07-08' },
+    { id:'m7',  name:'Frederikke Als',      title:'Migration Specialist',                 domainIds:['d3'],      group:'Technical Specialist', source:'Manual entry',  email:'frederikke.als@microsoft.example',      notes:'Identified via the partner portal. No contact established yet.',           updatedAt:'2026-04-19' },
+    { id:'m8',  name:'Mikkel Storm',        title:'Business Applications Director',       domainIds:['d4'],      group:'Leadership',           source:'Event',         email:'mikkel.storm@microsoft.example',        notes:'Long-standing relationship, keynote speaker at our 2025 summit.',          updatedAt:'2026-06-05' },
+    { id:'m9',  name:'Camilla Vestergaard', title:'D365 Finance & Operations Specialist', domainIds:['d4'],      group:'Technical Specialist', source:'Survey',        email:'camilla.vestergaard@microsoft.example', notes:'Main technical contact for F&O opportunities.',                            updatedAt:'2026-07-01' },
+    { id:'m10', name:'Oliver Bak',          title:'Power Platform Specialist',            domainIds:['d4'],      group:'Technical Specialist', source:'Survey',        email:'oliver.bak@microsoft.example',          notes:'Moved from Modern Work to Business Applications in May.',                  updatedAt:'2026-07-19' },
+    { id:'m11', name:'Josefine Rask',       title:'Account Executive, Business Apps',     domainIds:['d4','d5'], group:'Account Team',         source:'LinkedIn',      email:'josefine.rask@microsoft.example',       notes:'Covers three of our shared public sector accounts.',                       updatedAt:'2026-05-12' },
+    { id:'m12', name:'Villads Høeg',   title:'Modern Work Lead',                     domainIds:['d5'],      group:'Leadership',           source:'Manual entry',  email:'villads.hoeg@microsoft.example',        notes:'Relation is thin - mostly event small talk so far.',                       updatedAt:'2026-06-22' },
     { id:'m13', name:'Ida Munk',            title:'Copilot Adoption Specialist',          domainIds:['d4'],      group:'Technical Specialist', source:'Survey',        email:'ida.munk@microsoft.example',            notes:'Drives Copilot adoption programmes with partners.',                        updatedAt:'2026-07-16' },
-    { id:'m14', name:'Rasmus Dahl',         title:'Security Solution Lead',               domainIds:['d5'],      group:'Leadership',           source:'Event',         email:'rasmus.dahl@microsoft.example',         notes:'Several attempts at a meeting have gone unanswered.',                      updatedAt:'2026-03-27' },
-    { id:'m15', name:'Laura Kjær',     title:'Security Specialist, Entra & Purview', domainIds:['d5'],      group:'Technical Specialist', source:'Partner portal',email:'laura.kjaer@microsoft.example',         notes:'Named in the partner portal. Nobody at Columbus knows her yet.',           updatedAt:'2026-04-02' },
-    { id:'m16', name:'Andreas Bruun',       title:'Partner Development Manager',          domainIds:['d6'],      group:'Partner Development',  source:'Survey',        email:'andreas.bruun@microsoft.example',       notes:'Our primary partner contact - weekly cadence.',                            updatedAt:'2026-07-21' },
-    { id:'m17', name:'Maja Toft',           title:'Partner Marketing Manager',            domainIds:['d6'],      group:'Marketing',            source:'LinkedIn',      email:'maja.toft@microsoft.example',           notes:'Co-funds campaigns, responds quickly.',                                    updatedAt:'2026-06-18' },
-    { id:'m18', name:'Henrik Falk',         title:'Public Sector Director',               domainIds:['d7'],      group:'Leadership',           source:'Event',         email:'henrik.falk@microsoft.example',         notes:'Relationship damaged after the 2025 tender escalation.',                   updatedAt:'2026-05-06' },
-    { id:'m19', name:'Sara Nørgaard',  title:'Account Executive, Public Sector',     domainIds:['d7','d3'], group:'Account Team',         source:'Manual entry',  email:'sara.noergaard@microsoft.example',      notes:'Took over the accounts when the previous AE left.',                        updatedAt:'2026-06-27' },
-    { id:'m20', name:'Thomas Ejlersen',     title:'Co-sell & Incentives Manager',         domainIds:['d6'],      group:'Partner Development',  source:'Partner portal',email:'thomas.ejlersen@microsoft.example',     notes:'Owns co-sell registration and incentive claims.',                          updatedAt:'2026-07-09' }
+    { id:'m14', name:'Rasmus Dahl',         title:'Security Solution Lead',               domainIds:['d8'],      group:'Leadership',           source:'Event',         email:'rasmus.dahl@microsoft.example',         notes:'Several attempts at a meeting have gone unanswered.',                      updatedAt:'2026-03-27' },
+    { id:'m15', name:'Laura Kjær',     title:'Security Specialist, Entra & Purview', domainIds:['d8'],      group:'Technical Specialist', source:'Partner portal',email:'laura.kjaer@microsoft.example',         notes:'Named in the partner portal. Nobody at Columbus knows her yet.',           updatedAt:'2026-04-02' },
+    { id:'m16', name:'Andreas Bruun',       title:'Partner Development Manager',          domainIds:['d2'],      group:'Partner Development',  source:'Survey',        email:'andreas.bruun@microsoft.example',       notes:'Our primary partner contact - weekly cadence.',                            updatedAt:'2026-07-21' },
+    { id:'m17', name:'Maja Toft',           title:'Partner Marketing Manager',            domainIds:['d2'],      group:'Marketing',            source:'LinkedIn',      email:'maja.toft@microsoft.example',           notes:'Co-funds campaigns, responds quickly.',                                    updatedAt:'2026-06-18' },
+    { id:'m18', name:'Henrik Falk',         title:'Public Sector Director',               domainIds:['d5'],      group:'Leadership',           source:'Event',         email:'henrik.falk@microsoft.example',         notes:'Relationship damaged after the 2025 tender escalation.',                   updatedAt:'2026-05-06' },
+    { id:'m19', name:'Sara Nørgaard',  title:'Account Executive, Public Sector',     domainIds:['d5'],      group:'Account Team',         source:'Manual entry',  email:'sara.noergaard@microsoft.example',      notes:'Took over the accounts when the previous AE left.',                        updatedAt:'2026-06-27' },
+    { id:'m20', name:'Thomas Ejlersen',     title:'Co-sell & Incentives Manager',         domainIds:['d7'],      group:'Partner Development',  source:'Partner portal',email:'thomas.ejlersen@microsoft.example',     notes:'Owns co-sell registration and incentive claims.',                          updatedAt:'2026-07-09' }
   ],
 
   columbusProfiles: [
@@ -1047,7 +1048,11 @@ var ECO_ICONS = {
   'coins':'<path d="M12 3v18M16.5 7.5A3.5 3.5 0 0 0 13 5h-2a3 3 0 0 0 0 6h2a3 3 0 0 1 0 6h-2a3.5 3.5 0 0 1-3.5-2.5"/>',
   'wrench':'<path d="M14.5 3.5a5 5 0 0 0-4.1 7.6L4 17.5 6.5 20l6.4-6.4a5 5 0 0 0 7.6-4.1l-3.1 3.1-3-.6-.6-3z"/>',
   'flag':'<path d="M5 21V4M5 5h11l-1.6 3.5L16 12H5"/>',
-  'smile':'<circle cx="12" cy="12" r="9"/><path d="M8.5 14a4.5 4.5 0 0 0 7 0"/><path d="M9 9.5h.01M15 9.5h.01"/>'
+  'smile':'<circle cx="12" cy="12" r="9"/><path d="M8.5 14a4.5 4.5 0 0 0 7 0"/><path d="M9 9.5h.01M15 9.5h.01"/>',
+  'lightbulb':'<path d="M9 18h6M10.5 21h3"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2h5c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/>',
+  'building':'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h2M14 7h2M8 11h2M14 11h2M10 21v-4h4v4"/>',
+  'layers':'<path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 12l9 5 9-5"/><path d="M3 16.5l9 5 9-5"/>',
+  'globe':'<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.6 3.8 5.6 3.8 9S14.5 18.4 12 21c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/>'
 };
 function ecoIcon(name){
   return '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
@@ -1067,60 +1072,58 @@ var ECO = {
   groups: [
     { id:'azure-ai-sales', title:'Azure & AI', subtitle:'Sales', accent:'violet',
       icon:'trending-up', layout:'grid-2', position:'left-1', connect:true, people:[
-        { name:'Astrid Lindqvist', role:'Country Lead, Data & AI',      avatar:null, strength: 3, tentative:false },
-        { name:'Emil Krogh',       role:'Data & AI Sales Manager',      avatar:null, strength: 2, tentative:false },
-        { name:'Kasper Vinther',   role:'Solution Specialist, Fabric',  avatar:null, strength: 1, tentative:false },
-        { name:'Sigrid Holm',      role:'Azure Infrastructure Lead',    avatar:null, strength: 0, tentative:false }
+        { name:'Henrik Balslev', role:'Partner Solution Sales Manager, Cloud & AI Platform / Azure', avatar:null, strength: 3, tentative:false },
+        { name:'Kristian Rask',  role:'Cloud & AI Sales Consultant',                                 avatar:null, strength: 2, tentative:false },
+        { name:'Anne Gundersen', role:'Sales Specialist, Data & AI',                                 avatar:null, strength: 1, tentative:false },
+        { name:'Anders Boisen',  role:'Azure Cloud Solution Sales Executive',                        avatar:null, strength: 0, tentative:false }
       ] },
 
-    { id:'technical', title:'Technical & Architecture', subtitle:'CSA and GBB community', accent:'blue',
-      icon:'cpu', layout:'grid-2', position:'left-2', connect:true, people:[
-        { name:'Nanna Bjerre',     role:'Cloud Solution Architect, AI',    avatar:null, strength: 2, tentative:false },
-        { name:'Tobias Lund',      role:'Cloud Solution Architect, Azure', avatar:null, strength: 1, tentative:false },
-        { name:'Ida Munk',         role:'Copilot Adoption Specialist',     avatar:null, strength: 1, tentative:false },
-        { name:'Frederikke Als',   role:'Migration Specialist',            avatar:null, strength: null, tentative:false }
+    { id:'strategic-leadership', title:'Strategic & Partner Leadership', subtitle:null, accent:'blue',
+      icon:'lightbulb', layout:'rows', position:'centre-top', connect:true, people:[
+        { name:'Louise Dalgaard', role:'Director, Enterprise Partner Solutions', avatar:null, strength: 3, tentative:false },
+        { name:'Martin Kjeldsen', role:'Sr. Partner Development Manager',        avatar:null, strength: 2, tentative:false }
       ] },
 
-    { id:'partner', title:'Partner Management', subtitle:'Our formal route into Microsoft', accent:'green',
-      icon:'link', layout:'rows', position:'centre-top', connect:true, people:[
-        { name:'Andreas Bruun',    role:'Partner Development Manager', avatar:null, strength: 3, tentative:false },
-        { name:'Maja Toft',        role:'Partner Marketing Manager',   avatar:null, strength: 1, tentative:false }
-      ] },
-
-    { id:'industry', title:'Industry & Segment Sales', subtitle:'Small, medium & corporate segment', accent:'teal',
+    { id:'azure-ai-specialist', title:'Azure & AI', subtitle:'Specialist', accent:'green',
       icon:'briefcase', layout:'grid-2', position:'right-1', connect:true, people:[
-        { name:'Mikkel Storm',        role:'Business Applications Director',       avatar:null, strength: 2, tentative:false },
-        { name:'Josefine Rask',       role:'Account Executive, Business Apps',     avatar:null, strength: 1, tentative:false },
-        { name:'Camilla Vestergaard', role:'D365 Finance & Operations Specialist', avatar:null, strength: 0, tentative:false },
-        { name:'Sara Norgaard',       role:'Account Executive, Public Sector',     avatar:null, strength:-1, tentative:false }
+        { name:'Mads Dahlgaard',    role:'AI Solution Engineer',             avatar:null, strength: 2,    tentative:false },
+        { name:'Nikolaj Mikkelsen', role:'Senior Cloud Solutions Architect', avatar:null, strength: 1,    tentative:false },
+        { name:'Christina Rohde',   role:'Cloud Solution Architect',         avatar:null, strength: 2,    tentative:false },
+        { name:'Mathias Quist',     role:'Azure Specialist',                 avatar:null, strength: null, tentative:false }
       ] },
 
-    { id:'customer-success', title:'Customer Success', subtitle:'CSU & FastTrack', accent:'rose',
-      icon:'heart', layout:'grid-2', position:'right-2', connect:true, people:[
-        { name:'Oliver Bak',       role:'Power Platform Specialist',           avatar:null, strength: 2, tentative:false },
-        { name:'Villads Hoeg',     role:'Modern Work Lead',                    avatar:null, strength: 1, tentative:false },
-        { name:'Rasmus Dahl',      role:'Security Solution Lead',              avatar:null, strength:-2, tentative:false },
-        { name:'Laura Kjaer',      role:'Security Specialist, Entra & Purview', avatar:null, strength: null, tentative:false }
+    { id:'business-apps', title:'Business Applications', subtitle:'Dynamics 365, Power Platform & Copilot', accent:'rose',
+      icon:'building', layout:'grid-2', position:'left-2', connect:true, people:[
+        { name:'Signe Brandt',    role:'NTM Lead, Dynamics 365 & Power Platform',       avatar:null, strength: 2,    tentative:false },
+        { name:'Rikke Toft',      role:'Sr. Technical Specialist, Power Platform & AI', avatar:null, strength: 1,    tentative:false },
+        { name:'Peter Lindhardt', role:'Solution Sales Professional, BizApps',          avatar:null, strength:-1,    tentative:false },
+        { name:'Ea Sorensen',     role:'Solution Sales Professional, BizApps',          avatar:null, strength: null, tentative:true  }
       ] },
 
-    { id:'leadership', title:'Leadership', subtitle:'Microsoft Denmark', accent:'orange',
-      icon:'crown', layout:'rows', position:'centre-bottom', connect:true, people:[
-        { name:'Henrik Falk',      role:'Public Sector Director',    avatar:null, strength: 0, tentative:false },
-        { name:'Trine Bak-Hansen', role:'General Manager, Denmark',  avatar:null, strength: null, tentative:true }
+    { id:'smc-smb', title:'SMC & SMB', subtitle:'Small, medium & corporate segment', accent:'teal',
+      icon:'users', layout:'rows', position:'right-2', connect:true, people:[
+        { name:'Jesper Hald',     role:'SMC & SMB Lead, DK / NO',         avatar:null, strength: 1, tentative:false },
+        { name:'Camilla Winther', role:'SMC Azure Lead',                  avatar:null, strength: 0, tentative:false },
+        { name:'Torben Aagaard',  role:'Senior Sales Executive, Aalborg', avatar:null, strength:-2, tentative:false }
+      ] },
+
+    { id:'fabric-success', title:'Fabric Partner Success', subtitle:null, accent:'orange',
+      icon:'layers', layout:'rows', position:'centre-bottom', connect:true, people:[
+        { name:'Pia Gregersen', role:'Fabric Partner Ecosystem Lead', avatar:null, strength: 3, tentative:false }
       ] },
 
     { id:'funding', title:'Funding & Programs', subtitle:null, accent:'amber',
       icon:'gift', layout:'bare', position:'bottom-1', connect:false, people:[
-        { name:'Thomas Ejlersen',  role:'Co-sell & Incentives Manager', avatar:null, strength: 2, tentative:false },
-        { name:'Simon Overgaard',  role:'MCI & partner funding',        avatar:null, strength: null, tentative:false },
-        { name:'Line Krabbe',      role:'ECIF / AMM programme',         avatar:null, strength: null, tentative:true }
+        { name:'Jonas Riis',            role:'Sr. Partner Development Manager', avatar:null, strength: 2,    tentative:false },
+        { name:'Mette Hvid',            role:'Funding & programs',              avatar:null, strength: 1,    tentative:false },
+        { name:'Azure Accelerate Team', role:'Deployment funding, guidance',    avatar:null, strength: null, tentative:false }
       ] },
 
-    { id:'wider', title:'Wider network', subtitle:null, accent:'slate',
-      icon:'users', layout:'bare', position:'bottom-2', connect:false, people:[
-        { name:'Pernille Dam',     role:'Marketplace & cloud GTM',     avatar:null, strength: 1, tentative:false },
-        { name:'Jonas Bruhn',      role:'ISV partner lead',            avatar:null, strength: 0, tentative:false },
-        { name:'Martin Steens',    role:'Alumni, now at a customer',   avatar:null, strength: null, tentative:true }
+    { id:'wider', title:'Wider network', subtitle:'placement to be decided', accent:'slate',
+      icon:'globe', layout:'bare', position:'bottom-2', connect:false, people:[
+        { name:'Frederik Steen', role:'Sr. Customer Success Account Mgr', avatar:null, strength: 0,    tentative:false },
+        { name:'Marie Vinter',   role:'Account Executive',                avatar:null, strength: null, tentative:false },
+        { name:'Lars Holst',     role:'Cyber Security Professional',      avatar:null, strength:-3,    tentative:false }
       ] }
   ],
   collaborationModes: [
