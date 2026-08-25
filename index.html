@@ -7,7 +7,9 @@
 <style>
 /* ============================================================
    Columbus - Microsoft Relationship Map (UI mockup)
-   Single-file mockup. No dependencies, no backend, fictional data.
+   Single-file mockup. No dependencies, no backend.
+   The Microsoft contacts are the real intake list. Every score, note and
+   Columbus user in here is placeholder data for the UI - not real intelligence.
    ============================================================ */
 
 :root{
@@ -42,6 +44,13 @@
   --s-p1:#71ab6b;
   --s-p2:#3d9457;
   --s-p3:#1c7040;
+
+  /* chart furniture. --c-mark is the magnitude hue: the first step of the navy
+     ramp that clears the OKLCH lightness band (0.43-0.77), the chroma floor
+     (>=0.10) and 3:1 on white - checked with the palette validator, not by eye. */
+  --c-mark:#1a5f96;
+  --c-mark-soft:#e7eef6;
+  --c-axis:#8b99ac;
 
   --radius:8px;
   --radius-lg:12px;
@@ -409,6 +418,129 @@ td.actions{text-align:right;white-space:nowrap}
 .eco-legend li{display:flex;align-items:center;gap:7px;font-size:10px;color:var(--e-muted);line-height:1.35}
 .eco-legend li span{width:10px;height:10px;border-radius:50%;flex:0 0 10px}
 
+/* ---------- charts ----------
+   Plain HTML bars, not SVG: text keeps its real size at any width and the card
+   grows with its content, so the axis band can never fall outside a fixed height. */
+.seg{display:inline-flex;gap:6px;flex-wrap:wrap}
+.seg button{border:1px solid var(--border-strong);background:#fff;border-radius:999px;
+  padding:6px 13px;font:inherit;font-size:12.5px;color:var(--e-ink);cursor:pointer;white-space:nowrap}
+.seg button:hover{border-color:var(--e-navy)}
+.seg button[aria-pressed=true]{background:var(--e-navy);border-color:var(--e-navy);color:#fff;font-weight:600}
+.seg button:disabled{opacity:.4;cursor:not-allowed}
+
+/* --- graphic view: the dashboard's boxes, applied to charts ---
+   Its own copy of the three tokens it borrows, so nothing here reaches back
+   into .eco-root and changes the dashboard. */
+.gv{--e-navy:#16243f;--e-ink:#1e293b;--e-muted:#64748b}
+.gv-head{margin-bottom:20px}
+.gv-head h2{font-size:26px;line-height:1.15;font-weight:700;color:var(--e-navy);margin:0}
+.gv-head p{margin:7px 0 0;font-size:12.5px;line-height:1.55;color:var(--e-muted);max-width:74ch}
+
+.gv-ico{flex:0 0 32px;width:32px;height:32px;border-radius:9px;background:var(--a);color:#fff;
+  display:flex;align-items:center;justify-content:center}
+.gv-ico svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+.gv-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(152px,1fr));gap:12px;margin-bottom:20px}
+.gv-kpi{display:flex;gap:11px;align-items:flex-start;padding:13px 15px;border-radius:14px;
+  background:color-mix(in srgb,var(--a) 7%,#fff);border:1px solid color-mix(in srgb,var(--a) 22%,#fff)}
+.gv-kpi .gv-ico{flex-basis:30px;width:30px;height:30px;border-radius:8px}
+.gv-kpi .gv-ico svg{width:17px;height:17px}
+.gv-kpi b{display:block;font-size:22px;line-height:1.1;letter-spacing:-.02em;color:var(--a-dark)}
+.gv-kpi span{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--text-faint);margin-top:3px}
+.gv-kpi em{display:block;font-style:normal;font-size:11.5px;line-height:1.4;color:var(--e-muted);margin-top:5px}
+
+/* Accent tints the head only. The body stays white so the score ramp keeps the
+   contrast it was validated at. */
+.gv-panel{background:#fff;border:1px solid color-mix(in srgb,var(--a) 22%,#fff);
+  border-radius:16px;overflow:hidden;box-shadow:var(--shadow-sm)}
+.gv-panel__head{display:flex;align-items:flex-start;gap:10px;padding:13px 16px;
+  background:color-mix(in srgb,var(--a) 7%,#fff);
+  border-bottom:1px solid color-mix(in srgb,var(--a) 18%,#fff)}
+.gv-panel__head h3{margin:1px 0 0;font-size:14px;font-weight:650;line-height:1.2;color:var(--a-dark)}
+.gv-panel__head p{margin:3px 0 0;font-size:11.5px;line-height:1.45;color:var(--e-muted)}
+.gv-panel__body{padding:16px 18px 18px}
+
+.gv-tools{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:18px}
+.gv-tools > b{font-size:9.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--text-faint)}
+.gv-tools .spacer{flex:1;min-width:8px}
+
+/* horizontal bars - magnitude */
+.bars{display:flex;flex-direction:column;gap:7px}
+.bars__row{display:grid;grid-template-columns:minmax(96px,168px) 1fr 54px;align-items:center;
+  gap:12px;min-height:26px;border-radius:6px;cursor:help;outline:none}
+.bars__row:hover,.bars__row:focus-visible{background:#f7f9fc}
+.bars__lbl{font-size:12px;line-height:1.3;color:var(--text)}
+.bars__plot{position:relative;height:18px}
+.bars__plot i{position:absolute;left:0;top:0;height:18px;border-radius:0 4px 4px 0;background:var(--a,var(--c-mark))}
+.bars__plot i.is-zero{background:var(--c-mark-soft);border-radius:0 2px 2px 0}
+.bars__val{font-size:12px;color:var(--text-muted);text-align:right;font-variant-numeric:tabular-nums}
+
+/* horizontal bars - diverging around zero */
+.dbars__plot{position:relative;height:18px}
+.dbars__plot .zline{position:absolute;left:50%;top:-4px;bottom:-4px;width:1px;background:var(--border-strong)}
+.dbars__plot i{position:absolute;top:0;height:18px}
+.dbars__plot i.pos{left:50%;border-radius:0 4px 4px 0}
+.dbars__plot i.neg{right:50%;border-radius:4px 0 0 4px}
+
+/* columns - the -3..+3 distribution */
+.cols{display:flex;align-items:flex-end;gap:10px;height:150px}
+.cols__col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;
+  height:100%;gap:5px;border-radius:6px 6px 0 0;cursor:help;outline:none}
+.cols__col:hover,.cols__col:focus-visible{background:#f7f9fc}
+.cols__val{font-size:11.5px;color:var(--text-muted);font-variant-numeric:tabular-nums}
+.cols__bar{width:100%;max-width:24px;border-radius:4px 4px 0 0;min-height:2px}
+.cols__ax{display:flex;gap:10px;margin-top:7px;padding-top:7px;border-top:1px solid var(--border)}
+.cols__ax span{flex:1;text-align:center;font-size:11px;color:var(--c-axis);font-variant-numeric:tabular-nums}
+
+.axnote{margin:12px 0 0;font-size:11px;color:var(--c-axis);
+  display:grid;grid-template-columns:minmax(96px,168px) 1fr 54px;gap:12px}
+.axnote__scale{grid-column:2;display:flex;justify-content:space-between;
+  border-top:1px solid var(--border);padding-top:6px;font-variant-numeric:tabular-nums}
+.chart-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px;margin-top:18px}
+
+/* ---------- shared tooltip ----------
+   One box on <body>, positioned with JS. An absolutely positioned child would be
+   clipped by .tablewrap (overflow-x:auto) and mis-placed inside the scaled canvas. */
+.tipbox{
+  position:fixed;left:0;top:0;z-index:200;max-width:320px;
+  background:var(--navy-900);color:#fff;font-size:11px;line-height:1.45;
+  padding:8px 11px;border-radius:8px;box-shadow:var(--shadow-lg);
+  opacity:0;visibility:hidden;transition:opacity .12s;pointer-events:none;
+}
+.tipbox.is-on{opacity:1;visibility:visible}
+.has-tip{display:inline-flex;align-items:center;gap:6px;cursor:help;outline:none;white-space:nowrap}
+.has-tip:focus-visible{outline:2px solid var(--accent, #2563eb);outline-offset:2px;border-radius:6px}
+
+.infoi{
+  flex:0 0 15px;width:15px;height:15px;padding:0;border-radius:50%;cursor:help;
+  border:1px solid currentColor;background:transparent;color:inherit;opacity:.65;
+  font-family:inherit;font-weight:600;font-size:10px;line-height:13px;
+  text-align:center;letter-spacing:0;text-transform:none;
+}
+.infoi:hover,.infoi:focus-visible{opacity:1}
+
+.tipbox .defs > b{display:block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;opacity:.7;margin-bottom:7px}
+.defs__row{display:flex;align-items:flex-start;gap:8px;padding:3px 0}
+.defs__row i{width:9px;height:9px;border-radius:50%;flex:0 0 9px;margin-top:4px}
+.defs__v{flex:0 0 22px;font-weight:700;font-variant-numeric:tabular-nums}
+.defs__t{display:block}
+.defs__t b{display:block;font-weight:600}
+.defs__t em{display:block;font-style:normal;opacity:.72}
+
+.scale-head{display:flex;align-items:center;gap:7px;font-size:13px;margin-bottom:10px}
+.sched{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.sched__main{flex:1 1 240px;min-width:220px}
+.sched__main .scale-head{margin-bottom:4px}
+.sched__toggle{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-muted);padding-bottom:9px;white-space:nowrap}
+
+/* Same definitions, rendered straight into the survey rather than on hover. */
+.defs--inline{margin-top:13px;padding-top:11px;border-top:1px solid var(--border);
+  font-size:11.5px;line-height:1.45;color:var(--text-muted);
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:2px 20px}
+.defs--inline > b{grid-column:1/-1;font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--text-faint);margin-bottom:4px}
+.defs--inline .defs__t b{color:var(--text)}
+
 /* ---------- connector layer ---------- */
 .eco-links{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
 .eco--flow .eco-links{display:none}
@@ -561,6 +693,7 @@ td.actions{text-align:right;white-space:nowrap}
   .sidebar,.topbar,.eco-tools,#toasts,.drawer,.modal{display:none!important}
   .page{padding:0;max-width:none}
   .eco-canvas{border:0;background:#fff}
+  .infoi,.tipbox{display:none !important}
   .pcard:hover{transform:none;box-shadow:none}
 }
 
@@ -581,16 +714,18 @@ td.actions{text-align:right;white-space:nowrap}
    1. CONSTANTS
    ============================================================ */
 
-// Relation score scale, -3 .. +3, with the description shown in
-// the legend and in every score picker.
+// Relation score scale, -3 .. +3. This is the single source of truth for the
+// wording, the description and the colour - tables, pickers, the survey and the
+// dashboard legend all read it, so the scale can never say two different things.
+// bg/fg are the dot colours on the dashboard; fg keeps the number readable.
 var SCORE_LEVELS = [
-  { v:  3, label: 'Trusted advisor', desc: 'They reach out to us proactively - we are a first call.' },
-  { v:  2, label: 'Strong',          desc: 'Regular contact, mutual trust, ongoing dialogue.' },
-  { v:  1, label: 'Positive',        desc: 'Occasional contact, good rapport.' },
-  { v:  0, label: 'Neutral',         desc: 'Aware of each other, no real working relationship.' },
-  { v: -1, label: 'Weak',            desc: 'Limited or one-sided contact.' },
-  { v: -2, label: 'Strained',        desc: 'Friction or lost momentum in the relationship.' },
-  { v: -3, label: 'Damaged',         desc: 'Actively avoids working with us.' }
+  { v:  3, label: 'Trusted advisor', bg:'#15803d', fg:'#ffffff', desc: 'They reach out to us proactively - we are a first call.' },
+  { v:  2, label: 'Strong',          bg:'#22c55e', fg:'#062e12', desc: 'Regular contact, mutual trust, ongoing dialogue.' },
+  { v:  1, label: 'Positive',        bg:'#86efac', fg:'#062e12', desc: 'Occasional contact, good rapport.' },
+  { v:  0, label: 'Neutral',         bg:'#94a3b8', fg:'#0f172a', desc: 'Aware of each other, no real working relationship.' },
+  { v: -1, label: 'Weak',            bg:'#f97316', fg:'#2b1000', desc: 'Limited or one-sided contact.' },
+  { v: -2, label: 'Strained',        bg:'#dc2626', fg:'#ffffff', desc: 'Friction or lost momentum in the relationship.' },
+  { v: -3, label: 'Damaged',         bg:'#991b1b', fg:'#ffffff', desc: 'Actively avoids working with us.' }
 ];
 function scoreLevel(v){ for (var i=0;i<SCORE_LEVELS.length;i++){ if (SCORE_LEVELS[i].v === v) return SCORE_LEVELS[i]; } return SCORE_LEVELS[3]; }
 
@@ -608,9 +743,9 @@ var NAV_SECTIONS = ['Dashboards', 'Administration', 'Submissions & Relations'];
 // Which pages each role may open. Drives the left menu AND route guarding.
 var PAGES = [
   { route:'dashboard',         title:'Dashboard',           sub:'Overview',                    icon:'▦', section:'Dashboards',             roles:['superadmin','admin','moderator'] },
-  { route:'graphic-view',      title:'Graphic View',        sub:'Visual relationship map',     icon:'◈', section:'Dashboards',             roles:['superadmin','admin','moderator'] },
-  { route:'ms-profiles',       title:'Microsoft Profiles',  sub:'Approved Microsoft contacts', icon:'●', section:'Administration',         roles:['superadmin','admin','moderator'] },
+  { route:'graphic-view',      title:'Graphic View',        sub:'Numbers & breakdowns',       icon:'◈', section:'Dashboards',             roles:['superadmin','admin','moderator'] },
   { route:'ms-domains',        title:'Microsoft Domains',   sub:'Categories & mapping',        icon:'◆', section:'Administration',         roles:['superadmin','admin'] },
+  { route:'ms-profiles',       title:'Microsoft Profiles',  sub:'Approved Microsoft contacts', icon:'●', section:'Administration',         roles:['superadmin','admin','moderator'] },
   { route:'columbus-profiles', title:'Columbus Profiles',   sub:'Internal users & relations',  icon:'▲', section:'Administration',         roles:['superadmin','admin','moderator'] },
   { route:'submissions',       title:'Pending Submissions', sub:'Surveys awaiting approval',   icon:'■', section:'Submissions & Relations',roles:['superadmin','admin'] },
   { route:'my-relations',      title:'My Relations',        sub:'Your own Microsoft contacts', icon:'★', section:'Submissions & Relations',roles:['superadmin','admin','moderator','standard'] }
@@ -621,15 +756,32 @@ function canOpen(route, role){ var p = pageFor(route); return !!p && p.roles.ind
 function canEdit(){ return state.session.role === 'admin' || state.session.role === 'superadmin'; }
 
 var MS_GROUPS  = ['Leadership','Account Team','Technical Specialist','Partner Development','Marketing'];
-var MS_SOURCES = ['Survey','LinkedIn','Event','Manual entry','Partner portal'];
+var MS_SOURCES = ['Ayla\'s list','Microsoft DK leadership page','LinkedIn / MS Pulse','LinkedIn / Thomas\' deck','Survey','Manual entry','Unconfirmed'];
+// The system domain every unplaced Microsoft profile falls back to.
+var UNMARKED_ID = 'd0';
+
+// How often the automatic survey goes out. Quarterly is the default.
+var CADENCES = [
+  { id:'monthly',   label:'Monthly',        months:1  },
+  { id:'quarterly', label:'Quarterly',      months:3  },
+  { id:'half',      label:'Every 6 months', months:6  },
+  { id:'yearly',    label:'Yearly',         months:12 }
+];
+function cadence(id){ for (var i=0;i<CADENCES.length;i++){ if (CADENCES[i].id === id) return CADENCES[i]; } return CADENCES[1]; }
+
 var CB_DEPARTMENTS = ['Executive','Alliances','Data & AI','Business Applications','Cloud & Infrastructure','Modern Work','Sales','Marketing','Delivery'];
 
 /* ============================================================
-   2. SEED DATA  -  every person below is fictional
+   2. SEED DATA
+   msProfiles are the real Microsoft Denmark intake list.
+   The Columbus users, every score and every note are placeholders.
    ============================================================ */
 
 var state = {
   session: { userId:'c1', role:'admin' },
+
+  // Automatic survey cadence. Quarterly out of the box.
+  surveySchedule: { enabled:true, cadence:'quarterly', lastSent:'2026-07-01' },
 
   // Domains live separately from the profiles so the mapping is easy to restructure.
   domains: [
@@ -640,30 +792,37 @@ var state = {
     { id:'d5', name:'SMC & SMB',                      owner:'Anders Holmgaard', desc:'Small, medium and corporate segment across DK / NO.' },
     { id:'d6', name:'Fabric Partner Success',         owner:'Rikke Dalsgaard',  desc:'Microsoft Fabric partner ecosystem and joint success motions.' },
     { id:'d7', name:'Funding & Programs',             owner:'Sofie Bang',       desc:'Co-sell, incentives, MCI and Azure Accelerate deployment funding.' },
-    { id:'d8', name:'Wider network',                  owner:'Jonas Ravn',       desc:'Contacts we hold but have not yet placed against a domain.' }
+    { id:'d8', name:'Wider network',                  owner:'Jonas Ravn',       desc:'Contacts we hold but have not yet placed against a domain.' },
+    // System domain. Never shown on the dashboard - it is the landing place for
+    // Microsoft profiles that have no domain, including the ones left behind
+    // when a domain is deleted. It cannot be renamed or removed.
+    { id:UNMARKED_ID, name:'Unmarked', system:true, owner:'\u2014', desc:'Microsoft profiles that are not placed in a domain yet, plus everyone left behind when a domain is deleted.' }
   ],
 
   msProfiles: [
-    { id:'m1',  name:'Astrid Lindqvist',    title:'Country Lead, Data & AI',              domainIds:['d1','d2'], group:'Leadership',           source:'Event',         email:'astrid.lindqvist@microsoft.example',    notes:'Sponsors the Danish Data & AI agenda. Prefers quarterly business reviews.', updatedAt:'2026-06-11' },
-    { id:'m2',  name:'Kasper Vinther',      title:'Solution Specialist, Fabric',          domainIds:['d6'],      group:'Technical Specialist', source:'Survey',        email:'kasper.vinther@microsoft.example',      notes:'Very hands-on. Happy to co-present at customer workshops.',                updatedAt:'2026-07-02' },
-    { id:'m3',  name:'Nanna Bjerre',        title:'Cloud Solution Architect, AI',         domainIds:['d3'],      group:'Technical Specialist', source:'Survey',        email:'nanna.bjerre@microsoft.example',        notes:'Split between AI and platform engagements.',                               updatedAt:'2026-05-28' },
-    { id:'m4',  name:'Emil Krogh',          title:'Data & AI Sales Manager',              domainIds:['d1'],      group:'Account Team',         source:'LinkedIn',      email:'emil.krogh@microsoft.example',          notes:'Owns the Data & AI number for the enterprise segment.',                    updatedAt:'2026-06-30' },
-    { id:'m5',  name:'Sigrid Holm',         title:'Azure Infrastructure Lead',            domainIds:['d3'],      group:'Leadership',           source:'Event',         email:'sigrid.holm@microsoft.example',         notes:'New in role since March 2026 - relation needs rebuilding.',                updatedAt:'2026-07-14' },
-    { id:'m6',  name:'Tobias Lund',         title:'Cloud Solution Architect, Azure',      domainIds:['d3'],      group:'Technical Specialist', source:'Survey',        email:'tobias.lund@microsoft.example',         notes:'Runs joint architecture design sessions with our practice.',               updatedAt:'2026-07-08' },
-    { id:'m7',  name:'Frederikke Als',      title:'Migration Specialist',                 domainIds:['d3'],      group:'Technical Specialist', source:'Manual entry',  email:'frederikke.als@microsoft.example',      notes:'Identified via the partner portal. No contact established yet.',           updatedAt:'2026-04-19' },
-    { id:'m8',  name:'Mikkel Storm',        title:'Business Applications Director',       domainIds:['d4'],      group:'Leadership',           source:'Event',         email:'mikkel.storm@microsoft.example',        notes:'Long-standing relationship, keynote speaker at our 2025 summit.',          updatedAt:'2026-06-05' },
-    { id:'m9',  name:'Camilla Vestergaard', title:'D365 Finance & Operations Specialist', domainIds:['d4'],      group:'Technical Specialist', source:'Survey',        email:'camilla.vestergaard@microsoft.example', notes:'Main technical contact for F&O opportunities.',                            updatedAt:'2026-07-01' },
-    { id:'m10', name:'Oliver Bak',          title:'Power Platform Specialist',            domainIds:['d4'],      group:'Technical Specialist', source:'Survey',        email:'oliver.bak@microsoft.example',          notes:'Moved from Modern Work to Business Applications in May.',                  updatedAt:'2026-07-19' },
-    { id:'m11', name:'Josefine Rask',       title:'Account Executive, Business Apps',     domainIds:['d4','d5'], group:'Account Team',         source:'LinkedIn',      email:'josefine.rask@microsoft.example',       notes:'Covers three of our shared public sector accounts.',                       updatedAt:'2026-05-12' },
-    { id:'m12', name:'Villads Høeg',   title:'Modern Work Lead',                     domainIds:['d5'],      group:'Leadership',           source:'Manual entry',  email:'villads.hoeg@microsoft.example',        notes:'Relation is thin - mostly event small talk so far.',                       updatedAt:'2026-06-22' },
-    { id:'m13', name:'Ida Munk',            title:'Copilot Adoption Specialist',          domainIds:['d4'],      group:'Technical Specialist', source:'Survey',        email:'ida.munk@microsoft.example',            notes:'Drives Copilot adoption programmes with partners.',                        updatedAt:'2026-07-16' },
-    { id:'m14', name:'Rasmus Dahl',         title:'Security Solution Lead',               domainIds:['d8'],      group:'Leadership',           source:'Event',         email:'rasmus.dahl@microsoft.example',         notes:'Several attempts at a meeting have gone unanswered.',                      updatedAt:'2026-03-27' },
-    { id:'m15', name:'Laura Kjær',     title:'Security Specialist, Entra & Purview', domainIds:['d8'],      group:'Technical Specialist', source:'Partner portal',email:'laura.kjaer@microsoft.example',         notes:'Named in the partner portal. Nobody at Columbus knows her yet.',           updatedAt:'2026-04-02' },
-    { id:'m16', name:'Andreas Bruun',       title:'Partner Development Manager',          domainIds:['d2'],      group:'Partner Development',  source:'Survey',        email:'andreas.bruun@microsoft.example',       notes:'Our primary partner contact - weekly cadence.',                            updatedAt:'2026-07-21' },
-    { id:'m17', name:'Maja Toft',           title:'Partner Marketing Manager',            domainIds:['d2'],      group:'Marketing',            source:'LinkedIn',      email:'maja.toft@microsoft.example',           notes:'Co-funds campaigns, responds quickly.',                                    updatedAt:'2026-06-18' },
-    { id:'m18', name:'Henrik Falk',         title:'Public Sector Director',               domainIds:['d5'],      group:'Leadership',           source:'Event',         email:'henrik.falk@microsoft.example',         notes:'Relationship damaged after the 2025 tender escalation.',                   updatedAt:'2026-05-06' },
-    { id:'m19', name:'Sara Nørgaard',  title:'Account Executive, Public Sector',     domainIds:['d5'],      group:'Account Team',         source:'Manual entry',  email:'sara.noergaard@microsoft.example',      notes:'Took over the accounts when the previous AE left.',                        updatedAt:'2026-06-27' },
-    { id:'m20', name:'Thomas Ejlersen',     title:'Co-sell & Incentives Manager',         domainIds:['d7'],      group:'Partner Development',  source:'Partner portal',email:'thomas.ejlersen@microsoft.example',     notes:'Owns co-sell registration and incentive claims.',                          updatedAt:'2026-07-09' }
+    { id:'m1',  name:'Nina Due',               title:'Director, Enterprise Partner Solutions',                      domainIds:['d2'], group:'Leadership',           source:'Microsoft DK leadership page', email:'', notes:'Listed on the Microsoft DK leadership page.', updatedAt:'2026-08-19' },
+    { id:'m2',  name:'Christian Koch-Bentzen', title:'Sr. Partner Development Manager',                             domainIds:['d2'], group:'Partner Development',  source:'Ayla\'s list',                 email:'', notes:'', updatedAt:'2026-08-19' },
+    { id:'m3',  name:'Claus Iversen',          title:'Partner Solution Sales Manager, Cloud & AI Platform / Azure', domainIds:['d1'], group:'Partner Development',  source:'Ayla\'s list',                 email:'', notes:'', updatedAt:'2026-08-19' },
+    { id:'m4',  name:'Kris Rozanka',           title:'Cloud & AI Sales Consultant',                                 domainIds:['d1'], group:'Account Team',         source:'Ayla\'s list',                 email:'', notes:'', updatedAt:'2026-08-19' },
+    { id:'m5',  name:'Arthur Gentit',          title:'Sales Specialist, Data & AI',                                 domainIds:['d1'], group:'Account Team',         source:'Ayla\'s list',                 email:'', notes:'', updatedAt:'2026-08-19' },
+    { id:'m6',  name:'Aybike Bozkurt',         title:'Azure Cloud Solution Sales Executive',                        domainIds:['d1'], group:'Account Team',         source:'Ayla\'s list',                 email:'', notes:'', updatedAt:'2026-08-19' },
+    { id:'m7',  name:'Mauro Dalvit',           title:'AI Solution Engineer',                                        domainIds:['d3'], group:'Technical Specialist', source:'Ayla\'s list',                 email:'', notes:'', updatedAt:'2026-08-19' },
+    { id:'m8',  name:'Nikhil Makkar',          title:'Senior Cloud Solutions Architect',                            domainIds:['d3'], group:'Technical Specialist', source:'Ayla\'s list',                 email:'', notes:'', updatedAt:'2026-08-19' },
+    { id:'m9',  name:'Chandana Ramesh',        title:'Cloud Solution Architect',                                    domainIds:['d3'], group:'Technical Specialist', source:'Ayla\'s list',                 email:'', notes:'', updatedAt:'2026-08-19' },
+    { id:'m10', name:'Marcus Quistgaard',      title:'Azure Specialist',                                            domainIds:['d3'], group:'Technical Specialist', source:'Ayla\'s list',                 email:'', notes:'', updatedAt:'2026-08-19' },
+    { id:'m11', name:'Bo Kaaber Brandt',       title:'GTM Lead, Dynamics 365 & Power Platform',                     domainIds:['d4'], group:'Leadership',           source:'LinkedIn / MS Pulse',          email:'', notes:'', updatedAt:'2026-08-19' },
+    { id:'m12', name:'Anders Fjordhøj',        title:'Sr. Technical Specialist, Power Platform & AI',               domainIds:['d4'], group:'Technical Specialist', source:'LinkedIn / MS Pulse',          email:'', notes:'', updatedAt:'2026-08-19' },
+    { id:'m13', name:'Jesper N. Pedersen',     title:'Solution Sales Professional, BizApps',                        domainIds:['d4'], group:'Account Team',         source:'LinkedIn / MS Pulse',          email:'', notes:'', updatedAt:'2026-08-19' },
+    { id:'m14', name:'Bo Larsen',              title:'Solution Sales Professional, BizApps',                        domainIds:['d4'], group:'Account Team',         source:'Unconfirmed',                  email:'', tentative:true, notes:'Role and placement still to be confirmed.', updatedAt:'2026-08-19' },
+    { id:'m15', name:'Sarah McKenna',          title:'SMC & SMB Lead, DK / NO',                                     domainIds:['d5'], group:'Leadership',           source:'LinkedIn / Thomas\' deck',     email:'', notes:'', updatedAt:'2026-08-19' },
+    { id:'m16', name:'Thomas Lundgren',        title:'SMC Azure Lead',                                              domainIds:['d5'], group:'Leadership',           source:'Ayla\'s list',                 email:'', notes:'', updatedAt:'2026-08-19' },
+    { id:'m17', name:'Kasper N. Nielsen',      title:'Senior Sales Executive, Aalborg',                             domainIds:['d5'], group:'Account Team',         source:'LinkedIn / Thomas\' deck',     email:'', notes:'', updatedAt:'2026-08-19' },
+    { id:'m18', name:'Prashant Gutala',        title:'Fabric Partner Ecosystem Lead',                               domainIds:['d6'], group:'Partner Development',  source:'Ayla\'s list',                 email:'', notes:'', updatedAt:'2026-08-19' },
+    { id:'m19', name:'Mads Hammerbak',         title:'Funding & programs',                                          domainIds:['d7'], group:'Partner Development',  source:'Ayla\'s list',                 email:'', notes:'', updatedAt:'2026-08-19' },
+    { id:'m20', name:'Azure Accelerate Team',  title:'Deployment funding, guidance',                                domainIds:['d7'], group:'Partner Development',  source:'Ayla\'s list',                 email:'', notes:'A Microsoft team, not a single named contact.', updatedAt:'2026-08-19' },
+    { id:'m21', name:'Frederikke Smidt',       title:'Sr. Customer Success Account Mgr',                            domainIds:['d8'], group:'Account Team',         source:'Ayla\'s list',                 email:'', notes:'Domain placement still to be decided.', updatedAt:'2026-08-19' },
+    { id:'m22', name:'Malte Vilain',           title:'Account Executive',                                           domainIds:['d8'], group:'Account Team',         source:'Ayla\'s list',                 email:'', notes:'Domain placement still to be decided.', updatedAt:'2026-08-19' },
+    { id:'m23', name:'Lars-Bo Heidemann',      title:'Cyber Security Professional',                                 domainIds:['d8'], group:'Technical Specialist', source:'Ayla\'s list',                 email:'', notes:'Domain placement still to be decided.', updatedAt:'2026-08-19' }
   ],
 
   columbusProfiles: [
@@ -685,60 +844,59 @@ var state = {
 
   // The many-to-many join: one Columbus person can know many Microsoft people and vice versa.
   relations: [
-    { id:'r1',  columbusId:'c1',  msProfileId:'m1',  score: 2, note:'Quarterly alliance sync, open dialogue.',            updatedAt:'2026-06-11' },
-    { id:'r2',  columbusId:'c1',  msProfileId:'m16', score: 3, note:'Weekly partner cadence - our main entry point.',     updatedAt:'2026-07-21' },
-    { id:'r3',  columbusId:'c1',  msProfileId:'m20', score: 2, note:'Aligned on the co-sell pipeline every month.',       updatedAt:'2026-07-09' },
-    { id:'r4',  columbusId:'c1',  msProfileId:'m5',  score: 1, note:'Met at Azure partner day, follow-up pending.',       updatedAt:'2026-07-14' },
-    { id:'r5',  columbusId:'c1',  msProfileId:'m8',  score: 2, note:'Joint Business Applications planning.',              updatedAt:'2026-06-05' },
-    { id:'r6',  columbusId:'c2',  msProfileId:'m1',  score: 2, note:'Executive sponsor relationship.',                    updatedAt:'2026-06-11' },
-    { id:'r7',  columbusId:'c2',  msProfileId:'m18', score: 1, note:'Introduced at the public sector roundtable.',        updatedAt:'2026-05-06' },
-    { id:'r8',  columbusId:'c2',  msProfileId:'m12', score: 0, note:'Met once at an event, nothing since.',               updatedAt:'2026-06-22' },
-    { id:'r9',  columbusId:'c3',  msProfileId:'m8',  score: 3, note:'Long-standing, speaks at our customer events.',      updatedAt:'2026-06-05' },
-    { id:'r10', columbusId:'c3',  msProfileId:'m9',  score: 2, note:'Frequent solution reviews together.',                updatedAt:'2026-07-01' },
-    { id:'r11', columbusId:'c3',  msProfileId:'m11', score: 1, note:'Occasional deal alignment.',                         updatedAt:'2026-05-12' },
-    { id:'r12', columbusId:'c4',  msProfileId:'m5',  score: 2, note:'Rebuilding after her role change - going well.',     updatedAt:'2026-07-14' },
-    { id:'r13', columbusId:'c4',  msProfileId:'m6',  score: 3, note:'Runs joint architecture sessions with the team.',    updatedAt:'2026-07-08' },
-    { id:'r14', columbusId:'c5',  msProfileId:'m14', score:-1, note:'Several meeting requests unanswered.',               updatedAt:'2026-03-27' },
-    { id:'r15', columbusId:'c6',  msProfileId:'m12', score: 1, note:'Good chat at the Modern Work briefing.',             updatedAt:'2026-06-22' },
-    { id:'r16', columbusId:'c6',  msProfileId:'m13', score: 2, note:'Co-running a Copilot adoption pilot.',               updatedAt:'2026-07-16' },
-    { id:'r17', columbusId:'c7',  msProfileId:'m2',  score: 2, note:'Regular Fabric sparring.',                           updatedAt:'2026-07-02' },
-    { id:'r18', columbusId:'c7',  msProfileId:'m3',  score: 1, note:'Worked together on one architecture review.',        updatedAt:'2026-05-28' },
-    { id:'r19', columbusId:'c8',  msProfileId:'m4',  score: 1, note:'Pipeline reviews, still fairly formal.',             updatedAt:'2026-06-30' },
-    { id:'r20', columbusId:'c8',  msProfileId:'m19', score:-1, note:'Relation lost when the previous AE left.',           updatedAt:'2026-06-27' },
-    { id:'r21', columbusId:'c8',  msProfileId:'m11', score: 0, note:'Introduced by e-mail, no meeting yet.',              updatedAt:'2026-05-12' },
-    { id:'r22', columbusId:'c9',  msProfileId:'m17', score: 2, note:'Two co-marketing campaigns delivered.',              updatedAt:'2026-06-18' },
-    { id:'r23', columbusId:'c10', msProfileId:'m6',  score: 1, note:'Technical sparring on landing zones.',               updatedAt:'2026-07-08' },
-    { id:'r24', columbusId:'c10', msProfileId:'m3',  score: 0, note:'Same customer project, little direct contact.',      updatedAt:'2026-05-28' },
-    { id:'r25', columbusId:'c11', msProfileId:'m9',  score: 1, note:'Escalation support on an F&O case.',                 updatedAt:'2026-07-01' },
-    { id:'r26', columbusId:'c11', msProfileId:'m10', score: 2, note:'Power Platform community work together.',            updatedAt:'2026-07-19' },
-    { id:'r27', columbusId:'c12', msProfileId:'m9',  score: 0, note:'Only project status meetings.',                      updatedAt:'2026-07-01' },
-    { id:'r28', columbusId:'c13', msProfileId:'m2',  score: 3, note:'Co-presented at the Fabric event - very strong.',    updatedAt:'2026-07-02' },
-    { id:'r29', columbusId:'c13', msProfileId:'m1',  score: 1, note:'Briefed her on our AI offering once.',               updatedAt:'2026-06-11' },
-    { id:'r30', columbusId:'c13', msProfileId:'m4',  score: 2, note:'Joint account planning on two accounts.',            updatedAt:'2026-06-30' },
-    { id:'r31', columbusId:'c14', msProfileId:'m18', score:-2, note:'Bid escalation in 2025 left a bad impression.',      updatedAt:'2026-05-06' },
-    { id:'r32', columbusId:'c14', msProfileId:'m19', score: 0, note:'Only tender correspondence so far.',                 updatedAt:'2026-06-27' }
+    { id:'r1',  columbusId:'c1',   msProfileId:'m1',   score: 3, note:'Alliance sponsor - regular executive dialogue.', updatedAt:'2026-08-19' },
+    { id:'r2',  columbusId:'c2',   msProfileId:'m1',   score: 3, note:'Executive sponsor relationship.', updatedAt:'2026-08-19' },
+    { id:'r3',  columbusId:'c1',   msProfileId:'m2',   score: 3, note:'Our main partner contact - weekly cadence.', updatedAt:'2026-08-19' },
+    { id:'r4',  columbusId:'c3',   msProfileId:'m2',   score: 1, note:'Occasional contact through Business Applications planning.', updatedAt:'2026-08-19' },
+    { id:'r5',  columbusId:'c1',   msProfileId:'m3',   score: 3, note:'Joint pipeline reviews on Azure & AI.', updatedAt:'2026-08-19' },
+    { id:'r6',  columbusId:'c4',   msProfileId:'m3',   score: 3, note:'Regular technical and commercial alignment.', updatedAt:'2026-08-19' },
+    { id:'r7',  columbusId:'c4',   msProfileId:'m4',   score: 2, note:'Ongoing dialogue on Azure opportunities.', updatedAt:'2026-08-19' },
+    { id:'r8',  columbusId:'c10',  msProfileId:'m4',   score: 2, note:'Works with us on architecture-led deals.', updatedAt:'2026-08-19' },
+    { id:'r9',  columbusId:'c7',   msProfileId:'m5',   score: 1, note:'Occasional contact on Data & AI pursuits.', updatedAt:'2026-08-19' },
+    { id:'r10', columbusId:'c13',  msProfileId:'m5',   score: 1, note:'Met on a few joint pursuits.', updatedAt:'2026-08-19' },
+    { id:'r11', columbusId:'c10',  msProfileId:'m6',   score: 1, note:'Introduced on a shared Azure opportunity.', updatedAt:'2026-08-19' },
+    { id:'r12', columbusId:'c8',   msProfileId:'m6',   score:-1, note:'One-sided contact so far.', updatedAt:'2026-08-19' },
+    { id:'r13', columbusId:'c13',  msProfileId:'m7',   score: 2, note:'Co-runs AI solution workshops with us.', updatedAt:'2026-08-19' },
+    { id:'r14', columbusId:'c7',   msProfileId:'m7',   score: 2, note:'Regular contact on AI engagements.', updatedAt:'2026-08-19' },
+    { id:'r15', columbusId:'c10',  msProfileId:'m8',   score: 2, note:'Joint architecture design sessions.', updatedAt:'2026-08-19' },
+    { id:'r16', columbusId:'c4',   msProfileId:'m8',   score: 0, note:'Aware of each other, nothing active.', updatedAt:'2026-08-19' },
+    { id:'r17', columbusId:'c10',  msProfileId:'m9',   score: 2, note:'Technical counterpart on Azure migrations.', updatedAt:'2026-08-19' },
+    { id:'r18', columbusId:'c3',   msProfileId:'m11',  score: 2, note:'Ongoing Business Applications alignment.', updatedAt:'2026-08-19' },
+    { id:'r19', columbusId:'c11',  msProfileId:'m11',  score: 2, note:'Regular dialogue on D365 and Power Platform.', updatedAt:'2026-08-19' },
+    { id:'r20', columbusId:'c11',  msProfileId:'m12',  score: 1, note:'Occasional contact on Power Platform topics.', updatedAt:'2026-08-19' },
+    { id:'r21', columbusId:'c3',   msProfileId:'m12',  score: 1, note:'Good rapport, no fixed cadence.', updatedAt:'2026-08-19' },
+    { id:'r22', columbusId:'c11',  msProfileId:'m13',  score:-1, note:'Limited contact - hard to reach.', updatedAt:'2026-08-19' },
+    { id:'r23', columbusId:'c8',   msProfileId:'m15',  score: 1, note:'Introduced at an SMC partner session.', updatedAt:'2026-08-19' },
+    { id:'r24', columbusId:'c1',   msProfileId:'m15',  score: 1, note:'Occasional alliance contact.', updatedAt:'2026-08-19' },
+    { id:'r25', columbusId:'c8',   msProfileId:'m16',  score: 0, note:'No real working relationship yet.', updatedAt:'2026-08-19' },
+    { id:'r26', columbusId:'c4',   msProfileId:'m16',  score: 0, note:'Aware of each other only.', updatedAt:'2026-08-19' },
+    { id:'r27', columbusId:'c8',   msProfileId:'m17',  score:-2, note:'Momentum lost after the last joint pursuit.', updatedAt:'2026-08-19' },
+    { id:'r28', columbusId:'c7',   msProfileId:'m18',  score: 3, note:'First call on anything Fabric.', updatedAt:'2026-08-19' },
+    { id:'r29', columbusId:'c13',  msProfileId:'m18',  score: 3, note:'Brings us into Fabric partner motions.', updatedAt:'2026-08-19' },
+    { id:'r30', columbusId:'c1',   msProfileId:'m19',  score: 1, note:'Contact for funding and incentive questions.', updatedAt:'2026-08-19' },
+    { id:'r31', columbusId:'c5',   msProfileId:'m23',  score:-3, note:'Repeated attempts at contact unanswered.', updatedAt:'2026-08-19' }
   ],
 
   // Survey responses / edits waiting for an Admin to approve them.
   submissions: [
     { id:'s1', columbusId:'c7',  type:'survey', submittedAt:'2026-08-14', items:[
-        { msProfileId:'m2',  oldScore: 2, newScore: 3, note:'We now run a shared workshop series.' },
-        { msProfileId:'m3',  oldScore: 1, newScore: 2, note:'Weekly contact on the current project.' },
-        { msProfileId:'m13', oldScore:null, newScore: 1, note:'Met at the Copilot bootcamp in August.' }
+        { msProfileId:'m7',  oldScore: 2,   newScore: 3, note:'Now co-delivering an AI workshop series.' },
+        { msProfileId:'m5',  oldScore: 1,   newScore: 2, note:'Weekly contact on the current pursuit.' },
+        { msProfileId:'m10', oldScore:null, newScore: 1, note:'Met at an Azure community event in August.' }
       ] },
-    { id:'s2', columbusId:'c6',  type:'survey', submittedAt:'2026-08-13', items:[
-        { msProfileId:'m12', oldScore: 1, newScore: 2, note:'Monthly Modern Work sync established.' },
-        { msProfileId:'m13', oldScore: 2, newScore: 3, note:'She now brings us into her adoption programmes.' }
+    { id:'s2', columbusId:'c10', type:'survey', submittedAt:'2026-08-13', items:[
+        { msProfileId:'m8',  oldScore: 2, newScore: 3, note:'Now runs joint design sessions with us.' },
+        { msProfileId:'m6',  oldScore: 1, newScore: 2, note:'Cadence established on the shared account.' }
       ] },
     { id:'s3', columbusId:'c11', type:'edit',   submittedAt:'2026-08-12', items:[
-        { msProfileId:'m10', oldScore: 2, newScore: 1, note:'He changed area - far less contact now.' }
+        { msProfileId:'m12', oldScore: 1, newScore: 0, note:'Changed area - far less contact now.' }
       ] },
     { id:'s4', columbusId:'c8',  type:'survey', submittedAt:'2026-08-11', items:[
-        { msProfileId:'m19', oldScore:-1, newScore: 0, note:'Handover meeting held, starting over.' },
-        { msProfileId:'m4',  oldScore: 1, newScore: 2, note:'Now in a monthly pipeline cadence.' }
+        { msProfileId:'m17', oldScore:-2, newScore:-1, note:'Cleared the air at the last debrief.' },
+        { msProfileId:'m16', oldScore: 0, newScore: 1, note:'First real working session held.' }
       ] },
     { id:'s5', columbusId:'c14', type:'edit',   submittedAt:'2026-08-08', items:[
-        { msProfileId:'m18', oldScore:-2, newScore:-1, note:'Cleared the air at the tender debrief.' }
+        { msProfileId:'m19', oldScore:null, newScore: 1, note:'Helped on the last funding application.' }
       ] }
   ],
 
@@ -749,7 +907,8 @@ var state = {
     cbSearch:'', cbDept:'', cbRole:'', cbSort:'name', cbDir:1, cbOpen:null,
     subOpen:null,
     myDraft:null, myPicker:'',
-    ecoFilter:'', ecoPick:null
+    ecoFilter:'', ecoPick:null,
+    gvDim:'domain', gvMeasure:'mean', gvView:'chart'
   }
 };
 
@@ -764,6 +923,19 @@ function esc(s){
 }
 function uid(prefix){ uid.n = (uid.n || 0) + 1; return prefix + '_' + uid.n + '_' + (uid.n * 7919 % 9973); }
 function today(){ return '2026-08-19'; }
+// Pure string date maths - today() is a frozen constant, so there is no Date() anywhere.
+function addMonths(iso, n){
+  var p = String(iso).split('-'), y = parseInt(p[0],10), m = parseInt(p[1],10) - 1 + n, d = parseInt(p[2],10);
+  y += Math.floor(m / 12); m = ((m % 12) + 12) % 12;
+  var last = [31, (y%4===0 && y%100!==0)||y%400===0 ? 29 : 28, 31,30,31,30,31,31,30,31,30,31][m];
+  if (d > last) d = last;
+  return y + '-' + (m+1 < 10 ? '0' : '') + (m+1) + '-' + (d < 10 ? '0' : '') + d;
+}
+function nextSurveyDate(){
+  var sc = state.surveySchedule;
+  return addMonths(sc.lastSent, cadence(sc.cadence).months);
+}
+function realDomains(){ return state.domains.filter(function(d){ return !d.system; }); }
 function initials(name){
   var parts = String(name).trim().split(/\s+/);
   return ((parts[0]||'')[0] || '') + ((parts[parts.length-1]||'')[0] || '');
@@ -782,6 +954,24 @@ function fmtDate(d){
 function signed(n){ return (n > 0 ? '+' : '') + n; }
 function clampScore(n){ return Math.max(-3, Math.min(3, n)); }
 
+/* Both averages are computed from the same list of raw relation scores.
+   The mean is what we show; the median rides along in the hover box. */
+function meanOf(a){
+  if (!a.length) return 0;
+  var t = 0; a.forEach(function(v){ t += v; });
+  return t / a.length;
+}
+function medianOf(a){
+  if (!a.length) return 0;
+  var s = a.slice().sort(function(x, y){ return x - y; }), n = s.length;
+  return n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2;
+}
+/* One decimal, always signed, no trailing ".0" noise on whole numbers. */
+function fmtScore(n){
+  var r = Math.round(n * 10) / 10;
+  return (r > 0 ? '+' : '') + r;
+}
+
 /* --- derived numbers (never stored twice) --- */
 function relationsForMs(msId){
   return state.relations.filter(function(r){ return r.msProfileId === msId; });
@@ -790,28 +980,36 @@ function relationsForCb(cbId){
   return state.relations.filter(function(r){ return r.columbusId === cbId; });
 }
 function msStats(msId){
-  var rs = relationsForMs(msId), sum = 0, best = null;
-  rs.forEach(function(r){ sum += r.score; if (best === null || r.score > best) best = r.score; });
-  return { count: rs.length, sum: sum, best: best, avg: rs.length ? sum / rs.length : 0 };
+  var rs = relationsForMs(msId), scores = [], sum = 0, best = null;
+  rs.forEach(function(r){ scores.push(r.score); sum += r.score; if (best === null || r.score > best) best = r.score; });
+  return { count: rs.length, scores: scores, sum: sum, best: best,
+           mean: meanOf(scores), median: medianOf(scores), avg: meanOf(scores) };
 }
 function cbStats(cbId){
-  var rs = relationsForCb(cbId), sum = 0;
-  rs.forEach(function(r){ sum += r.score; });
-  return { count: rs.length, sum: sum, avg: rs.length ? Math.round(sum / rs.length) : 0 };
+  var rs = relationsForCb(cbId), scores = [], sum = 0;
+  rs.forEach(function(r){ scores.push(r.score); sum += r.score; });
+  return { count: rs.length, scores: scores, sum: sum,
+           mean: meanOf(scores), median: medianOf(scores), avg: meanOf(scores) };
 }
 function domainStats(dId){
   var profiles = state.msProfiles.filter(function(p){ return p.domainIds.indexOf(dId) !== -1; });
-  var conns = 0, sum = 0, covered = 0;
+  /* Every individual relation in the domain, flattened - so the median is a
+     median of real scores, not a median of per-profile averages. */
+  var scores = [], sum = 0, covered = 0;
   profiles.forEach(function(p){
     var s = msStats(p.id);
-    conns += s.count; sum += s.sum;
+    scores = scores.concat(s.scores); sum += s.sum;
     if (s.count > 0 && s.best >= 1) covered++;
   });
   return {
     profiles: profiles.length,
-    connections: conns,
+    connections: scores.length,
+    count: scores.length,
+    scores: scores,
     sum: sum,
-    avg: conns ? Math.round(sum / conns) : 0,
+    mean: meanOf(scores),
+    median: medianOf(scores),
+    avg: meanOf(scores),
     coverage: profiles.length ? Math.round(covered / profiles.length * 100) : 0
   };
 }
@@ -828,6 +1026,41 @@ function scoreLegend(){
     return '<div title="' + esc(l.desc) + '">' + scoreChip(l.v) + '<b>' + esc(l.label) + '</b></div>';
   }).join('') + '</div>';
 }
+/* "Relationship scale" heading + (i). Used above every scoreLegend(). */
+function scaleHeading(){
+  return '<h3 class="scale-head">Relationship scale' + infoIcon('score-defs', 'What the scores mean') + '</h3>';
+}
+/* The aggregate cell. Mean is the number on the chip; the median is one
+   hover away. Both come from the same stats object, so they can never drift. */
+function scoreStat(st){
+  if (!st.count) return '<span class="chip chip--muted">none</span>';
+  var tip = 'Mean ' + fmtScore(st.mean) + '  \u00b7  Median ' + fmtScore(st.median) +
+            '  \u00b7  ' + st.count + ' relation' + (st.count === 1 ? '' : 's') +
+            '  \u00b7  sum ' + signed(st.sum);
+  return '<span class="has-tip" tabindex="0" data-tip="' + esc(tip) + '">' +
+         scoreChip(clampScore(Math.round(st.mean))) +
+         ' <small class="hint">mean ' + fmtScore(st.mean) + '</small></span>';
+}
+
+/* The written definition of the -3..+3 scale. One source, used by the
+   dashboard legend, the survey and every "relationship scale" card. */
+function scoreDefsHtml(variant){
+  return '<div class="defs' + (variant === 'inline' ? ' defs--inline' : '') + '"><b>What the scores mean</b>' + SCORE_LEVELS.map(function(l){
+    var c = l.bg;
+    return '<div class="defs__row"><i style="background:' + c + '"></i>' +
+           '<span class="defs__v">' + signed(l.v) + '</span>' +
+           '<span class="defs__t"><b>' + esc(l.label) + '</b><em>' + esc(l.desc) + '</em></span></div>';
+  }).join('') + '</div>';
+}
+var TIP_HTML = { 'score-defs': scoreDefsHtml };
+
+/* Small circled i. Shares the one body-level tooltip, so it is never
+   clipped by a scrolling table or the scaled dashboard canvas. */
+function infoIcon(tipId, label){
+  return '<button type="button" class="infoi" data-tip-id="' + esc(tipId) + '" tabindex="0" ' +
+         'aria-label="' + esc(label || 'Score definitions') + '">i</button>';
+}
+
 function scorePicker(value, action, extraAttr){
   return '<div class="picker">' + SCORE_LEVELS.slice().reverse().map(function(l){
     return '<button type="button" data-action="' + action + '" data-score="' + l.v + '" data-s="' + l.v +
@@ -837,7 +1070,7 @@ function scorePicker(value, action, extraAttr){
 }
 function personCell(name, sub){
   return '<div class="person"><span class="avatar">' + esc(initials(name)) + '</span><div><b>' +
-         esc(name) + '</b><span>' + esc(sub || '') + '</span></div></div>';
+         esc(name) + '</b>' + (sub ? '<span>' + esc(sub) + '</span>' : '') + '</div></div>';
 }
 function domainChips(ids){
   if (!ids || !ids.length) return '<span class="hint">Unmapped</span>';
@@ -878,6 +1111,7 @@ window.addEventListener('hashchange', function(){ readHash(); render(); });
 
 function render(){
   var route = state.ui.route;
+  syncEcoPeople();
 
   if (route === 'login') { document.getElementById('app').innerHTML = viewLogin(); return; }
 
@@ -924,7 +1158,7 @@ function sidebar(route){
   return '<aside class="sidebar">' +
     '<div class="sidebar__logo"><strong>COLUMBUS</strong><small>Microsoft Relationship Map</small></div>' +
     '<nav class="nav">' + nav + '</nav>' +
-    '<div class="sidebar__foot">UI mockup &middot; fictional data<br>Version 0.1</div>' +
+    '<div class="sidebar__foot">UI mockup &middot; placeholder scores<br>Version 0.1</div>' +
     '</aside>';
 }
 
@@ -964,7 +1198,7 @@ function viewLogin(){
           '<li><i>&#9679;</i><span>Keep the knowledge when people change roles or leave.</span></li>' +
         '</ul>' +
       '</div>' +
-      '<div style="position:relative;z-index:1;color:#7e97b1;font-size:12px">Mockup &middot; fictional data &middot; not connected to any system</div>' +
+      '<div style="position:relative;z-index:1;color:#7e97b1;font-size:12px">Mockup &middot; placeholder scores &middot; not connected to any system</div>' +
     '</div>' +
     '<div class="login__form"><form class="login__card" data-action="login">' +
       '<h2>Sign in</h2>' +
@@ -1019,7 +1253,8 @@ var ECO_ACCENTS = {
   amber: { c:'#d97706', d:'#b45309' }, slate: { c:'#475569', d:'#334155' }
 };
 
-/* The -3..+3 scale. fg is picked per step so the number on the dot stays readable. */
+/* The -3..+3 scale. fg is picked per step so the number on the dot stays readable.
+   The board keeps its own wording - see SCORE_LEVELS for the wording the tables use. */
 var ECO_STRENGTH = [
   { v: 3, bg:'#15803d', fg:'#ffffff', label:'Strong' },
   { v: 2, bg:'#22c55e', fg:'#062e12', label:'Good' },
@@ -1071,60 +1306,28 @@ var ECO = {
   },
   groups: [
     { id:'azure-ai-sales', title:'Azure & AI', subtitle:'Sales', accent:'violet',
-      icon:'trending-up', layout:'grid-2', position:'left-1', connect:true, people:[
-        { name:'Henrik Balslev', role:'Partner Solution Sales Manager, Cloud & AI Platform / Azure', avatar:null, strength: 3, tentative:false },
-        { name:'Kristian Rask',  role:'Cloud & AI Sales Consultant',                                 avatar:null, strength: 2, tentative:false },
-        { name:'Anne Gundersen', role:'Sales Specialist, Data & AI',                                 avatar:null, strength: 1, tentative:false },
-        { name:'Anders Boisen',  role:'Azure Cloud Solution Sales Executive',                        avatar:null, strength: 0, tentative:false }
-      ] },
+      icon:'trending-up', layout:'grid-2', position:'left-1', connect:true, domainId:'d1', people:[] },
 
     { id:'strategic-leadership', title:'Strategic & Partner Leadership', subtitle:null, accent:'blue',
-      icon:'lightbulb', layout:'rows', position:'centre-top', connect:true, people:[
-        { name:'Louise Dalgaard', role:'Director, Enterprise Partner Solutions', avatar:null, strength: 3, tentative:false },
-        { name:'Martin Kjeldsen', role:'Sr. Partner Development Manager',        avatar:null, strength: 2, tentative:false }
-      ] },
+      icon:'lightbulb', layout:'rows', position:'centre-top', connect:true, domainId:'d2', people:[] },
 
     { id:'azure-ai-specialist', title:'Azure & AI', subtitle:'Specialist', accent:'green',
-      icon:'briefcase', layout:'grid-2', position:'right-1', connect:true, people:[
-        { name:'Mads Dahlgaard',    role:'AI Solution Engineer',             avatar:null, strength: 2,    tentative:false },
-        { name:'Nikolaj Mikkelsen', role:'Senior Cloud Solutions Architect', avatar:null, strength: 1,    tentative:false },
-        { name:'Christina Rohde',   role:'Cloud Solution Architect',         avatar:null, strength: 2,    tentative:false },
-        { name:'Mathias Quist',     role:'Azure Specialist',                 avatar:null, strength: null, tentative:false }
-      ] },
+      icon:'briefcase', layout:'grid-2', position:'right-1', connect:true, domainId:'d3', people:[] },
 
     { id:'business-apps', title:'Business Applications', subtitle:'Dynamics 365, Power Platform & Copilot', accent:'rose',
-      icon:'building', layout:'grid-2', position:'left-2', connect:true, people:[
-        { name:'Signe Brandt',    role:'NTM Lead, Dynamics 365 & Power Platform',       avatar:null, strength: 2,    tentative:false },
-        { name:'Rikke Toft',      role:'Sr. Technical Specialist, Power Platform & AI', avatar:null, strength: 1,    tentative:false },
-        { name:'Peter Lindhardt', role:'Solution Sales Professional, BizApps',          avatar:null, strength:-1,    tentative:false },
-        { name:'Ea Sorensen',     role:'Solution Sales Professional, BizApps',          avatar:null, strength: null, tentative:true  }
-      ] },
+      icon:'building', layout:'grid-2', position:'left-2', connect:true, domainId:'d4', people:[] },
 
     { id:'smc-smb', title:'SMC & SMB', subtitle:'Small, medium & corporate segment', accent:'teal',
-      icon:'users', layout:'rows', position:'right-2', connect:true, people:[
-        { name:'Jesper Hald',     role:'SMC & SMB Lead, DK / NO',         avatar:null, strength: 1, tentative:false },
-        { name:'Camilla Winther', role:'SMC Azure Lead',                  avatar:null, strength: 0, tentative:false },
-        { name:'Torben Aagaard',  role:'Senior Sales Executive, Aalborg', avatar:null, strength:-2, tentative:false }
-      ] },
+      icon:'users', layout:'rows', position:'right-2', connect:true, domainId:'d5', people:[] },
 
     { id:'fabric-success', title:'Fabric Partner Success', subtitle:null, accent:'orange',
-      icon:'layers', layout:'rows', position:'centre-bottom', connect:true, people:[
-        { name:'Pia Gregersen', role:'Fabric Partner Ecosystem Lead', avatar:null, strength: 3, tentative:false }
-      ] },
+      icon:'layers', layout:'rows', position:'centre-bottom', connect:true, domainId:'d6', people:[] },
 
     { id:'funding', title:'Funding & Programs', subtitle:null, accent:'amber',
-      icon:'gift', layout:'bare', position:'bottom-1', connect:false, people:[
-        { name:'Jonas Riis',            role:'Sr. Partner Development Manager', avatar:null, strength: 2,    tentative:false },
-        { name:'Mette Hvid',            role:'Funding & programs',              avatar:null, strength: 1,    tentative:false },
-        { name:'Azure Accelerate Team', role:'Deployment funding, guidance',    avatar:null, strength: null, tentative:false }
-      ] },
+      icon:'gift', layout:'bare', position:'bottom-1', connect:false, domainId:'d7', people:[] },
 
     { id:'wider', title:'Wider network', subtitle:'placement to be decided', accent:'slate',
-      icon:'globe', layout:'bare', position:'bottom-2', connect:false, people:[
-        { name:'Frederik Steen', role:'Sr. Customer Success Account Mgr', avatar:null, strength: 0,    tentative:false },
-        { name:'Marie Vinter',   role:'Account Executive',                avatar:null, strength: null, tentative:false },
-        { name:'Lars Holst',     role:'Cyber Security Professional',      avatar:null, strength:-3,    tentative:false }
-      ] }
+      icon:'globe', layout:'bare', position:'bottom-2', connect:false, domainId:'d8', people:[] }
   ],
   collaborationModes: [
     { icon:'target',    label:'Strategic alignment' },
@@ -1134,6 +1337,25 @@ var ECO = {
     { icon:'smile',     label:'Customer success' }
   ]
 };
+
+/* The board is not a second list of people. It reads state.msProfiles, so the
+   dashboard and the Microsoft Profiles page can never describe different people.
+   Strength is the profile's mean score, the same number the tables show. */
+function ecoPeopleFor(domainId){
+  return state.msProfiles.filter(function(p){ return p.domainIds.indexOf(domainId) !== -1; })
+    .map(function(p){
+      var st = msStats(p.id);
+      return {
+        msId: p.id, name: p.name, role: p.title, avatar: null,
+        strength: st.count ? clampScore(Math.round(st.mean)) : null,
+        tentative: !!p.tentative
+      };
+    });
+}
+function syncEcoPeople(){
+  ECO.groups.forEach(function(g){ g.people = ecoPeopleFor(g.domainId); });
+}
+syncEcoPeople();
 
 /* ------------------------------------------------------------
    Rendering
@@ -1287,7 +1509,7 @@ function viewDashboard(){
       '<button type="button" class="eco-chip" data-action="eco-filter" data-v="strong" aria-pressed="' +
         (f === 'strong') + '"><i></i>Only +2 and stronger</button>' +
       '<span class="sp"></span>' +
-      '<span class="note">Click a strength dot to score a relationship</span>' +
+      '<span class="note">Click a strength dot to score your own relationship</span>' +
       '<button type="button" class="eco-chip" data-action="eco-export">Export SVG</button>' +
       '<button type="button" class="eco-chip" data-action="eco-print">Print</button>' +
     '</div>';
@@ -1450,14 +1672,258 @@ function ecoPrint(){
    PAGE 2b - GRAPHIC VIEW  (deliberately empty for now)
    ------------------------------------------------------------ */
 
+/* ------------------------------------------------------------
+   Breakdowns. Pick a dimension and a measure; every panel below
+   re-renders against the same choice. Bars are plain HTML.
+   ------------------------------------------------------------ */
+var GV_DIMS = [
+  { id:'domain', label:'Domain',          note:'Microsoft contacts grouped by the domain they sit in.' },
+  { id:'group',  label:'Microsoft group', note:'Microsoft contacts grouped by the kind of role they hold.' },
+  { id:'source', label:'Source',          note:'Where each Microsoft contact came from.' },
+  { id:'cbdept', label:'Columbus dept.',  note:'Seen from our side: what each Columbus department reaches into Microsoft.' }
+];
+var GV_MEASURES = [
+  { id:'mean',      label:'Mean score', diverging:true, axis:'-3 to +3' },
+  { id:'coverage',  label:'Coverage',   suffix:'%',     axis:'0 to 100%' },
+  { id:'contacts',  label:'Contacts' },
+  { id:'relations', label:'Relations' }
+];
+function gvDim(){ return byId(GV_DIMS, state.ui.gvDim) || GV_DIMS[0]; }
+function gvMeasure(){ return byId(GV_MEASURES, state.ui.gvMeasure) || GV_MEASURES[0]; }
+
+/* One bucket per category: the Microsoft contacts in it and the relations to them. */
+function gvBuckets(){
+  var dim = gvDim().id, out = [];
+  function bucket(label, profiles){
+    var ids = profiles.map(function(p){ return p.id; });
+    var rels = state.relations.filter(function(r){ return ids.indexOf(r.msProfileId) !== -1; });
+    return { label:label, msIds:ids, rels:rels };
+  }
+  if (dim === 'domain') {
+    out = realDomains().map(function(d){
+      return bucket(d.name, state.msProfiles.filter(function(p){ return p.domainIds.indexOf(d.id) !== -1; }));
+    });
+  } else if (dim === 'group' || dim === 'source') {
+    var key = dim === 'group' ? 'group' : 'source';
+    (dim === 'group' ? MS_GROUPS : MS_SOURCES).forEach(function(v){
+      out.push(bucket(v, state.msProfiles.filter(function(p){ return p[key] === v; })));
+    });
+  } else {
+    /* From our side: the contacts a department actually reaches. */
+    CB_DEPARTMENTS.forEach(function(dep){
+      var mine = state.columbusProfiles.filter(function(c){ return c.department === dep; }).map(function(c){ return c.id; });
+      var rels = state.relations.filter(function(r){ return mine.indexOf(r.columbusId) !== -1; });
+      var ids = [];
+      rels.forEach(function(r){ if (ids.indexOf(r.msProfileId) === -1) ids.push(r.msProfileId); });
+      out.push({ label:dep, msIds:ids, rels:rels });
+    });
+  }
+  /* An unused group or source is just a longer taxonomy - drop it. A domain or a
+     department that reaches nobody is the finding, so those empties stay. */
+  if (dim === 'group' || dim === 'source') {
+    return out.filter(function(b){ return b.msIds.length; });
+  }
+  return out;
+}
+
+function gvValue(b, id){
+  if (id === 'contacts')  return b.msIds.length;
+  if (id === 'relations') return b.rels.length;
+  if (id === 'mean')      return meanOf(b.rels.map(function(r){ return r.score; }));
+  var covered = b.msIds.filter(function(i){ var st = msStats(i); return st.count > 0 && st.best >= 1; }).length;
+  return b.msIds.length ? Math.round(covered / b.msIds.length * 100) : 0;
+}
+function gvFormat(v, m){
+  return m.id === 'mean' ? fmtScore(v) : v + (m.suffix || '');
+}
+
+/* --- the marks --- */
+function barRow(label, value, display, tip, max){
+  var w = max > 0 ? Math.max(value / max * 100, value > 0 ? 1.5 : 0) : 0;
+  return '<div class="bars__row" tabindex="0" data-tip="' + esc(tip) + '">' +
+    '<span class="bars__lbl">' + esc(label) + '</span>' +
+    '<span class="bars__plot"><i class="' + (value ? '' : 'is-zero') + '" style="width:' +
+      (value ? w.toFixed(1) : 2) + (value ? '%' : 'px') + '"></i></span>' +
+    '<span class="bars__val">' + esc(display) + '</span>' +
+  '</div>';
+}
+function divRow(label, value, display, tip){
+  var step = clampScore(Math.round(value)), lvl = scoreLevel(step);
+  var w = Math.min(Math.abs(value) / 3, 1) * 50;
+  var bar = Math.abs(value) < 0.05
+    ? '<i class="pos" style="left:50%;width:2px;background:var(--s-0)"></i>'
+    : '<i class="' + (value > 0 ? 'pos' : 'neg') + '" style="width:' + w.toFixed(1) +
+      '%;background:' + lvl.bg + '"></i>';
+  return '<div class="bars__row" tabindex="0" data-tip="' + esc(tip) + '">' +
+    '<span class="bars__lbl">' + esc(label) + '</span>' +
+    '<span class="dbars__plot"><span class="zline"></span>' + bar + '</span>' +
+    '<span class="bars__val">' + esc(display) + '</span>' +
+  '</div>';
+}
+
+/* --- the panels --- */
+function gvBreakdown(){
+  var m = gvMeasure(), buckets = gvBuckets();
+  if (!buckets.length) return '<div class="empty"><b>Nothing to chart yet</b>No contacts in this breakdown.</div>';
+
+  var rows = buckets.map(function(b){
+    return { label:b.label, value:gvValue(b, m.id), b:b };
+  });
+  if (m.id !== 'mean') rows.sort(function(a, b){ return b.value - a.value; });
+
+  var max = rows.reduce(function(n, r){ return Math.max(n, r.value); }, 0);
+  var body = rows.map(function(r){
+    var scores = r.b.rels.map(function(x){ return x.score; });
+    var tip = r.label + '  ·  ' + r.b.msIds.length + ' contact' + (r.b.msIds.length === 1 ? '' : 's') +
+              '  ·  ' + r.b.rels.length + ' relation' + (r.b.rels.length === 1 ? '' : 's') +
+              (scores.length ? '  ·  mean ' + fmtScore(meanOf(scores)) + ', median ' + fmtScore(medianOf(scores)) : '');
+    return m.diverging
+      ? divRow(r.label, r.value, gvFormat(r.value, m), tip)
+      : barRow(r.label, r.value, gvFormat(r.value, m), tip, max);
+  }).join('');
+
+  var ticks = m.diverging
+    ? '<span>-3</span><span>0</span><span>+3</span>'
+    : '<span>0</span><span>' + gvFormat(max, m) + '</span>';
+  var axis = '<div class="axnote"><span class="axnote__scale">' + ticks + '</span></div>';
+  return '<div class="bars">' + body + '</div>' + axis;
+}
+
+function gvDistribution(){
+  var counts = SCORE_LEVELS.slice().reverse().map(function(l){
+    return { l:l, n:state.relations.filter(function(r){ return r.score === l.v; }).length };
+  });
+  var max = counts.reduce(function(n, c){ return Math.max(n, c.n); }, 0) || 1;
+  var cols = counts.map(function(c){
+    return '<div class="cols__col" tabindex="0" data-tip="' + esc(signed(c.l.v) + ' ' + c.l.label + ' · ' +
+             c.n + ' relation' + (c.n === 1 ? '' : 's') + ' · ' + c.l.desc) + '">' +
+      '<span class="cols__val">' + c.n + '</span>' +
+      '<span class="cols__bar" style="height:' + (c.n / max * 100).toFixed(1) + '%;background:' + c.l.bg + '"></span>' +
+    '</div>';
+  }).join('');
+  var ax = counts.map(function(c){ return '<span>' + signed(c.l.v) + '</span>'; }).join('');
+  return '<div class="cols">' + cols + '</div><div class="cols__ax">' + ax + '</div>';
+}
+
+function gvHolders(){
+  var rows = state.columbusProfiles.map(function(c){
+    var st = cbStats(c.id);
+    return { label:c.name, value:st.count, st:st, dept:c.department };
+  }).sort(function(a, b){ return b.value - a.value || a.label.localeCompare(b.label); });
+  var max = rows.reduce(function(n, r){ return Math.max(n, r.value); }, 0);
+  return '<div class="bars">' + rows.map(function(r){
+    var tip = r.label + '  ·  ' + r.dept + '  ·  ' + r.value + ' relation' + (r.value === 1 ? '' : 's') +
+              (r.value ? '  ·  mean ' + fmtScore(r.st.mean) + ', median ' + fmtScore(r.st.median)
+                       : '  ·  holds no Microsoft relationships');
+    return barRow(r.label, r.value, String(r.value), tip, max);
+  }).join('') + '</div>';
+}
+
+/* --- table twins, so no value is only reachable by hovering --- */
+function gvTable(head, rows){
+  return '<div class="tablewrap"><table><thead><tr>' +
+    head.map(function(h){ return '<th>' + esc(h) + '</th>'; }).join('') +
+    '</tr></thead><tbody>' + rows.map(function(r){
+      return '<tr>' + r.map(function(c, i){
+        return '<td' + (i ? ' class="num"' : '') + '>' + c + '</td>';
+      }).join('') + '</tr>';
+    }).join('') + '</tbody></table></div>';
+}
+function gvBreakdownTable(){
+  var buckets = gvBuckets();
+  return gvTable([gvDim().label, 'Contacts', 'Relations', 'Mean', 'Median', 'Coverage'],
+    buckets.map(function(b){
+      var sc = b.rels.map(function(r){ return r.score; });
+      return [esc(b.label), b.msIds.length, b.rels.length,
+              sc.length ? fmtScore(meanOf(sc)) : '&ndash;',
+              sc.length ? fmtScore(medianOf(sc)) : '&ndash;',
+              gvValue(b, 'coverage') + '%'];
+    }));
+}
+function gvDistributionTable(){
+  return gvTable(['Level', 'Label', 'Relations'], SCORE_LEVELS.map(function(l){
+    return [scoreChip(l.v) + ' ' + esc(l.label), esc(l.desc),
+            state.relations.filter(function(r){ return r.score === l.v; }).length];
+  }));
+}
+function gvHoldersTable(){
+  return gvTable(['Columbus employee', 'Relations', 'Mean', 'Median'],
+    state.columbusProfiles.slice().sort(function(a, b){ return cbStats(b.id).count - cbStats(a.id).count; })
+      .map(function(c){
+        var st = cbStats(c.id);
+        return [personCell(c.name, c.department), st.count,
+                st.count ? fmtScore(st.mean) : '&ndash;', st.count ? fmtScore(st.median) : '&ndash;'];
+      }));
+}
+
+function seg(action, options, current){
+  return '<div class="seg" role="group">' + options.map(function(o){
+    return '<button type="button" data-action="' + action + '" data-id="' + esc(o.id) + '" aria-pressed="' +
+           (o.id === current ? 'true' : 'false') + '">' + esc(o.label) + '</button>';
+  }).join('') + '</div>';
+}
+
 function viewGraphicView(){
-  return '' +
-  '<div class="page__head"><div><h2>Graphic View</h2>' +
-    '<p>Visual map of the Columbus - Microsoft relationships.</p></div></div>' +
-  '<div class="placeholder"><b>Graphic view is not part of this mockup yet</b>' +
-    '<p>This page will show the relationships as a picture rather than a table: Microsoft people ' +
-    'grouped by domain, Columbus employees around them, and the connection strength as the link ' +
-    'between them - so the gaps are visible at a glance.</p></div>';
+  var u = state.ui, m = gvMeasure(), asTable = u.gvView === 'table';
+  var all = state.relations.map(function(r){ return r.score; });
+  var scored = state.msProfiles.filter(function(p){ return msStats(p.id).count > 0; });
+  var covered = state.msProfiles.filter(function(p){ var st = msStats(p.id); return st.count && st.best >= 1; }).length;
+  var single = state.msProfiles.filter(function(p){ return msStats(p.id).count === 1; }).length;
+
+  function kpi(accent, icon, value, label, note){
+    var a = ECO_ACCENTS[accent];
+    return '<div class="gv-kpi" style="--a:' + a.c + ';--a-dark:' + a.d + '">' +
+      '<span class="gv-ico">' + ecoIcon(icon) + '</span>' +
+      '<div><b>' + value + '</b><span>' + esc(label) + '</span><em>' + esc(note) + '</em></div>' +
+    '</div>';
+  }
+
+  /* The accent tints the panel head; the chart itself sits on white. */
+  function panel(accent, icon, title, note, chart, table){
+    var a = ECO_ACCENTS[accent];
+    return '<div class="gv-panel" style="--a:' + a.c + ';--a-dark:' + a.d + '">' +
+      '<div class="gv-panel__head"><span class="gv-ico">' + ecoIcon(icon) + '</span>' +
+        '<div><h3>' + esc(title) + '</h3><p>' + esc(note) + '</p></div></div>' +
+      '<div class="gv-panel__body">' + (asTable ? table() : chart()) + '</div>' +
+    '</div>';
+  }
+
+  var head =
+    '<div class="gv-head"><h2>The alliance in numbers</h2>' +
+      '<p>The same relationships as the dashboard, counted. Pick what to break down and what to measure - ' +
+      'every panel below follows the same choice. Hover any bar for the detail behind it.</p></div>';
+
+  var kpis =
+    '<div class="gv-kpis">' +
+      kpi('blue',   'users',       state.msProfiles.length, 'Microsoft contacts', 'across ' + realDomains().length + ' domains') +
+      kpi('violet', 'link',        state.relations.length,  'Mapped relations',   scored.length + ' contacts scored') +
+      kpi('green',  'trending-up', all.length ? fmtScore(meanOf(all)) : '&ndash;', 'Mean score',
+          all.length ? 'median ' + fmtScore(medianOf(all)) : 'nothing scored yet') +
+      kpi('teal',   'target',      Math.round(covered / state.msProfiles.length * 100) + '%', 'Coverage', 'at least one +1 or better') +
+      kpi('amber',  'flag',        state.msProfiles.length - scored.length, 'Not yet scored', 'nobody has rated them') +
+      kpi('rose',   'crown',       single, 'Held by one person', 'lost if that person leaves') +
+    '</div>';
+
+  var tools =
+    '<div class="gv-tools">' +
+      '<b>Break down by</b>' + seg('gv-dim', GV_DIMS, gvDim().id) +
+      '<b>Measure</b>' + seg('gv-measure', GV_MEASURES, m.id) +
+      '<div class="spacer"></div>' +
+      seg('gv-view', [{ id:'chart', label:'Chart' }, { id:'table', label:'Table' }], asTable ? 'table' : 'chart') +
+    '</div>';
+
+  return '<div class="gv">' + head + kpis + tools +
+    panel('blue', 'layers', m.label + ' by ' + gvDim().label.toLowerCase(), gvDim().note,
+          gvBreakdown, gvBreakdownTable) +
+    '<div class="chart-grid">' +
+      panel('teal', 'target', 'Where the scores sit',
+            'All ' + state.relations.length + ' approved relationships, by level. Position on the scale carries the sign - the colour repeats it.',
+            gvDistribution, gvDistributionTable) +
+      panel('violet', 'users', 'Who holds the relationships',
+            'Relationships per Columbus employee. Empty rows are people the survey has not reached.',
+            gvHolders, gvHoldersTable) +
+    '</div>' +
+  '</div>';
 }
 
 /* ============================================================
@@ -1487,7 +1953,7 @@ function msRows(){
     return {
       id:p.id, name:p.name, title:p.title, group:p.group, source:p.source,
       domainIds:p.domainIds, updatedAt:p.updatedAt, email:p.email,
-      count:s.count, sum:s.sum, best:s.best, band:bandOf(s)
+      count:s.count, sum:s.sum, best:s.best, mean:s.mean, median:s.median, band:bandOf(s)
     };
   });
   rows = rows.filter(function(r){
@@ -1520,7 +1986,7 @@ function viewMsProfiles(){
 
   var head =
     '<div class="page__head"><div><h2>Microsoft Profiles</h2>' +
-      '<p>Approved Microsoft Denmark contacts with their domains, group, source and the summed relationship score across all Columbus employees.</p></div>' +
+      '<p>Approved Microsoft Denmark contacts with their domains, group, source and the mean relationship score across all Columbus employees. Hover a score to see the median behind it.</p></div>' +
       '<div class="page__actions">' +
         '<button class="btn btn--primary" data-action="ms-new"' + (editable ? '' : ' disabled') + '>+ Add Microsoft profile</button>' +
       '</div></div>' +
@@ -1528,7 +1994,7 @@ function viewMsProfiles(){
 
   var stats =
     '<div class="stats">' +
-      '<div class="stat"><b>' + state.msProfiles.length + '</b><span>Microsoft profiles</span><em>across ' + state.domains.length + ' domains</em></div>' +
+      '<div class="stat"><b>' + state.msProfiles.length + '</b><span>Microsoft profiles</span><em>across ' + realDomains().length + ' domains</em></div>' +
       '<div class="stat"><b>' + state.relations.length + '</b><span>Mapped relations</span><em>Columbus &rarr; Microsoft</em></div>' +
       '<div class="stat"><b>' + strong + '</b><span>Strong coverage</span><em>at least one +2 or +3</em></div>' +
       '<div class="stat"><b>' + noConnection + '</b><span>No connection yet</span><em>nobody at Columbus knows them</em></div>' +
@@ -1555,8 +2021,7 @@ function viewMsProfiles(){
       '<td><span class="chip chip--muted">' + esc(r.group) + '</span></td>' +
       '<td><span class="chip chip--src">' + esc(r.source) + '</span></td>' +
       '<td class="num">' + r.count + '</td>' +
-      '<td>' + (r.count ? scoreChip(clampScore(r.sum)) + ' <small class="hint">sum ' + signed(r.sum) + '</small>'
-                        : '<span class="chip chip--muted">no connection</span>') + '</td>' +
+      '<td>' + (r.count ? scoreStat(msStats(r.id)) : '<span class="chip chip--muted">no connection</span>') + '</td>' +
       '<td>' + fmtDate(r.updatedAt) + '</td>' +
       '<td class="actions">' +
         '<button class="btn btn--sm" data-action="ms-edit" data-id="' + r.id + '"' + (editable ? '' : ' disabled') + '>Edit</button> ' +
@@ -1568,13 +2033,13 @@ function viewMsProfiles(){
     '<div class="card">' + toolbar + '<div class="tablewrap"><table><thead><tr>' +
       th('Name','name',u.msSort,u.msDir) + th('Title','title',u.msSort,u.msDir) +
       '<th>Domains</th>' + th('Group','group',u.msSort,u.msDir) + th('Source','source',u.msSort,u.msDir) +
-      th('Conn.','count',u.msSort,u.msDir) + th('Total score','sum',u.msSort,u.msDir) +
+      th('Conn.','count',u.msSort,u.msDir) + th('Mean score','mean',u.msSort,u.msDir) +
       th('Updated','updatedAt',u.msSort,u.msDir) + '<th></th>' +
     '</tr></thead><tbody>' + body + '</tbody></table></div></div>';
 
   var legend = '<div class="card" style="margin-top:18px"><div class="card__body">' +
-    '<h3 style="font-size:13px;margin-bottom:10px">Relationship scale</h3>' + scoreLegend() +
-    '<p class="hint" style="margin:12px 0 0">The table shows the <b>sum</b> of all Columbus relationships to that person - the "vector with a sum" from the requirements. Click a row for the individual scores.</p>' +
+    scaleHeading() + scoreLegend() +
+    '<p class="hint" style="margin:12px 0 0">The table shows the <b>mean</b> of all Columbus relationships to that person. Hover the score for the <b>median</b>, the number of relations and the summed "vector" behind it. Click a row for the individual scores.</p>' +
     '</div></div>';
 
   return head + stats + table + legend;
@@ -1588,18 +2053,22 @@ function viewMsDomains(){
   var editable = canEdit();
   var rows = state.domains.map(function(d){
     var s = domainStats(d.id);
+    var lockNote = 'Unmarked is a system domain - it is where profiles land when a domain is deleted';
     return '<tr>' +
-      '<td><b>' + esc(d.name) + '</b></td>' +
+      '<td><b>' + esc(d.name) + '</b>' +
+        (d.system ? ' <span class="chip chip--muted" title="' + esc(lockNote) + '">system</span>' : '') + '</td>' +
       '<td style="max-width:360px;color:var(--text-muted)">' + esc(d.desc) + '</td>' +
       '<td>' + esc(d.owner) + '</td>' +
       '<td class="num">' + s.profiles + '</td>' +
       '<td class="num">' + s.connections + '</td>' +
-      '<td>' + (s.connections ? scoreChip(s.avg) : '<span class="chip chip--muted">n/a</span>') + '</td>' +
+      '<td>' + (s.connections ? scoreStat(s) : '<span class="chip chip--muted">n/a</span>') + '</td>' +
       '<td><div class="scoreline"><span class="bar"><i style="width:' + s.coverage + '%"></i></span>' +
           '<small>' + s.coverage + '%</small></div></td>' +
       '<td class="actions">' +
-        '<button class="btn btn--sm" data-action="dom-edit" data-id="' + d.id + '"' + (editable ? '' : ' disabled') + '>Edit</button> ' +
-        '<button class="btn btn--sm btn--danger" data-action="dom-delete" data-id="' + d.id + '"' + (editable ? '' : ' disabled') + '>Delete</button>' +
+        '<button class="btn btn--sm" data-action="dom-edit" data-id="' + d.id + '"' +
+          (editable && !d.system ? '' : ' disabled') + (d.system ? ' title="' + esc(lockNote) + '"' : '') + '>Edit</button> ' +
+        '<button class="btn btn--sm btn--danger" data-action="dom-delete" data-id="' + d.id + '"' +
+          (editable && !d.system ? '' : ' disabled') + (d.system ? ' title="' + esc(lockNote) + '"' : '') + '>Delete</button>' +
       '</td></tr>';
   }).join('');
 
@@ -1609,9 +2078,10 @@ function viewMsDomains(){
       '<div class="page__actions"><button class="btn btn--primary" data-action="dom-new"' + (editable ? '' : ' disabled') + '>+ Add domain</button></div></div>' +
     '<div class="card"><div class="tablewrap"><table><thead><tr>' +
       '<th>Domain</th><th>Description</th><th>Process owner</th><th>Profiles</th><th>Connections</th>' +
-      '<th>Avg. score</th><th>Coverage</th><th></th>' +
+      '<th>Mean score</th><th>Coverage</th><th></th>' +
     '</tr></thead><tbody>' + rows + '</tbody></table></div></div>' +
-    '<p class="hint" style="margin-top:12px">Coverage = share of the domain\'s Microsoft profiles where at least one Columbus employee has a score of +1 or better.</p>';
+    '<p class="hint" style="margin-top:12px">Coverage = share of the domain\'s Microsoft profiles where at least one Columbus employee has a score of +1 or better. Mean score is the average of every individual relation in the domain - hover it for the median.</p>' +
+    '<p class="hint" style="margin-top:6px"><b>Unmarked</b> is a system domain. Deleting a domain does not delete its people: any profile left without a domain moves to Unmarked. It is deliberately kept off the dashboard.</p>';
 }
 /* ============================================================
    9. PAGE 4 - COLUMBUS / INTERNAL PROFILES
@@ -1623,7 +2093,7 @@ function cbRows(){
     var s = cbStats(p.id);
     return {
       id:p.id, name:p.name, title:p.title, department:p.department, skills:p.skills,
-      role:p.role, email:p.email, lastSurvey:p.lastSurvey, count:s.count, avg:s.avg, sum:s.sum
+      role:p.role, email:p.email, lastSurvey:p.lastSurvey, count:s.count, avg:s.avg, mean:s.mean, median:s.median, sum:s.sum
     };
   });
   rows = rows.filter(function(r){
@@ -1695,7 +2165,7 @@ function viewColumbusProfiles(){
       '<td><div class="chips">' + r.skills.map(function(s){ return '<span class="chip">' + esc(s) + '</span>'; }).join('') + '</div></td>' +
       '<td>' + roleCell + '</td>' +
       '<td class="num">' + r.count + '</td>' +
-      '<td>' + (r.count ? scoreChip(r.avg) + ' <small class="hint">sum ' + signed(r.sum) + '</small>' : '<span class="chip chip--muted">none</span>') + '</td>' +
+      '<td>' + scoreStat(cbStats(r.id)) + '</td>' +
       '<td>' + fmtDate(r.lastSurvey) + '</td>' +
       '<td class="actions">' +
         '<button class="btn btn--sm" data-action="cb-survey" data-id="' + r.id + '"' + (editable ? '' : ' disabled') + '>Send survey</button> ' +
@@ -1714,19 +2184,43 @@ function viewColumbusProfiles(){
   return head +
     '<div class="card">' + toolbar + '<div class="tablewrap"><table><thead><tr>' +
       thc('Name','name') + thc('Title','title') + thc('Department','department') + '<th>Skills</th>' +
-      thc('Role','role') + thc('Relations','count') + thc('Avg. score','avg') + thc('Last survey','lastSurvey') + '<th></th>' +
+      thc('Role','role') + thc('Relations','count') + thc('Mean score','avg') + thc('Last survey','lastSurvey') + '<th></th>' +
     '</tr></thead><tbody>' + body + '</tbody></table></div></div>' +
-    '<div class="card" style="margin-top:18px"><div class="card__body">' + scoreLegend() + '</div></div>';
+    '<div class="card" style="margin-top:18px"><div class="card__body">' + scaleHeading() + scoreLegend() + '</div></div>';
 }
 
 /* ============================================================
    10. PAGE 5 - PENDING SUBMISSIONS & SURVEYS  (Admin only)
    ============================================================ */
 
+/* The survey schedule. Sits above the queue, because this is the page an Admin
+   opens to see what has come in and to decide what goes out next. */
+function scheduleCard(){
+  var sc = state.surveySchedule, editable = canEdit(), off = !sc.enabled;
+  var timing = off
+    ? '<span class="hint">Automatic sending is paused. Surveys only go out when you send them manually.</span>'
+    : '<span class="hint">Last sent ' + fmtDate(sc.lastSent) + ' &middot; next automatic send <b>' +
+      fmtDate(nextSurveyDate()) + '</b> (' + esc(cadence(sc.cadence).label.toLowerCase()) + ')</span>';
+
+  return '<div class="card" style="margin-bottom:18px"><div class="card__body">' +
+    '<div class="sched">' +
+      '<div class="sched__main">' +
+        '<h3 class="scale-head">Survey schedule</h3>' + timing +
+      '</div>' +
+      '<label class="sched__toggle"><input type="checkbox" data-action="sched-toggle"' +
+        (sc.enabled ? ' checked' : '') + (editable ? '' : ' disabled') + '> Send automatically</label>' +
+      selectField('Every', 'sched-cadence', sc.cadence, CADENCES, '') +
+      '<button class="btn" data-action="cb-survey-all"' + (editable ? '' : ' disabled') + '>Send survey to all now</button>' +
+    '</div>' +
+    '<div class="mockflag" style="margin:14px 0 0">Mockup - no mail is actually sent. Sending stamps every Columbus profile with today\'s date and rolls the next automatic send forward from there.</div>' +
+  '</div></div>';
+}
+
 function viewSubmissions(){
   if (!state.submissions.length) {
     return '<div class="page__head"><div><h2>Pending Submissions &amp; Surveys</h2>' +
       '<p>Survey responses and manual edits from Columbus employees, waiting for approval.</p></div></div>' +
+      scheduleCard() +
       '<div class="card"><div class="empty"><b>Nothing is waiting for approval</b>' +
       'New survey responses and edits will land here. Switch to the <b>Standard</b> role and submit a change from <b>My Relations</b> to see it in action.</div></div>';
   }
@@ -1771,6 +2265,7 @@ function viewSubmissions(){
   return '<div class="page__head"><div><h2>Pending Submissions &amp; Surveys</h2>' +
       '<p>Survey responses and manual edits from Columbus employees. Expand a submission to review the before/after, adjust a score if needed, then approve or reject.</p></div>' +
       '<div class="page__actions"><span class="chip">' + state.submissions.length + ' waiting</span></div></div>' +
+    scheduleCard() +
     list;
 }
 
@@ -1855,7 +2350,8 @@ function viewMyRelations(){
         '<button class="btn btn--accent" data-action="my-submit"' + (dirtyCount ? '' : ' disabled') + '>Submit for approval</button>' +
       '</div></div>' +
     '<div class="mockflag">Your submission does not change the approved data directly - it lands on <b>Pending Submissions</b> where an Admin reviews it. Switch role in the top bar to see it arrive.</div>' +
-    '<div class="card" style="margin-bottom:18px"><div class="card__body">' + scoreLegend() + '</div></div>' +
+    '<div class="card" style="margin-bottom:18px"><div class="card__body">' + scaleHeading() + scoreLegend() +
+      scoreDefsHtml('inline') + '</div></div>' +
     picker +
     '<div style="display:grid;gap:12px;margin-top:18px">' + (cards || '<div class="card"><div class="empty"><b>You have no relations yet</b>Add a Microsoft contact above to get started.</div></div>') + removed + '</div>';
 }
@@ -1890,12 +2386,13 @@ function drawerMs(id){
 
   return '<div class="drawer"><div class="drawer__bg" data-action="close-layer"></div><div class="drawer__panel">' +
     '<div class="drawer__head"><div>' + personCell(p.name, p.title) +
-      '<p>' + esc(p.email) + '</p></div>' +
+      '<p>' + (p.email ? esc(p.email) : '<span class="hint">No e-mail on file</span>') + '</p></div>' +
       '<div style="margin-left:auto"><button class="btn btn--sm btn--ghost" data-action="close-layer">&#10005;</button></div></div>' +
     '<div class="drawer__body">' +
       '<div class="stats" style="margin:0;grid-template-columns:1fr 1fr">' +
         '<div class="stat"><b>' + s.count + '</b><span>Columbus connections</span></div>' +
-        '<div class="stat"><b>' + signed(s.sum) + '</b><span>Summed score</span></div>' +
+        '<div class="stat"><b>' + (s.count ? fmtScore(s.mean) : '&ndash;') + '</b><span>Mean score</span>' +
+          '<em>' + (s.count ? 'median ' + fmtScore(s.median) + ' \u00b7 sum ' + signed(s.sum) : 'no connections yet') + '</em></div>' +
       '</div>' +
       '<dl class="kv">' +
         '<dt>Domains</dt><dd>' + domainChips(p.domainIds) + '</dd>' +
@@ -1930,7 +2427,8 @@ function modalMarkup(m){
         '<div class="field full"><label>Domains</label><div class="checks">' + state.domains.map(function(d){
           return '<label><input type="checkbox" class="f-dom" value="' + d.id + '"' +
                  (p.domainIds.indexOf(d.id) !== -1 ? ' checked' : '') + '>' + esc(d.name) + '</label>';
-        }).join('') + '</div></div>' +
+        }).join('') + '</div>' +
+        '<p class="hint" style="margin-top:6px">Leave everything unticked and the profile lands in <b>Unmarked</b>.</p></div>' +
         '<div class="field full"><label>Notes</label><textarea id="f-notes" rows="3">' + esc(p.notes) + '</textarea></div>' +
       '</div>',
       '<button class="btn" data-action="close-layer">Cancel</button>' +
@@ -1951,7 +2449,7 @@ function modalMarkup(m){
   if (m.type === 'cb') {
     var c = m.id ? cb(m.id) : { name:'', title:'', email:'', department:CB_DEPARTMENTS[2], role:'standard', skills:[] };
     return shellModal(m.id ? 'Edit Columbus user' : 'Add Columbus user',
-      'Internal user. A survey can be sent as soon as the user exists.',
+      'Internal user. Creating the profile sends them the relationship survey straight away.',
       '<div class="form-grid">' +
         inputField('f-cname', 'Full name', c.name, 'full') +
         inputField('f-ctitle', 'Title', c.title) +
@@ -1961,7 +2459,8 @@ function modalMarkup(m){
         inputField('f-cskills', 'Skills (comma separated)', c.skills.join(', '), 'full') +
       '</div>',
       '<button class="btn" data-action="close-layer">Cancel</button>' +
-      '<button class="btn btn--primary" data-action="cb-save" data-id="' + (m.id || '') + '">Save user</button>');
+      '<button class="btn btn--primary" data-action="cb-save" data-id="' + (m.id || '') + '">' +
+        (m.id ? 'Save user' : 'Create profile + Send survey') + '</button>');
   }
   return '';
 }
@@ -2050,12 +2549,22 @@ function ecoSetStrength(key, v){
   if (!g) return;
   var p = g.people[Number(parts[1])];
   if (!p) return;
-  p.strength = v === 'none' ? null : Number(v);
+
+  /* The dot writes a real relation for the signed-in user, then the board is
+     re-derived - so the dashboard and the tables always agree. */
+  var me = state.session.userId, score = v === 'none' ? null : Number(v);
+  state.relations = state.relations.filter(function(r){
+    return !(r.columbusId === me && r.msProfileId === p.msId);
+  });
+  if (score !== null) {
+    state.relations.push({ id:uid('r'), columbusId:me, msProfileId:p.msId,
+                           score:score, note:'Scored from the dashboard.', updatedAt:today() });
+  }
   state.ui.ecoPick = null;
   render();
-  toast(p.strength === null
-    ? p.name + ' is no longer scored'
-    : p.name + ' set to ' + (p.strength > 0 ? '+' : '') + p.strength + ' - ' + ecoLevel(p.strength).label, 'ok');
+  toast(score === null
+    ? p.name + ' is no longer scored by you'
+    : p.name + ' set to ' + signed(score) + ' - ' + ecoLevel(score).label, 'ok');
 }
 
 /* ============================================================
@@ -2117,6 +2626,18 @@ document.addEventListener('change', function(e){
     if (person) { person.role = el.value; toast(person.name + ' is now ' + roleName(el.value), 'ok'); }
     render();
   }
+  else if (a === 'sched-cadence') {
+    if (!canEdit()) return;
+    state.surveySchedule.cadence = el.value;
+    toast('Surveys now go out ' + cadence(el.value).label.toLowerCase(), 'ok');
+    render();
+  }
+  else if (a === 'sched-toggle') {
+    if (!canEdit()) return;
+    state.surveySchedule.enabled = el.checked;
+    toast(el.checked ? 'Automatic surveys are on' : 'Automatic surveys are paused', 'ok');
+    render();
+  }
   else if (a === 'my-pick') { state.ui.myPicker = el.value; render(); }
   else if (a === 'my-note') { render(); }
 });
@@ -2153,6 +2674,10 @@ document.addEventListener('click', function(e){
       break;
 
     /* --- dashboard: ecosystem map --- */
+    case 'gv-dim':     state.ui.gvDim     = el.getAttribute('data-id'); render(); break;
+    case 'gv-measure': state.ui.gvMeasure = el.getAttribute('data-id'); render(); break;
+    case 'gv-view':    state.ui.gvView    = el.getAttribute('data-id'); render(); break;
+
     case 'eco-dot':
       state.ui.ecoPick = state.ui.ecoPick === id ? null : id;
       render(); break;
@@ -2187,6 +2712,9 @@ document.addEventListener('click', function(e){
       var name = val('f-name');
       if (!name) { toast('A name is required', 'err'); return; }
       var doms = Array.prototype.slice.call(document.querySelectorAll('.f-dom:checked')).map(function(x){ return x.value; });
+      // Unmarked is a fallback, never a co-domain: it applies only when nothing else does.
+      var real = doms.filter(function(x){ return x !== UNMARKED_ID; });
+      doms = real.length ? real : [UNMARKED_ID];
       var payload = { name:name, title:val('f-title'), email:val('f-email'), group:val('f-group'),
                       source:val('f-source'), domainIds:doms, notes:val('f-notes'), updatedAt:today() };
       if (id) { var t = ms(id); for (var key in payload) t[key] = payload[key]; toast('Updated ' + name, 'ok'); }
@@ -2196,23 +2724,41 @@ document.addEventListener('click', function(e){
 
     /* --- Microsoft domains --- */
     case 'dom-new':  openModal({ type:'dom' }); break;
-    case 'dom-edit': openModal({ type:'dom', id:id }); break;
+    case 'dom-edit':
+      if ((dom(id) || {}).system) { toast('The Unmarked domain cannot be edited', 'err'); return; }
+      openModal({ type:'dom', id:id });
+      break;
     case 'dom-delete':
+      if ((dom(id) || {}).system) { toast('The Unmarked domain cannot be deleted', 'err'); return; }
       var used = domainStats(id).profiles;
-      if (used) { toast('Cannot delete: ' + used + ' Microsoft profile(s) are still mapped to this domain', 'err'); return; }
       pendingConfirm = function(){
         var d = dom(id);
         state.domains = state.domains.filter(function(x){ return x.id !== id; });
-        toast('Deleted domain ' + (d ? d.name : ''), 'ok');
+        // Nobody is orphaned: profiles left without a domain land in Unmarked.
+        state.msProfiles.forEach(function(p){
+          p.domainIds = p.domainIds.filter(function(x){ return x !== id; });
+          if (!p.domainIds.length) p.domainIds = [UNMARKED_ID];
+        });
+        toast('Deleted domain ' + (d ? d.name : '') +
+              (used ? ' - ' + used + ' profile(s) moved to Unmarked' : ''), 'ok');
       };
-      openModal({ type:'confirm', title:'Delete domain', sub:'No profiles are mapped to it.',
-        body:'Delete <b>' + esc((dom(id)||{}).name) + '</b>?', okLabel:'Delete', danger:true });
+      openModal({ type:'confirm', title:'Delete domain',
+        sub: used ? 'The profiles mapped to it are not deleted.' : 'No profiles are mapped to it.',
+        body:'Delete <b>' + esc((dom(id)||{}).name) + '</b>?' +
+             (used ? '<br><span class="hint"><b>' + used + '</b> Microsoft profile(s) mapped only to this domain will move to <b>Unmarked</b>.</span>' : ''),
+        okLabel:'Delete', danger:true });
       break;
     case 'dom-save':
       var dn = val('f-dname');
       if (!dn) { toast('A domain name is required', 'err'); return; }
       if (id) { var dd = dom(id); dd.name = dn; dd.owner = val('f-downer'); dd.desc = val('f-ddesc'); toast('Updated ' + dn, 'ok'); }
-      else { state.domains.push({ id:uid('d'), name:dn, owner:val('f-downer'), desc:val('f-ddesc') }); toast('Added ' + dn, 'ok'); }
+      else {
+        // Unmarked always sits last, so insert ahead of it.
+        var at = state.domains.length;
+        state.domains.forEach(function(x, i){ if (x.system && i < at) at = i; });
+        state.domains.splice(at, 0, { id:uid('d'), name:dn, owner:val('f-downer'), desc:val('f-ddesc') });
+        toast('Added ' + dn, 'ok');
+      }
       closeLayer(); render();
       break;
 
@@ -2230,9 +2776,10 @@ document.addEventListener('click', function(e){
       var roleId = 'standard';
       ROLES.forEach(function(r){ if (r.name === val('f-crole')) roleId = r.id; });
       var skills = val('f-cskills').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+      // Creating a profile also sends the first survey - that is what the button says.
       state.columbusProfiles.push({ id:uid('c'), name:cn, title:val('f-ctitle'), department:val('f-cdept'),
-        skills:skills, role:roleId, email:val('f-cmail'), lastSurvey:null });
-      toast('Added ' + cn, 'ok');
+        skills:skills, role:roleId, email:val('f-cmail'), lastSurvey:today() });
+      toast('Created ' + cn + ' and sent them a survey', 'ok');
       closeLayer(); render();
       break;
     case 'cb-delete':
@@ -2249,10 +2796,15 @@ document.addEventListener('click', function(e){
     case 'cb-survey-all':
       pendingConfirm = function(){
         state.columbusProfiles.forEach(function(p){ p.lastSurvey = today(); });
+        // The cadence counts from the last send, so the next one rolls forward too.
+        state.surveySchedule.lastSent = today();
         toast('Survey sent to all ' + state.columbusProfiles.length + ' users', 'ok');
       };
       openModal({ type:'confirm', title:'Send survey to everyone', sub:'Mockup - no mail is actually sent.',
-        body:'Send a new relationship survey to all <b>' + state.columbusProfiles.length + '</b> Columbus users?',
+        body:'Send a new relationship survey to all <b>' + state.columbusProfiles.length + '</b> Columbus users?' +
+             (state.surveySchedule.enabled
+               ? '<br><span class="hint">The next automatic send moves to ' + fmtDate(addMonths(today(), cadence(state.surveySchedule.cadence).months)) + '.</span>'
+               : ''),
         okLabel:'Send survey' });
       break;
 
@@ -2315,6 +2867,66 @@ document.addEventListener('mouseover', function(e){
   ecoHot = id;
   ecoHover(id);
 });
+
+/* ------------------------------------------------------------
+   Shared hover tooltip. One box on <body>, so it is never clipped by a
+   scrolling table or misplaced by the scaled dashboard canvas.
+   [data-tip]     - plain text
+   [data-tip-id]  - rich HTML from TIP_HTML
+   ------------------------------------------------------------ */
+var tipBox = document.createElement('div');
+tipBox.className = 'tipbox';
+tipBox.setAttribute('role', 'tooltip');
+document.body.appendChild(tipBox);
+var tipHost = null;
+
+function tipShow(el){
+  if (el === tipHost) return;
+  var id = el.getAttribute('data-tip-id');
+  if (id) {
+    if (!TIP_HTML[id]) return;
+    tipBox.innerHTML = TIP_HTML[id]();
+  } else {
+    tipBox.textContent = el.getAttribute('data-tip') || '';
+  }
+  tipHost = el;
+  tipBox.classList.add('is-on');
+  tipPlace(el);
+}
+function tipPlace(el){
+  var r = el.getBoundingClientRect(), b = tipBox.getBoundingClientRect(), pad = 8;
+  var top = r.top - b.height - pad;                       // above by default
+  if (top < pad) top = r.bottom + pad;                    // flip below if it would clip
+  if (top + b.height > window.innerHeight - pad) top = Math.max(pad, window.innerHeight - b.height - pad);
+  var left = r.left + r.width / 2 - b.width / 2;          // centred, then clamped
+  left = Math.max(pad, Math.min(left, window.innerWidth - b.width - pad));
+  tipBox.style.left = Math.round(left) + 'px';
+  tipBox.style.top  = Math.round(top) + 'px';
+}
+function tipHide(){
+  if (!tipHost) return;
+  tipHost = null;
+  tipBox.classList.remove('is-on');
+}
+function tipTarget(node){
+  return node && node.closest ? node.closest('[data-tip],[data-tip-id]') : null;
+}
+document.addEventListener('mouseover', function(e){
+  var t = tipTarget(e.target);
+  if (t) tipShow(t); else tipHide();
+});
+document.addEventListener('focusin',  function(e){
+  var t = tipTarget(e.target);
+  if (t) tipShow(t); else tipHide();
+});
+document.addEventListener('focusout', tipHide);
+window.addEventListener('scroll', tipHide, true);
+window.addEventListener('resize', tipHide);
+// A re-render throws away the element the tooltip was anchored to, so any click
+// that is not on the tip's own trigger closes it.
+document.addEventListener('click', function(e){
+  if (tipTarget(e.target) !== tipHost) tipHide();
+}, true);
 
 /* ============================================================
    15. INIT
