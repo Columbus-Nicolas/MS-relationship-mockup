@@ -65,6 +65,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasIndex(x => new { x.ColumbusUserId, x.MsProfileId }).IsUnique();
             e.HasOne<ColumbusUser>().WithMany().HasForeignKey(x => x.ColumbusUserId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne<MsProfile>().WithMany().HasForeignKey(x => x.MsProfileId).OnDelete(DeleteBehavior.Restrict);
+            // Concurrency token for lost-update protection (Task 7b, finding 2). UpdatedAt is
+            // already stamped unconditionally by RelationWriter.UpsertAsync on every write, so
+            // this adds zero schema — EF just includes "updated_at = @original" in the UPDATE's
+            // WHERE clause, and a concurrent writer's stale read now fails loudly instead of
+            // silently corrupting relation_history's old->new chain.
+            e.Property(x => x.UpdatedAt).IsConcurrencyToken();
         });
 
         b.Entity<RelationHistory>(e =>

@@ -55,4 +55,46 @@ public class RelationWriterTests(PostgresFixture fixture) : IAsyncLifetime
         Assert.Equal(-2, last.OldScore);
         Assert.Null(last.NewScore);
     }
+
+    /// <summary>
+    /// Reproduces the lost-update race from the Task 7 review deterministically, with no
+    /// threads or sleeps: two <see cref="AppDbContext"/> instances both load the relation
+    /// while it is still at its pre-update state, then one writes. Because
+    /// <see cref="Relation.UpdatedAt"/> is a concurrency token, the second writer's stale
+    /// snapshot no longer matches the row, and EF fails its UPDATE instead of silently
+    /// letting a second, stale-based history row land.
+    /// </summary>
+    [Fact]
+    public async Task Concurrent_updates_to_the_same_relation_are_caught()
+    {
+        await using var seedDb = fixture.NewContext();
+        var (user, profile) = await Seed.PairAsync(seedDb);
+        await new RelationWriter(seedDb).UpsertAsync(user.Id, profile.Id, 1, "initial", user.Id);
+
+        await using var dbA = fixture.NewContext();
+        await using var dbB = fixture.NewContext();
+
+        // Both contexts load (and thus track) the relation at its pre-update state before
+        // either one saves. EF's identity map means dbB keeps this stale snapshot — including
+        // the original UpdatedAt token — even after dbA's write below changes the real row.
+        await dbA.Relations.SingleAsync(r => r.ColumbusUserId == user.Id && r.MsProfileId == profile.Id);
+        await dbB.Relations.SingleAsync(r => r.ColumbusUserId == user.Id && r.MsProfileId == profile.Id);
+
+        var writerA = new RelationWriter(dbA);
+        var writerB = new RelationWriter(dbB);
+
+        await writerA.UpsertAsync(user.Id, profile.Id, 2, "writer A", user.Id);
+
+        await Assert.ThrowsAsync<DbUpdateConcurrencyException>(
+            () => writerB.UpsertAsync(user.Id, profile.Id, 3, "writer B", user.Id));
+
+        await using var verifyDb = fixture.NewContext();
+        Assert.Equal(2, (await verifyDb.Relations
+            .SingleAsync(r => r.ColumbusUserId == user.Id && r.MsProfileId == profile.Id)).Score);
+
+        var updatedHistoryCount = await verifyDb.RelationHistory.CountAsync(h =>
+            h.ColumbusUserId == user.Id && h.MsProfileId == profile.Id &&
+            h.ChangeType == RelationChangeType.Updated);
+        Assert.Equal(1, updatedHistoryCount);
+    }
 }
