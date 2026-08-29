@@ -120,4 +120,64 @@ public class SubmissionTests(PostgresFixture fixture) : IAsyncLifetime
         Assert.Equal(SubmissionStatus.Pending,
             (await db.Submissions.SingleAsync(s => s.Id == submission.Id)).Status);
     }
+
+    [Fact]
+    public async Task Approving_a_remove_item_deletes_the_relation_and_links_the_history()
+    {
+        await using var db = fixture.NewContext();
+        var (user, profile) = await Seed.PairAsync(db);
+        var admin = await Seed.UserAsync(db);
+        await new RelationWriter(db).UpsertAsync(user.Id, profile.Id, -1, "strained", user.Id);
+        var service = new SubmissionService(db, new RelationWriter(db));
+        var submission = await service.SubmitAsync(user.Id,
+            [new SubmissionDraft(profile.Id, SubmissionAction.Remove, null, null)]);
+
+        await service.ApproveAsync(submission.Id, admin.Id);
+
+        Assert.False(await db.Relations.AnyAsync(r => r.ColumbusUserId == user.Id && r.MsProfileId == profile.Id));
+        var history = await db.RelationHistory.SingleAsync(h => h.SubmissionId == submission.Id);
+        Assert.Equal(RelationChangeType.Removed, history.ChangeType);
+        Assert.Equal(SubmissionStatus.Approved,
+            (await db.Submissions.SingleAsync(s => s.Id == submission.Id)).Status);
+    }
+
+    [Fact]
+    public async Task Approving_a_remove_item_for_an_already_absent_relation_is_a_no_op_that_still_approves()
+    {
+        // No relation exists for this pair (e.g. it was removed independently, or another
+        // pending submission already removed it) — RelationWriter.RemoveAsync is a silent
+        // no-op in that case. This pins that as deliberate: no throw, no history row, and
+        // the submission still reaches Approved (see the comment in
+        // SubmissionService.ApproveAsync's Remove branch for why).
+        await using var db = fixture.NewContext();
+        var (user, profile) = await Seed.PairAsync(db);
+        var admin = await Seed.UserAsync(db);
+        var service = new SubmissionService(db, new RelationWriter(db));
+        var submission = await service.SubmitAsync(user.Id,
+            [new SubmissionDraft(profile.Id, SubmissionAction.Remove, null, null)]);
+
+        await service.ApproveAsync(submission.Id, admin.Id);
+
+        Assert.False(await db.Relations.AnyAsync(r => r.ColumbusUserId == user.Id && r.MsProfileId == profile.Id));
+        Assert.False(await db.RelationHistory.AnyAsync(h => h.SubmissionId == submission.Id));
+        Assert.Equal(SubmissionStatus.Approved,
+            (await db.Submissions.SingleAsync(s => s.Id == submission.Id)).Status);
+    }
+
+    [Fact]
+    public async Task Rejecting_after_approve_throws()
+    {
+        await using var db = fixture.NewContext();
+        var (user, profile) = await Seed.PairAsync(db);
+        var admin = await Seed.UserAsync(db);
+        var service = new SubmissionService(db, new RelationWriter(db));
+        var submission = await service.SubmitAsync(user.Id,
+            [new SubmissionDraft(profile.Id, SubmissionAction.Upsert, 2, "positive")]);
+
+        await service.ApproveAsync(submission.Id, admin.Id);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.RejectAsync(submission.Id, admin.Id));
+        Assert.Equal(SubmissionStatus.Approved,
+            (await db.Submissions.SingleAsync(s => s.Id == submission.Id)).Status);
+    }
 }
