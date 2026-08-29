@@ -10,6 +10,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<CbDepartment> CbDepartments => Set<CbDepartment>();
     public DbSet<MsDomain> MsDomains => Set<MsDomain>();
     public DbSet<ColumbusUser> ColumbusUsers => Set<ColumbusUser>();
+    public DbSet<MsProfile> MsProfiles => Set<MsProfile>();
+    public DbSet<MsProfileDomain> MsProfileDomains => Set<MsProfileDomain>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -25,6 +27,23 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasIndex(x => x.EntraObjectId).IsUnique().HasFilter("entra_object_id IS NOT NULL");
             e.Property(x => x.Role).HasConversion<string>();
             e.Property(x => x.Status).HasConversion<string>();
+        });
+
+        b.Entity<MsProfile>(e =>
+        {
+            e.ToTable("ms_profiles");
+            e.Property(x => x.IdentityKey)
+             .HasComputedColumnSql(
+                 "CASE WHEN email IS NULL OR btrim(email) = '' " +
+                 "THEN lower(btrim(name)) || '|' || lower(btrim(coalesce(organization, ''))) " +
+                 "ELSE lower(btrim(email)) END", stored: true);
+            e.HasIndex(x => x.IdentityKey).IsUnique().HasFilter("merged_into_id IS NULL");
+        });
+
+        b.Entity<MsProfileDomain>(e =>
+        {
+            e.ToTable("ms_profile_domains");
+            e.HasKey(x => new { x.MsProfileId, x.DomainId });
         });
     }
 }
