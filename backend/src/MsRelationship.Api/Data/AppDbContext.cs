@@ -12,7 +12,15 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<ColumbusUser> ColumbusUsers => Set<ColumbusUser>();
     public DbSet<MsProfile> MsProfiles => Set<MsProfile>();
     public DbSet<MsProfileDomain> MsProfileDomains => Set<MsProfileDomain>();
+
+    /// <summary>
+    /// Do not Add/Update/Remove against this set directly outside
+    /// <see cref="Features.Relations.RelationWriter"/> — every mutation must also append a
+    /// <see cref="Entities.RelationHistory"/> row in the same SaveChanges call (FR-09).
+    /// </summary>
     public DbSet<Relation> Relations => Set<Relation>();
+
+    public DbSet<RelationHistory> RelationHistory => Set<RelationHistory>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -54,6 +62,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasIndex(x => new { x.ColumbusUserId, x.MsProfileId }).IsUnique();
             e.HasOne<ColumbusUser>().WithMany().HasForeignKey(x => x.ColumbusUserId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne<MsProfile>().WithMany().HasForeignKey(x => x.MsProfileId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        b.Entity<RelationHistory>(e =>
+        {
+            e.ToTable("relation_history");
+            e.Property(x => x.ChangeType).HasConversion<string>();
+            e.HasIndex(x => new { x.ColumbusUserId, x.MsProfileId });
+            e.HasIndex(x => x.ChangedAt);
         });
     }
 }

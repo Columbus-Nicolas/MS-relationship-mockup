@@ -26,6 +26,26 @@ public class RelationTests(PostgresFixture fixture) : IAsyncLifetime
         await Assert.ThrowsAsync<DbUpdateException>(() => db.SaveChangesAsync());
     }
 
+    [Theory]
+    [InlineData(-3)]
+    [InlineData(0)]
+    public async Task Scores_at_the_scale_boundary_are_accepted(int score)
+    {
+        await using var db = fixture.NewContext();
+        var (user, profile) = await Seed.PairAsync(db);
+        db.Relations.Add(new Relation
+        {
+            Id = Guid.NewGuid(), ColumbusUserId = user.Id, MsProfileId = profile.Id, Score = score
+        });
+
+        await db.SaveChangesAsync();
+
+        Assert.Equal(score, await db.Relations
+            .Where(r => r.ColumbusUserId == user.Id && r.MsProfileId == profile.Id)
+            .Select(r => r.Score)
+            .SingleAsync());
+    }
+
     [Fact]
     public async Task One_microsoft_person_takes_many_columbus_relations()
     {
