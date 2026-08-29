@@ -22,6 +22,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     public DbSet<RelationHistory> RelationHistory => Set<RelationHistory>();
 
+    public DbSet<Submission> Submissions => Set<Submission>();
+    public DbSet<SubmissionItem> SubmissionItems => Set<SubmissionItem>();
+
     protected override void OnModelCreating(ModelBuilder b)
     {
         b.Entity<MsGroup>().ToTable("ms_groups").HasIndex(x => x.Name).IsUnique();
@@ -70,6 +73,20 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.Property(x => x.ChangeType).HasConversion<string>();
             e.HasIndex(x => new { x.ColumbusUserId, x.MsProfileId });
             e.HasIndex(x => x.ChangedAt);
+        });
+
+        b.Entity<Submission>(e =>
+        {
+            e.ToTable("submissions");
+            e.Property(x => x.Status).HasConversion<string>();
+            e.HasIndex(x => x.Status);
+        });
+
+        b.Entity<SubmissionItem>(e =>
+        {
+            e.ToTable("submission_items");
+            e.Property(x => x.Action).HasConversion<string>();
+            e.HasIndex(x => x.SubmissionId);
         });
     }
 }
