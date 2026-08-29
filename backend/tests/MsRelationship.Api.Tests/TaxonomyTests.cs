@@ -5,8 +5,12 @@ using Xunit;
 namespace MsRelationship.Api.Tests;
 
 [Collection("postgres")]
-public class TaxonomyTests(PostgresFixture fixture)
+public class TaxonomyTests(PostgresFixture fixture) : IAsyncLifetime
 {
+    public Task InitializeAsync() => fixture.ResetAsync();
+
+    public Task DisposeAsync() => Task.CompletedTask;
+
     [Fact]
     public async Task A_new_group_needs_no_migration()
     {

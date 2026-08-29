@@ -9,6 +9,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<MsSource> MsSources => Set<MsSource>();
     public DbSet<CbDepartment> CbDepartments => Set<CbDepartment>();
     public DbSet<MsDomain> MsDomains => Set<MsDomain>();
+    public DbSet<ColumbusUser> ColumbusUsers => Set<ColumbusUser>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -16,5 +17,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         b.Entity<MsSource>().ToTable("ms_sources").HasIndex(x => x.Name).IsUnique();
         b.Entity<CbDepartment>().ToTable("cb_departments").HasIndex(x => x.Name).IsUnique();
         b.Entity<MsDomain>().ToTable("ms_domains").HasIndex(x => x.Name).IsUnique();
+
+        b.Entity<ColumbusUser>(e =>
+        {
+            e.ToTable("columbus_users");
+            e.HasIndex(x => x.Email).IsUnique();
+            e.HasIndex(x => x.EntraObjectId).IsUnique().HasFilter("\"EntraObjectId\" IS NOT NULL");
+            e.Property(x => x.Role).HasConversion<string>();
+            e.Property(x => x.Status).HasConversion<string>();
+        });
     }
 }
