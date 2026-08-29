@@ -1,2 +1,17 @@
 # Local tooling / dev-server config
 .claude/
+
+# Secrets — .env is tracked in history as of 015ba58; see spec OD-6
+.env
+
+# OS noise
+.DS_Store
+
+# .NET
+bin/
+obj/
+*.user
+
+# Node
+node_modules/
+dist/
