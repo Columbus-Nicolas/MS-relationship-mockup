@@ -12,6 +12,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<ColumbusUser> ColumbusUsers => Set<ColumbusUser>();
     public DbSet<MsProfile> MsProfiles => Set<MsProfile>();
     public DbSet<MsProfileDomain> MsProfileDomains => Set<MsProfileDomain>();
+    public DbSet<Relation> Relations => Set<Relation>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -44,6 +45,15 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         {
             e.ToTable("ms_profile_domains");
             e.HasKey(x => new { x.MsProfileId, x.DomainId });
+        });
+
+        b.Entity<Relation>(e =>
+        {
+            e.ToTable("relations", t =>
+                t.HasCheckConstraint("ck_relations_score", "score BETWEEN -3 AND 3"));
+            e.HasIndex(x => new { x.ColumbusUserId, x.MsProfileId }).IsUnique();
+            e.HasOne<ColumbusUser>().WithMany().HasForeignKey(x => x.ColumbusUserId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<MsProfile>().WithMany().HasForeignKey(x => x.MsProfileId).OnDelete(DeleteBehavior.Restrict);
         });
     }
 }
