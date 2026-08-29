@@ -38,6 +38,20 @@ public class IdentityKeyTests(PostgresFixture fixture) : IAsyncLifetime
         Assert.Equal("claus iversen|microsoft", (await read.MsProfiles.SingleAsync(x => x.Id == p.Id)).IdentityKey);
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task Empty_or_whitespace_email_falls_back_to_name_and_organization(string email)
+    {
+        await using var db = fixture.NewContext();
+        var p = Profile("Claus Iversen", email, "Microsoft");
+        db.MsProfiles.Add(p);
+        await db.SaveChangesAsync();
+
+        await using var read = fixture.NewContext();
+        Assert.Equal("claus iversen|microsoft", (await read.MsProfiles.SingleAsync(x => x.Id == p.Id)).IdentityKey);
+    }
+
     [Fact]
     public async Task Live_duplicates_are_rejected()
     {

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using MsRelationship.Api.Data;
+using MsRelationship.Api.Features.MsProfiles;
 using MsRelationship.Api.Features.Relations;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,6 +9,7 @@ builder.Services.AddDbContext<AppDbContext>(o =>
     o.UseNpgsql(builder.Configuration.GetConnectionString("Default"))
         .UseSnakeCaseNamingConvention());
 builder.Services.AddScoped<RelationWriter>();
+builder.Services.AddScoped<MsProfileMatcher>();
 
 var app = builder.Build();
 app.MapGet("/health", () => Results.Text("ok"));
