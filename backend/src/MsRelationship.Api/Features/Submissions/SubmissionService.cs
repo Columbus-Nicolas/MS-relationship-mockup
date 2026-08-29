@@ -57,6 +57,13 @@ public class SubmissionService(AppDbContext db, RelationWriter writer)
         foreach (var item in items)
         {
             if (item.Action == SubmissionAction.Remove)
+                // Intentional no-op when the relation is already gone (e.g. two pending
+                // submissions targeted the same profile, or it was removed independently
+                // between submit and approve): RelationWriter.RemoveAsync silently returns
+                // without writing history in that case. The desired end state (no relation)
+                // already holds, and this SubmissionItem row remains the durable record of
+                // what was requested and approved — do not make this throw or force a
+                // history write for a change that has no effect.
                 await writer.RemoveAsync(submission.ColumbusUserId, item.MsProfileId, actorId, submissionId);
             else
                 await writer.UpsertAsync(submission.ColumbusUserId, item.MsProfileId,
