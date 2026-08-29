@@ -89,4 +89,30 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasIndex(x => x.SubmissionId);
         });
     }
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        EnforceRelationHistoryAppendOnly();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(
+        bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        EnforceRelationHistoryAppendOnly();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    /// <summary>
+    /// Enforces FR-09 structurally: <see cref="RelationHistory"/> rows may be inserted but
+    /// never modified or deleted, regardless of which caller staged the change.
+    /// </summary>
+    private void EnforceRelationHistoryAppendOnly()
+    {
+        var offending = ChangeTracker.Entries<RelationHistory>()
+            .Any(e => e.State is EntityState.Modified or EntityState.Deleted);
+        if (offending)
+            throw new InvalidOperationException(
+                "relation_history is append-only: history rows may be inserted but never modified or deleted.");
+    }
 }
