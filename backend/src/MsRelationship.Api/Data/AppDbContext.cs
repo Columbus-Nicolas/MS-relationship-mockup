@@ -22,7 +22,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         {
             e.ToTable("columbus_users");
             e.HasIndex(x => x.Email).IsUnique();
-            e.HasIndex(x => x.EntraObjectId).IsUnique().HasFilter("\"EntraObjectId\" IS NOT NULL");
+            e.HasIndex(x => x.EntraObjectId).IsUnique().HasFilter("entra_object_id IS NOT NULL");
             e.Property(x => x.Role).HasConversion<string>();
             e.Property(x => x.Status).HasConversion<string>();
         });

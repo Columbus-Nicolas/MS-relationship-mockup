@@ -23,6 +23,7 @@ public sealed class PostgresFixture : IAsyncLifetime
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
             .UseNpgsql(ConnectionString)
+            .UseSnakeCaseNamingConvention()
             .Options;
         return new AppDbContext(options);
     }
