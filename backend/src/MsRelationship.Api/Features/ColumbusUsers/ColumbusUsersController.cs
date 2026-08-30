@@ -24,4 +24,15 @@ public class ColumbusUsersController(AppDbContext db, UserArchiver archiver) : C
         await archiver.ArchiveAsync(id, actorId);
         return NoContent();
     }
+
+    // ICurrentUser arrives in Task 13. Until then, the outgoing Super Admin is a route-supplied
+    // query parameter (actorId); Task 13 Step 6 replaces it with ICurrentUser.Id. `id` is the
+    // incoming Super Admin.
+    [HttpPost("{id:guid}/promote-super-admin")]
+    public async Task<IActionResult> PromoteSuperAdmin(Guid id,
+        [FromQuery] Guid actorId, [FromServices] SuperAdminTransfer transfer)
+    {
+        await transfer.TransferAsync(actorId, id);
+        return NoContent();
+    }
 }

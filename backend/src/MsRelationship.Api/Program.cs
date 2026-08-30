@@ -14,6 +14,7 @@ builder.Services.AddScoped<RelationWriter>();
 builder.Services.AddScoped<MsProfileMatcher>();
 builder.Services.AddScoped<UserArchiver>();
 builder.Services.AddScoped<SubmissionService>();
+builder.Services.AddScoped<SuperAdminTransfer>();
 
 var app = builder.Build();
 app.MapGet("/health", () => Results.Text("ok"));
