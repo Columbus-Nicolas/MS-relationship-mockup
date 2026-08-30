@@ -28,6 +28,12 @@ public record SeedFile(
 /// <c>Data/seed.json</c> — extracted verbatim from the mockup's <c>state.domains</c>,
 /// <c>state.msProfiles</c>, <c>state.columbusProfiles</c> and <c>state.relations</c> arrays.
 /// Idempotent: a second call is a no-op, guarded by the presence of any <see cref="MsProfile"/>.
+/// Every row — taxonomies, profiles, users and relations — is staged and then persisted in a
+/// single <see cref="AppDbContext.SaveChangesAsync(System.Threading.CancellationToken)"/> call,
+/// which EF wraps in one implicit transaction, so the guard's premise ("no profiles means
+/// nothing has been seeded yet") always holds: there is no intermediate state where taxonomy
+/// rows exist but <see cref="MsProfile"/> rows do not, so a crash or restart mid-seed can never
+/// leave the guard unable to tell a fresh database from a half-seeded one (fix round 1, finding 1).
 /// </summary>
 public static class Seeder
 {
@@ -74,8 +80,6 @@ public static class Seeder
             departmentIds[name] = id;
             db.CbDepartments.Add(new CbDepartment { Id = id, Name = name });
         }
-
-        await db.SaveChangesAsync();
 
         var profileIds = new Dictionary<string, Guid>();
         foreach (var profile in seed.MsProfiles)
