@@ -45,12 +45,30 @@ public class RelationWriter(AppDbContext db)
 
         existing.Score = score;
         existing.Note = note;
-        existing.UpdatedAt = DateTimeOffset.UtcNow;
+        existing.UpdatedAt = TruncateToMicroseconds(DateTimeOffset.UtcNow);
 
         db.RelationHistory.Add(history);
         await db.SaveChangesAsync();
         return existing;
     }
+
+    /// <summary>
+    /// Postgres's "timestamp with time zone" has a hard 6-digit (microsecond) precision
+    /// ceiling, while .NET's <see cref="DateTimeOffset"/> ticks are 100ns-resolution (one
+    /// digit finer) and are almost never evenly divisible by 10. Rounding down here, before
+    /// the value is ever assigned to the tracked <see cref="Relation"/>, guarantees the
+    /// in-memory value EF snapshots into <c>OriginalValues</c> for the
+    /// <see cref="Relation.UpdatedAt"/> concurrency check is bit-for-bit identical to what
+    /// Postgres actually persists. Without this, a value carrying sub-microsecond residue
+    /// would be truncated by Postgres on write but kept untruncated in EF's in-memory
+    /// original-values snapshot, so a second write to the *same* tracked entity through the
+    /// *same* <see cref="AppDbContext"/> — e.g. two <see cref="Features.Submissions.SubmissionService.ApproveAsync"/>
+    /// items touching the same relation — could compare against a value that no longer
+    /// matches the stored row and throw a spurious <see cref="Microsoft.EntityFrameworkCore.DbUpdateConcurrencyException"/>
+    /// with no real second writer involved (Task 7b, fix-round-1 finding).
+    /// </summary>
+    private static DateTimeOffset TruncateToMicroseconds(DateTimeOffset value) =>
+        new(value.Ticks - value.Ticks % 10, value.Offset);
 
     public async Task RemoveAsync(Guid columbusUserId, Guid msProfileId, Guid changedBy, Guid? submissionId = null)
     {
