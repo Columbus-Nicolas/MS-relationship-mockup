@@ -60,6 +60,24 @@ public class RelationTests(PostgresFixture fixture) : IAsyncLifetime
         Assert.Equal(2, await db.Relations.CountAsync(r => r.MsProfileId == profile.Id));
     }
 
+    // FR-02 (spec §15) is "both directions many": the test above proves one Microsoft person can
+    // take many Columbus relations, but the other direction — one Columbus user holding
+    // relations to many Microsoft profiles — was previously only exercised incidentally
+    // elsewhere and never asserted directly.
+    [Fact]
+    public async Task One_columbus_user_takes_many_microsoft_profiles()
+    {
+        await using var db = fixture.NewContext();
+        var (user, profileA) = await Seed.PairAsync(db);
+        var profileB = await Seed.ProfileAsync(db);
+
+        db.Relations.Add(new Relation { Id = Guid.NewGuid(), ColumbusUserId = user.Id, MsProfileId = profileA.Id, Score = 2 });
+        db.Relations.Add(new Relation { Id = Guid.NewGuid(), ColumbusUserId = user.Id, MsProfileId = profileB.Id, Score = -1 });
+        await db.SaveChangesAsync();
+
+        Assert.Equal(2, await db.Relations.CountAsync(r => r.ColumbusUserId == user.Id));
+    }
+
     [Fact]
     public async Task The_same_pair_cannot_be_scored_twice()
     {
