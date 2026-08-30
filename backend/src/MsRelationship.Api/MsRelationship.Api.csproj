@@ -17,4 +17,8 @@
     <PackageReference Include="EFCore.NamingConventions" Version="9.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Data/seed.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

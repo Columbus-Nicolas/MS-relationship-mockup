@@ -1,0 +1,832 @@
+{
+  "domains": [
+    {
+      "legacyId": "d1",
+      "name": "Azure & AI - Sales",
+      "owner": "Mette Kirkegaard",
+      "desc": "Cloud & AI platform sales, Azure and Data & AI sales specialists.",
+      "system": false
+    },
+    {
+      "legacyId": "d2",
+      "name": "Strategic & Partner Leadership",
+      "owner": "Mette Kirkegaard",
+      "desc": "Enterprise partner solutions and partner development - our formal route in.",
+      "system": false
+    },
+    {
+      "legacyId": "d3",
+      "name": "Azure & AI - Specialist",
+      "owner": "Jonas Ravn",
+      "desc": "Cloud solution architects, AI solution engineers and Azure specialists.",
+      "system": false
+    },
+    {
+      "legacyId": "d4",
+      "name": "Business Applications",
+      "owner": "Sofie Bang",
+      "desc": "Dynamics 365, Power Platform and Copilot motions.",
+      "system": false
+    },
+    {
+      "legacyId": "d5",
+      "name": "SMC & SMB",
+      "owner": "Anders Holmgaard",
+      "desc": "Small, medium and corporate segment across DK / NO.",
+      "system": false
+    },
+    {
+      "legacyId": "d6",
+      "name": "Fabric Partner Success",
+      "owner": "Rikke Dalsgaard",
+      "desc": "Microsoft Fabric partner ecosystem and joint success motions.",
+      "system": false
+    },
+    {
+      "legacyId": "d7",
+      "name": "Funding & Programs",
+      "owner": "Sofie Bang",
+      "desc": "Co-sell, incentives, MCI and Azure Accelerate deployment funding.",
+      "system": false
+    },
+    {
+      "legacyId": "d8",
+      "name": "Wider network",
+      "owner": "Jonas Ravn",
+      "desc": "Contacts we hold but have not yet placed against a domain.",
+      "system": false
+    },
+    {
+      "legacyId": "d0",
+      "name": "Unmarked",
+      "owner": "—",
+      "desc": "Microsoft profiles that are not placed in a domain yet, plus everyone left behind when a domain is deleted.",
+      "system": true
+    }
+  ],
+  "msProfiles": [
+    {
+      "legacyId": "m1",
+      "name": "Nina Due",
+      "title": "Director, Enterprise Partner Solutions",
+      "email": null,
+      "group": "Leadership",
+      "source": "Microsoft DK leadership page",
+      "domainLegacyIds": [
+        "d2"
+      ],
+      "notes": "Listed on the Microsoft DK leadership page.",
+      "tentative": false,
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "m2",
+      "name": "Christian Koch-Bentzen",
+      "title": "Sr. Partner Development Manager",
+      "email": null,
+      "group": "Partner Development",
+      "source": "Ayla's list",
+      "domainLegacyIds": [
+        "d2"
+      ],
+      "notes": "",
+      "tentative": false,
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "m3",
+      "name": "Claus Iversen",
+      "title": "Partner Solution Sales Manager, Cloud & AI Platform / Azure",
+      "email": null,
+      "group": "Partner Development",
+      "source": "Ayla's list",
+      "domainLegacyIds": [
+        "d1"
+      ],
+      "notes": "",
+      "tentative": false,
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "m4",
+      "name": "Kris Rozanka",
+      "title": "Cloud & AI Sales Consultant",
+      "email": null,
+      "group": "Account Team",
+      "source": "Ayla's list",
+      "domainLegacyIds": [
+        "d1"
+      ],
+      "notes": "",
+      "tentative": false,
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "m5",
+      "name": "Arthur Gentit",
+      "title": "Sales Specialist, Data & AI",
+      "email": null,
+      "group": "Account Team",
+      "source": "Ayla's list",
+      "domainLegacyIds": [
+        "d1"
+      ],
+      "notes": "",
+      "tentative": false,
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "m6",
+      "name": "Aybike Bozkurt",
+      "title": "Azure Cloud Solution Sales Executive",
+      "email": null,
+      "group": "Account Team",
+      "source": "Ayla's list",
+      "domainLegacyIds": [
+        "d1"
+      ],
+      "notes": "",
+      "tentative": false,
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "m7",
+      "name": "Mauro Dalvit",
+      "title": "AI Solution Engineer",
+      "email": null,
+      "group": "Technical Specialist",
+      "source": "Ayla's list",
+      "domainLegacyIds": [
+        "d3"
+      ],
+      "notes": "",
+      "tentative": false,
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "m8",
+      "name": "Nikhil Makkar",
+      "title": "Senior Cloud Solutions Architect",
+      "email": null,
+      "group": "Technical Specialist",
+      "source": "Ayla's list",
+      "domainLegacyIds": [
+        "d3"
+      ],
+      "notes": "",
+      "tentative": false,
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "m9",
+      "name": "Chandana Ramesh",
+      "title": "Cloud Solution Architect",
+      "email": null,
+      "group": "Technical Specialist",
+      "source": "Ayla's list",
+      "domainLegacyIds": [
+        "d3"
+      ],
+      "notes": "",
+      "tentative": false,
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "m10",
+      "name": "Marcus Quistgaard",
+      "title": "Azure Specialist",
+      "email": null,
+      "group": "Technical Specialist",
+      "source": "Ayla's list",
+      "domainLegacyIds": [
+        "d3"
+      ],
+      "notes": "",
+      "tentative": false,
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "m11",
+      "name": "Bo Kaaber Brandt",
+      "title": "GTM Lead, Dynamics 365 & Power Platform",
+      "email": null,
+      "group": "Leadership",
+      "source": "LinkedIn / MS Pulse",
+      "domainLegacyIds": [
+        "d4"
+      ],
+      "notes": "",
+      "tentative": false,
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "m12",
+      "name": "Anders Fjordhøj",
+      "title": "Sr. Technical Specialist, Power Platform & AI",
+      "email": null,
+      "group": "Technical Specialist",
+      "source": "LinkedIn / MS Pulse",
+      "domainLegacyIds": [
+        "d4"
+      ],
+      "notes": "",
+      "tentative": false,
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "m13",
+      "name": "Jesper N. Pedersen",
+      "title": "Solution Sales Professional, BizApps",
+      "email": null,
+      "group": "Account Team",
+      "source": "LinkedIn / MS Pulse",
+      "domainLegacyIds": [
+        "d4"
+      ],
+      "notes": "",
+      "tentative": false,
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "m14",
+      "name": "Bo Larsen",
+      "title": "Solution Sales Professional, BizApps",
+      "email": null,
+      "group": "Account Team",
+      "source": "Unconfirmed",
+      "domainLegacyIds": [
+        "d4"
+      ],
+      "notes": "Role and placement still to be confirmed.",
+      "tentative": true,
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "m15",
+      "name": "Sarah McKenna",
+      "title": "SMC & SMB Lead, DK / NO",
+      "email": null,
+      "group": "Leadership",
+      "source": "LinkedIn / Thomas' deck",
+      "domainLegacyIds": [
+        "d5"
+      ],
+      "notes": "",
+      "tentative": false,
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "m16",
+      "name": "Thomas Lundgren",
+      "title": "SMC Azure Lead",
+      "email": null,
+      "group": "Leadership",
+      "source": "Ayla's list",
+      "domainLegacyIds": [
+        "d5"
+      ],
+      "notes": "",
+      "tentative": false,
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "m17",
+      "name": "Kasper N. Nielsen",
+      "title": "Senior Sales Executive, Aalborg",
+      "email": null,
+      "group": "Account Team",
+      "source": "LinkedIn / Thomas' deck",
+      "domainLegacyIds": [
+        "d5"
+      ],
+      "notes": "",
+      "tentative": false,
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "m18",
+      "name": "Prashant Gutala",
+      "title": "Fabric Partner Ecosystem Lead",
+      "email": null,
+      "group": "Partner Development",
+      "source": "Ayla's list",
+      "domainLegacyIds": [
+        "d6"
+      ],
+      "notes": "",
+      "tentative": false,
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "m19",
+      "name": "Mads Hammerbak",
+      "title": "Funding & programs",
+      "email": null,
+      "group": "Partner Development",
+      "source": "Ayla's list",
+      "domainLegacyIds": [
+        "d7"
+      ],
+      "notes": "",
+      "tentative": false,
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "m20",
+      "name": "Azure Accelerate Team",
+      "title": "Deployment funding, guidance",
+      "email": null,
+      "group": "Partner Development",
+      "source": "Ayla's list",
+      "domainLegacyIds": [
+        "d7"
+      ],
+      "notes": "A Microsoft team, not a single named contact.",
+      "tentative": false,
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "m21",
+      "name": "Frederikke Smidt",
+      "title": "Sr. Customer Success Account Mgr",
+      "email": null,
+      "group": "Account Team",
+      "source": "Ayla's list",
+      "domainLegacyIds": [
+        "d8"
+      ],
+      "notes": "Domain placement still to be decided.",
+      "tentative": false,
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "m22",
+      "name": "Malte Vilain",
+      "title": "Account Executive",
+      "email": null,
+      "group": "Account Team",
+      "source": "Ayla's list",
+      "domainLegacyIds": [
+        "d8"
+      ],
+      "notes": "Domain placement still to be decided.",
+      "tentative": false,
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "m23",
+      "name": "Lars-Bo Heidemann",
+      "title": "Cyber Security Professional",
+      "email": null,
+      "group": "Technical Specialist",
+      "source": "Ayla's list",
+      "domainLegacyIds": [
+        "d8"
+      ],
+      "notes": "Domain placement still to be decided.",
+      "tentative": false,
+      "updatedAt": "2026-08-19"
+    }
+  ],
+  "columbusUsers": [
+    {
+      "legacyId": "c1",
+      "name": "Mette Kirkegaard",
+      "title": "Partner Alliance Manager",
+      "department": "Alliances",
+      "skills": [
+        "Alliances",
+        "Co-sell",
+        "Governance"
+      ],
+      "role": "admin",
+      "email": "mette.kirkegaard@columbusglobal.example",
+      "lastSurvey": "2026-07-15"
+    },
+    {
+      "legacyId": "c2",
+      "name": "Jesper Winther",
+      "title": "Managing Director, Denmark",
+      "department": "Executive",
+      "skills": [
+        "Strategy",
+        "Executive sponsor"
+      ],
+      "role": "superadmin",
+      "email": "jesper.winther@columbusglobal.example",
+      "lastSurvey": "2026-06-02"
+    },
+    {
+      "legacyId": "c3",
+      "name": "Sofie Bang",
+      "title": "Business Applications Director",
+      "department": "Business Applications",
+      "skills": [
+        "D365 F&O",
+        "ERP",
+        "Presales"
+      ],
+      "role": "admin",
+      "email": "sofie.bang@columbusglobal.example",
+      "lastSurvey": "2026-07-15"
+    },
+    {
+      "legacyId": "c4",
+      "name": "Jonas Ravn",
+      "title": "Cloud Practice Lead",
+      "department": "Cloud & Infrastructure",
+      "skills": [
+        "Azure",
+        "Migration",
+        "Architecture"
+      ],
+      "role": "moderator",
+      "email": "jonas.ravn@columbusglobal.example",
+      "lastSurvey": "2026-07-15"
+    },
+    {
+      "legacyId": "c5",
+      "name": "Rikke Dalsgaard",
+      "title": "Security Lead",
+      "department": "Cloud & Infrastructure",
+      "skills": [
+        "Security",
+        "Entra",
+        "Compliance"
+      ],
+      "role": "moderator",
+      "email": "rikke.dalsgaard@columbusglobal.example",
+      "lastSurvey": "2026-05-20"
+    },
+    {
+      "legacyId": "c6",
+      "name": "Anders Holmgaard",
+      "title": "Modern Work Consultant",
+      "department": "Modern Work",
+      "skills": [
+        "M365",
+        "Teams",
+        "Adoption"
+      ],
+      "role": "standard",
+      "email": "anders.holmgaard@columbusglobal.example",
+      "lastSurvey": "2026-07-15"
+    },
+    {
+      "legacyId": "c7",
+      "name": "Line Aagaard",
+      "title": "Data & AI Consultant",
+      "department": "Data & AI",
+      "skills": [
+        "Fabric",
+        "Power BI",
+        "Data platform"
+      ],
+      "role": "standard",
+      "email": "line.aagaard@columbusglobal.example",
+      "lastSurvey": "2026-07-15"
+    },
+    {
+      "legacyId": "c8",
+      "name": "Peter Sandholm",
+      "title": "Enterprise Account Manager",
+      "department": "Sales",
+      "skills": [
+        "Sales",
+        "Public sector"
+      ],
+      "role": "standard",
+      "email": "peter.sandholm@columbusglobal.example",
+      "lastSurvey": "2026-07-15"
+    },
+    {
+      "legacyId": "c9",
+      "name": "Amalie Friis",
+      "title": "Marketing Manager",
+      "department": "Marketing",
+      "skills": [
+        "Campaigns",
+        "Events"
+      ],
+      "role": "standard",
+      "email": "amalie.friis@columbusglobal.example",
+      "lastSurvey": "2026-04-08"
+    },
+    {
+      "legacyId": "c10",
+      "name": "Christian Bloch",
+      "title": "Solution Architect",
+      "department": "Cloud & Infrastructure",
+      "skills": [
+        "Azure",
+        "Landing zones"
+      ],
+      "role": "standard",
+      "email": "christian.bloch@columbusglobal.example",
+      "lastSurvey": "2026-07-15"
+    },
+    {
+      "legacyId": "c11",
+      "name": "Louise Damgaard",
+      "title": "D365 CE Consultant",
+      "department": "Business Applications",
+      "skills": [
+        "D365 CE",
+        "Power Platform"
+      ],
+      "role": "standard",
+      "email": "louise.damgaard@columbusglobal.example",
+      "lastSurvey": "2026-07-15"
+    },
+    {
+      "legacyId": "c12",
+      "name": "Martin Østergaard",
+      "title": "Delivery Manager",
+      "department": "Delivery",
+      "skills": [
+        "Delivery",
+        "PMO"
+      ],
+      "role": "standard",
+      "email": "martin.oestergaard@columbusglobal.example",
+      "lastSurvey": "2026-03-11"
+    },
+    {
+      "legacyId": "c13",
+      "name": "Sara Lykke",
+      "title": "Presales Lead, Data & AI",
+      "department": "Data & AI",
+      "skills": [
+        "Presales",
+        "AI",
+        "Copilot"
+      ],
+      "role": "standard",
+      "email": "sara.lykke@columbusglobal.example",
+      "lastSurvey": "2026-07-15"
+    },
+    {
+      "legacyId": "c14",
+      "name": "Daniel Hvid",
+      "title": "Bid Manager",
+      "department": "Sales",
+      "skills": [
+        "Bids",
+        "Public tenders"
+      ],
+      "role": "standard",
+      "email": "daniel.hvid@columbusglobal.example",
+      "lastSurvey": "2026-06-02"
+    }
+  ],
+  "relations": [
+    {
+      "legacyId": "r1",
+      "columbusLegacyId": "c1",
+      "msProfileLegacyId": "m1",
+      "score": 3,
+      "note": "Alliance sponsor - regular executive dialogue.",
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "r2",
+      "columbusLegacyId": "c2",
+      "msProfileLegacyId": "m1",
+      "score": 3,
+      "note": "Executive sponsor relationship.",
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "r3",
+      "columbusLegacyId": "c1",
+      "msProfileLegacyId": "m2",
+      "score": 3,
+      "note": "Our main partner contact - weekly cadence.",
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "r4",
+      "columbusLegacyId": "c3",
+      "msProfileLegacyId": "m2",
+      "score": 1,
+      "note": "Occasional contact through Business Applications planning.",
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "r5",
+      "columbusLegacyId": "c1",
+      "msProfileLegacyId": "m3",
+      "score": 3,
+      "note": "Joint pipeline reviews on Azure & AI.",
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "r6",
+      "columbusLegacyId": "c4",
+      "msProfileLegacyId": "m3",
+      "score": 3,
+      "note": "Regular technical and commercial alignment.",
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "r7",
+      "columbusLegacyId": "c4",
+      "msProfileLegacyId": "m4",
+      "score": 2,
+      "note": "Ongoing dialogue on Azure opportunities.",
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "r8",
+      "columbusLegacyId": "c10",
+      "msProfileLegacyId": "m4",
+      "score": 2,
+      "note": "Works with us on architecture-led deals.",
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "r9",
+      "columbusLegacyId": "c7",
+      "msProfileLegacyId": "m5",
+      "score": 1,
+      "note": "Occasional contact on Data & AI pursuits.",
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "r10",
+      "columbusLegacyId": "c13",
+      "msProfileLegacyId": "m5",
+      "score": 1,
+      "note": "Met on a few joint pursuits.",
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "r11",
+      "columbusLegacyId": "c10",
+      "msProfileLegacyId": "m6",
+      "score": 1,
+      "note": "Introduced on a shared Azure opportunity.",
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "r12",
+      "columbusLegacyId": "c8",
+      "msProfileLegacyId": "m6",
+      "score": -1,
+      "note": "One-sided contact so far.",
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "r13",
+      "columbusLegacyId": "c13",
+      "msProfileLegacyId": "m7",
+      "score": 2,
+      "note": "Co-runs AI solution workshops with us.",
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "r14",
+      "columbusLegacyId": "c7",
+      "msProfileLegacyId": "m7",
+      "score": 2,
+      "note": "Regular contact on AI engagements.",
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "r15",
+      "columbusLegacyId": "c10",
+      "msProfileLegacyId": "m8",
+      "score": 2,
+      "note": "Joint architecture design sessions.",
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "r16",
+      "columbusLegacyId": "c4",
+      "msProfileLegacyId": "m8",
+      "score": 0,
+      "note": "Aware of each other, nothing active.",
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "r17",
+      "columbusLegacyId": "c10",
+      "msProfileLegacyId": "m9",
+      "score": 2,
+      "note": "Technical counterpart on Azure migrations.",
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "r18",
+      "columbusLegacyId": "c3",
+      "msProfileLegacyId": "m11",
+      "score": 2,
+      "note": "Ongoing Business Applications alignment.",
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "r19",
+      "columbusLegacyId": "c11",
+      "msProfileLegacyId": "m11",
+      "score": 2,
+      "note": "Regular dialogue on D365 and Power Platform.",
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "r20",
+      "columbusLegacyId": "c11",
+      "msProfileLegacyId": "m12",
+      "score": 1,
+      "note": "Occasional contact on Power Platform topics.",
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "r21",
+      "columbusLegacyId": "c3",
+      "msProfileLegacyId": "m12",
+      "score": 1,
+      "note": "Good rapport, no fixed cadence.",
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "r22",
+      "columbusLegacyId": "c11",
+      "msProfileLegacyId": "m13",
+      "score": -1,
+      "note": "Limited contact - hard to reach.",
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "r23",
+      "columbusLegacyId": "c8",
+      "msProfileLegacyId": "m15",
+      "score": 1,
+      "note": "Introduced at an SMC partner session.",
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "r24",
+      "columbusLegacyId": "c1",
+      "msProfileLegacyId": "m15",
+      "score": 1,
+      "note": "Occasional alliance contact.",
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "r25",
+      "columbusLegacyId": "c8",
+      "msProfileLegacyId": "m16",
+      "score": 0,
+      "note": "No real working relationship yet.",
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "r26",
+      "columbusLegacyId": "c4",
+      "msProfileLegacyId": "m16",
+      "score": 0,
+      "note": "Aware of each other only.",
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "r27",
+      "columbusLegacyId": "c8",
+      "msProfileLegacyId": "m17",
+      "score": -2,
+      "note": "Momentum lost after the last joint pursuit.",
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "r28",
+      "columbusLegacyId": "c7",
+      "msProfileLegacyId": "m18",
+      "score": 3,
+      "note": "First call on anything Fabric.",
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "r29",
+      "columbusLegacyId": "c13",
+      "msProfileLegacyId": "m18",
+      "score": 3,
+      "note": "Brings us into Fabric partner motions.",
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "r30",
+      "columbusLegacyId": "c1",
+      "msProfileLegacyId": "m19",
+      "score": 1,
+      "note": "Contact for funding and incentive questions.",
+      "updatedAt": "2026-08-19"
+    },
+    {
+      "legacyId": "r31",
+      "columbusLegacyId": "c5",
+      "msProfileLegacyId": "m23",
+      "score": -3,
+      "note": "Repeated attempts at contact unanswered.",
+      "updatedAt": "2026-08-19"
+    }
+  ]
+}
