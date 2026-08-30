@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using MsRelationship.Api.Auth;
 using MsRelationship.Api.Data;
 using MsRelationship.Api.Data.Entities;
 
@@ -52,13 +54,12 @@ public class MsProfilesController(AppDbContext db, MsProfileMatcher matcher) : C
     /// Folds the listed duplicates into <paramref name="survivorId"/> (FR-20). The whole merge is
     /// atomic — see <see cref="MsProfileMerger"/>.
     /// </summary>
-    // ICurrentUser arrives in Task 13. Until then, the actor is a route-supplied query
-    // parameter, matching the other controllers; Task 13 Step 6 replaces it with ICurrentUser.Id.
+    [Authorize(Policy = "CanEdit")]
     [HttpPost("{survivorId:guid}/merge")]
-    public async Task<IActionResult> Merge(Guid survivorId, [FromQuery] Guid actorId,
+    public async Task<IActionResult> Merge(Guid survivorId, ICurrentUser currentUser,
         [FromBody] MergeRequest request, [FromServices] MsProfileMerger merger)
     {
-        await merger.MergeAsync(survivorId, request.MergeIds, actorId);
+        await merger.MergeAsync(survivorId, request.MergeIds, currentUser.Id);
         return NoContent();
     }
 }

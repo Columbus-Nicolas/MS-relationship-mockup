@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using MsRelationship.Api.Auth;
 using MsRelationship.Api.Data;
 using MsRelationship.Api.Data.Entities;
 
@@ -16,23 +18,24 @@ public class ColumbusUsersController(AppDbContext db, UserArchiver archiver) : C
             .OrderBy(u => u.Name)
             .ToListAsync();
 
-    // ICurrentUser arrives in Task 13. Until then, the actor is a route-supplied query
-    // parameter; Task 13 Step 6 replaces it with ICurrentUser.Id.
+    [Authorize(Policy = "CanEdit")]
     [HttpPost("{id:guid}/archive")]
-    public async Task<IActionResult> Archive(Guid id, [FromQuery] Guid actorId)
+    public async Task<IActionResult> Archive(Guid id, ICurrentUser currentUser)
     {
-        await archiver.ArchiveAsync(id, actorId);
+        await archiver.ArchiveAsync(id, currentUser.Id);
         return NoContent();
     }
 
-    // ICurrentUser arrives in Task 13. Until then, the outgoing Super Admin is a route-supplied
-    // query parameter (actorId); Task 13 Step 6 replaces it with ICurrentUser.Id. `id` is the
-    // incoming Super Admin.
+    // `id` is the incoming Super Admin; the outgoing Super Admin is the caller (currentUser.Id).
+    // SuperAdminTransfer.TransferAsync itself requires the caller to already hold Role ==
+    // SuperAdmin (see its guard), so this is safe to leave under the same authenticated-user
+    // fallback policy as the rest of the API rather than CanEdit/CanAdminister specifically —
+    // the brief names only merge, archive and approve for the CanEdit attribute.
     [HttpPost("{id:guid}/promote-super-admin")]
     public async Task<IActionResult> PromoteSuperAdmin(Guid id,
-        [FromQuery] Guid actorId, [FromServices] SuperAdminTransfer transfer)
+        ICurrentUser currentUser, [FromServices] SuperAdminTransfer transfer)
     {
-        await transfer.TransferAsync(actorId, id);
+        await transfer.TransferAsync(currentUser.Id, id);
         return NoContent();
     }
 }
