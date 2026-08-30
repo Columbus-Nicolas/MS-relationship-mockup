@@ -99,17 +99,22 @@ public class RelationWriterTests(PostgresFixture fixture) : IAsyncLifetime
     }
 
     /// <summary>
-    /// Empirical check for the Task 7b fix-round review finding: Postgres
-    /// "timestamp with time zone" has microsecond (7-digit-tick) precision, but .NET
-    /// <see cref="DateTimeOffset"/> ticks are 100ns-resolution — one digit finer. If Npgsql
-    /// sends the untruncated in-memory value as the concurrency-token comparison parameter
-    /// while Postgres actually stored a truncated value, a second write to the *same* tracked
-    /// entity in the *same* <see cref="AppDbContext"/> (no intervening reload — the exact
-    /// shape of <c>SubmissionService.ApproveAsync</c>'s loop over multiple items) would see a
-    /// spurious WHERE-clause mismatch and throw <see cref="DbUpdateConcurrencyException"/>
-    /// with no real second writer involved. This test deliberately crafts an
-    /// <see cref="Relation.UpdatedAt"/> with sub-microsecond residue and proves the second,
-    /// same-context write still succeeds.
+    /// Does <em>not</em> guard <see cref="RelationWriter.TruncateToMicroseconds"/>: it inserts
+    /// via <c>db.Relations.Add</c> directly, bypassing <see cref="RelationWriter.UpsertAsync"/>,
+    /// so reverting the truncation would not make this test fail. What it actually pins down is
+    /// Npgsql's own wire behaviour: Npgsql truncates the <see cref="DateTimeOffset"/> comparison
+    /// parameter for the concurrency-token WHERE clause to microseconds on the way out, exactly
+    /// as it truncated the value on the way in at insert time, so the sub-microsecond residue
+    /// crafted below never reaches Postgres as a mismatch. That is why the spurious
+    /// <see cref="DbUpdateConcurrencyException"/> this test was written to catch was never
+    /// actually reproducible — which means neither this test nor
+    /// <see cref="RelationWriter.TruncateToMicroseconds"/> is load-bearing. The method and the
+    /// test are both kept anyway: the method is harmless and defensive, and the test legitimately
+    /// pins Npgsql's truncation behaviour. The real scenario the fix originally targeted — a
+    /// second write to the *same* tracked entity in the *same* <see cref="AppDbContext"/>, the
+    /// shape of <c>SubmissionService.ApproveAsync</c>'s loop over multiple items — is already
+    /// exercised (via the ordinary, non-crafted code path) by
+    /// <see cref="Creating_then_updating_leaves_two_history_rows"/>.
     /// </summary>
     [Fact]
     public async Task Second_same_context_write_is_not_defeated_by_subtick_precision_residue()
