@@ -444,6 +444,58 @@ public class MergeTests(PostgresFixture fixture) : IAsyncLifetime
         Assert.False(await verify.SubmissionItems.AnyAsync(i => i.MsProfileId == duplicate.Id));
     }
 
+    // ---------------------------------------------------------------- concurrency (Fix 1)
+
+    /// <summary>
+    /// Reproduces the tombstone-write race from the final review deterministically, with no
+    /// threads or sleeps — mirroring
+    /// <see cref="SuperAdminTransferTests.Two_concurrent_transfers_from_the_same_holder_do_not_both_succeed"/>.
+    /// <see cref="MsProfile"/> carries no concurrency token, so before the fix the "already
+    /// merged elsewhere" guard was a plain read (the duplicate's stale, still-tracked
+    /// <c>MergedIntoId == null</c>) followed by an unconditional tracked write: two contexts
+    /// both load the duplicate while it is still live, one context fully merges it into
+    /// <c>survivorB</c> and commits, and the other's later write — issued from its now-stale
+    /// belief that the duplicate is still unmerged — must fail instead of silently overwriting
+    /// the tombstone onto <c>survivorA</c> while the duplicate's relation already committed onto
+    /// <c>survivorB</c>.
+    /// </summary>
+    [Fact]
+    public async Task Two_concurrent_merges_of_the_same_duplicate_into_different_survivors_do_not_both_succeed()
+    {
+        await using var seedDb = fixture.NewContext();
+        var survivorA = await Seed.ProfileAsync(seedDb);
+        var survivorB = await Seed.ProfileAsync(seedDb);
+        var duplicate = await Seed.ProfileAsync(seedDb);
+        var user = await Seed.UserAsync(seedDb);
+        var actor = await Seed.UserAsync(seedDb);
+        await new RelationWriter(seedDb).UpsertAsync(user.Id, duplicate.Id, 2, "knows them", actor.Id);
+
+        await using var dbA = fixture.NewContext();
+        await using var dbB = fixture.NewContext();
+
+        // Both contexts load (and thus track) the duplicate while it is still live, before
+        // either merge commits.
+        await dbA.MsProfiles.SingleAsync(p => p.Id == duplicate.Id);
+        await dbB.MsProfiles.SingleAsync(p => p.Id == duplicate.Id);
+
+        var mergerA = new MsProfileMerger(dbA, new RelationWriter(dbA));
+        var mergerB = new MsProfileMerger(dbB, new RelationWriter(dbB));
+
+        // Context B completes and commits a full merge into survivorB first.
+        await mergerB.MergeAsync(survivorB.Id, [duplicate.Id], actor.Id);
+
+        // Context A's merge, still working from its stale "duplicate is live" snapshot, must
+        // fail rather than succeed and re-tombstone the duplicate onto survivorA.
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => mergerA.MergeAsync(survivorA.Id, [duplicate.Id], actor.Id));
+
+        await using var verifyDb = fixture.NewContext();
+        Assert.Equal(survivorB.Id, (await verifyDb.MsProfiles.SingleAsync(p => p.Id == duplicate.Id)).MergedIntoId);
+        Assert.True(await verifyDb.Relations.AnyAsync(
+            r => r.MsProfileId == survivorB.Id && r.ColumbusUserId == user.Id));
+        Assert.False(await verifyDb.Relations.AnyAsync(r => r.MsProfileId == survivorA.Id));
+    }
+
     [Fact]
     public async Task History_already_recorded_against_the_duplicate_is_left_where_it_is()
     {

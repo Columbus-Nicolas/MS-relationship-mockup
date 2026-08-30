@@ -107,8 +107,33 @@ public class MsProfileMerger(AppDbContext db, RelationWriter writer)
             // share that key once the duplicate has dropped out of the
             // "merged_into_id IS NULL" filtered unique index. One SaveChanges for both would
             // leave the statement order to EF and could hit a unique violation instead.
-            duplicate.MergedIntoId = survivorId;
-            await db.SaveChangesAsync();
+            // ExecuteUpdateAsync executes immediately as its own statement, so that ordering is
+            // preserved.
+            //
+            // The write is conditional rather than a plain tracked assignment because
+            // MsProfile carries no concurrency token (a schema change, which this fix may not
+            // make): the WHERE clause re-asserts "still live" at write time, closing the same
+            // race SuperAdminTransfer's conditional updates close for ColumbusUser. Without
+            // this, two concurrent merges of the same duplicate into different survivors could
+            // both pass the "already merged elsewhere" guard above (a plain read) and then both
+            // write unconditionally — the second blocking then overwriting the first, leaving
+            // merged_into_id pointing at one survivor while the relations actually committed
+            // onto the other, silently and unrepairable through the application. Proven
+            // deterministically (no threads/sleeps) by
+            // <see cref="MergeTests.Two_concurrent_merges_of_the_same_duplicate_into_different_survivors_do_not_both_succeed"/>,
+            // which mirrors
+            // <see cref="SuperAdminTransferTests.Two_concurrent_transfers_from_the_same_holder_do_not_both_succeed"/>.
+            var claimed = await db.MsProfiles
+                .Where(p => p.Id == duplicateId && p.MergedIntoId == null)
+                .ExecuteUpdateAsync(s => s.SetProperty(p => p.MergedIntoId, survivorId));
+            // ExecuteUpdateAsync bypasses the change tracker, so the tracked `duplicate`
+            // instance above would otherwise keep showing merged_into_id == null for the rest
+            // of this scope — including the idempotency check on a later call in the same
+            // context (see SuperAdminTransfer.Detach for the identical situation with
+            // ColumbusUser). Detaching forces the next query for this id back to the database.
+            Detach(duplicateId);
+            if (claimed != 1)
+                throw new InvalidOperationException($"Profile {duplicateId} was merged concurrently.");
 
             // Keep the graph one hop deep: anything pointing at this profile now points past it.
             await db.MsProfiles
@@ -120,6 +145,19 @@ public class MsProfileMerger(AppDbContext db, RelationWriter writer)
         }
 
         await tx.CommitAsync();
+    }
+
+    /// <summary>
+    /// <c>ExecuteUpdateAsync</c> writes straight to the database and bypasses the change
+    /// tracker, so any instance of this row already tracked by <c>db</c> would otherwise keep
+    /// showing pre-update values for the rest of that scope. Detaching forces the next query
+    /// for this id back to the database. Mirrors
+    /// <see cref="MsRelationship.Api.Features.ColumbusUsers.SuperAdminTransfer.Detach"/>.
+    /// </summary>
+    private void Detach(Guid id)
+    {
+        var entry = db.ChangeTracker.Entries<MsProfile>().FirstOrDefault(e => e.Entity.Id == id);
+        if (entry is not null) entry.State = EntityState.Detached;
     }
 
     /// <summary>
