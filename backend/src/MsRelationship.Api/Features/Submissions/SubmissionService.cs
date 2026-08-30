@@ -70,10 +70,28 @@ public class SubmissionService(AppDbContext db, RelationWriter writer)
                     item.NewScore ?? 0, item.NewNote ?? "", actorId, submissionId);
         }
 
-        submission.Status = SubmissionStatus.Approved;
-        submission.DecidedByUserId = actorId;
-        submission.DecidedAt = DateTimeOffset.UtcNow;
-        await db.SaveChangesAsync();
+        // Conditional write, not a plain tracked assignment: Submission carries no concurrency
+        // token (a schema change, out of scope for this fix), so the WHERE clause re-asserts
+        // "still Pending" at write time — the same idiom MsProfileMerger's tombstone write and
+        // SuperAdminTransfer's role updates use. Without this, two admins clearing a moderation
+        // backlog could both pass the guard above (a plain read) — approve-vs-approve is mostly
+        // caught by accident (Relation.UpdatedAt's token or the unique pair index), but
+        // approve-vs-reject was protected by nothing: a reject issued after this approve had
+        // already committed would silently flip the submission to Rejected while its relation
+        // writes stayed live. Proven deterministically (no threads/sleeps) by
+        // <see cref="SubmissionTests.Approve_then_reject_do_not_both_succeed"/>, which mirrors
+        // <see cref="SuperAdminTransferTests.Two_concurrent_transfers_from_the_same_holder_do_not_both_succeed"/>.
+        var decidedAt = DateTimeOffset.UtcNow;
+        var approved = await db.Submissions
+            .Where(s => s.Id == submissionId && s.Status == SubmissionStatus.Pending)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(x => x.Status, SubmissionStatus.Approved)
+                .SetProperty(x => x.DecidedByUserId, actorId)
+                .SetProperty(x => x.DecidedAt, decidedAt));
+        Detach(submissionId);
+        if (approved != 1)
+            throw new InvalidOperationException("This submission has already been decided.");
+
         await tx.CommitAsync();
     }
 
@@ -83,9 +101,33 @@ public class SubmissionService(AppDbContext db, RelationWriter writer)
         if (submission.Status != SubmissionStatus.Pending)
             throw new InvalidOperationException("This submission has already been decided.");
 
-        submission.Status = SubmissionStatus.Rejected;
-        submission.DecidedByUserId = actorId;
-        submission.DecidedAt = DateTimeOffset.UtcNow;
-        await db.SaveChangesAsync();
+        // See the matching comment in ApproveAsync: the same conditional-write idiom, closing
+        // the same race for the other half of the moderation decision. A single ExecuteUpdateAsync
+        // statement is already atomic, so no explicit transaction is needed here.
+        var decidedAt = DateTimeOffset.UtcNow;
+        var rejected = await db.Submissions
+            .Where(s => s.Id == submissionId && s.Status == SubmissionStatus.Pending)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(x => x.Status, SubmissionStatus.Rejected)
+                .SetProperty(x => x.DecidedByUserId, actorId)
+                .SetProperty(x => x.DecidedAt, decidedAt));
+        Detach(submissionId);
+        if (rejected != 1)
+            throw new InvalidOperationException("This submission has already been decided.");
+    }
+
+    /// <summary>
+    /// <c>ExecuteUpdateAsync</c> writes straight to the database and bypasses the change
+    /// tracker, so the tracked <see cref="Submission"/> instance loaded at the top of
+    /// <see cref="ApproveAsync"/>/<see cref="RejectAsync"/> would otherwise keep showing its
+    /// pre-decision <c>Status</c> for the rest of this <see cref="AppDbContext"/>'s lifetime —
+    /// including a later call in the same scope, which would then read the stale status instead
+    /// of the real one. Detaching forces the next query for this id back to the database.
+    /// Mirrors <see cref="MsRelationship.Api.Features.ColumbusUsers.SuperAdminTransfer.Detach"/>.
+    /// </summary>
+    private void Detach(Guid id)
+    {
+        var entry = db.ChangeTracker.Entries<Submission>().FirstOrDefault(e => e.Entity.Id == id);
+        if (entry is not null) entry.State = EntityState.Detached;
     }
 }

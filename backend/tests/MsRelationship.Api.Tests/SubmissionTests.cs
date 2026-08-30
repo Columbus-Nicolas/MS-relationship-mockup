@@ -164,6 +164,56 @@ public class SubmissionTests(PostgresFixture fixture) : IAsyncLifetime
             (await db.Submissions.SingleAsync(s => s.Id == submission.Id)).Status);
     }
 
+    /// <summary>
+    /// Reproduces the approve-vs-reject race from the final review deterministically, with no
+    /// threads or sleeps — mirroring
+    /// <see cref="SuperAdminTransferTests.Two_concurrent_transfers_from_the_same_holder_do_not_both_succeed"/>.
+    /// <see cref="Submission"/> carries no concurrency token, so before the fix
+    /// <c>RejectAsync</c>'s guard was a plain read of the still-tracked, stale
+    /// <c>Status == Pending</c> followed by an unconditional write: two admins both load the
+    /// submission while it is still Pending, one approves and commits (relations written,
+    /// history stamped with the submission id), and the other's reject — issued from its
+    /// now-stale belief that the submission is still Pending — must fail instead of silently
+    /// flipping an already-approved submission to Rejected while its changes stay live in
+    /// <c>relations</c>.
+    /// </summary>
+    [Fact]
+    public async Task Approve_then_reject_do_not_both_succeed()
+    {
+        await using var seedDb = fixture.NewContext();
+        var (user, profile) = await Seed.PairAsync(seedDb);
+        var adminA = await Seed.UserAsync(seedDb);
+        var adminB = await Seed.UserAsync(seedDb);
+        var submission = await new SubmissionService(seedDb, new RelationWriter(seedDb))
+            .SubmitAsync(user.Id, [new SubmissionDraft(profile.Id, SubmissionAction.Upsert, 2, "positive")]);
+
+        await using var dbA = fixture.NewContext();
+        await using var dbB = fixture.NewContext();
+
+        // Both contexts load (and thus track) the submission at Status == Pending before
+        // either one commits a decision.
+        await dbA.Submissions.SingleAsync(s => s.Id == submission.Id);
+        await dbB.Submissions.SingleAsync(s => s.Id == submission.Id);
+
+        var serviceA = new SubmissionService(dbA, new RelationWriter(dbA));
+        var serviceB = new SubmissionService(dbB, new RelationWriter(dbB));
+
+        // Admin A approves and commits first.
+        await serviceA.ApproveAsync(submission.Id, adminA.Id);
+
+        // Admin B's reject, still working from its stale "still Pending" snapshot, must fail
+        // rather than silently flip an already-approved submission to Rejected.
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => serviceB.RejectAsync(submission.Id, adminB.Id));
+
+        await using var verifyDb = fixture.NewContext();
+        var stored = await verifyDb.Submissions.SingleAsync(s => s.Id == submission.Id);
+        Assert.Equal(SubmissionStatus.Approved, stored.Status);
+        Assert.Equal(adminA.Id, stored.DecidedByUserId);
+        Assert.True(await verifyDb.Relations.AnyAsync(
+            r => r.ColumbusUserId == user.Id && r.MsProfileId == profile.Id));
+    }
+
     [Fact]
     public async Task Rejecting_after_approve_throws()
     {
