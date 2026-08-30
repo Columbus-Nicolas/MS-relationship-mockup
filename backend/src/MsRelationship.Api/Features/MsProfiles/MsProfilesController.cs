@@ -9,6 +9,7 @@ public record MatchRequest(string Name, string? Email, string Organization = "Mi
 public record CreateMsProfileRequest(
     string Name, string Title, string? Email, string Organization,
     Guid? GroupId, Guid? SourceId, string Notes, Guid[] DomainIds);
+public record MergeRequest(Guid[] MergeIds);
 
 [ApiController]
 [Route("api/ms-profiles")]
@@ -45,5 +46,19 @@ public class MsProfilesController(AppDbContext db, MsProfileMatcher matcher) : C
 
         await db.SaveChangesAsync();
         return CreatedAtAction(nameof(Create), new { id = profile.Id }, profile);
+    }
+
+    /// <summary>
+    /// Folds the listed duplicates into <paramref name="survivorId"/> (FR-20). The whole merge is
+    /// atomic — see <see cref="MsProfileMerger"/>.
+    /// </summary>
+    // ICurrentUser arrives in Task 13. Until then, the actor is a route-supplied query
+    // parameter, matching the other controllers; Task 13 Step 6 replaces it with ICurrentUser.Id.
+    [HttpPost("{survivorId:guid}/merge")]
+    public async Task<IActionResult> Merge(Guid survivorId, [FromQuery] Guid actorId,
+        [FromBody] MergeRequest request, [FromServices] MsProfileMerger merger)
+    {
+        await merger.MergeAsync(survivorId, request.MergeIds, actorId);
+        return NoContent();
     }
 }

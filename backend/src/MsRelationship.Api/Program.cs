@@ -12,6 +12,7 @@ builder.Services.AddDbContext<AppDbContext>(o =>
         .UseSnakeCaseNamingConvention());
 builder.Services.AddScoped<RelationWriter>();
 builder.Services.AddScoped<MsProfileMatcher>();
+builder.Services.AddScoped<MsProfileMerger>();
 builder.Services.AddScoped<UserArchiver>();
 builder.Services.AddScoped<SubmissionService>();
 builder.Services.AddScoped<SuperAdminTransfer>();

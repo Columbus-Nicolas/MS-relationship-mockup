@@ -14,8 +14,19 @@ namespace MsRelationship.Api.Features.Relations;
 /// </summary>
 public class RelationWriter(AppDbContext db)
 {
+    /// <param name="changeType">
+    /// Overrides the change type stamped on the history row. Left null — the normal case — the
+    /// row is labelled by the <em>shape</em> of the write: <see cref="RelationChangeType.Created"/>
+    /// or <see cref="RelationChangeType.Updated"/>. A caller that knows the <em>reason</em> for
+    /// the write passes it instead, so the timeline says why a value changed rather than merely
+    /// that it did. Only <see cref="MsProfiles.MsProfileMerger"/> does this today, labelling
+    /// merge traffic <see cref="RelationChangeType.MergeMoved"/> /
+    /// <see cref="RelationChangeType.MergeDiscarded"/> (FR-20). The relation row and its history
+    /// row still land in one SaveChanges either way.
+    /// </param>
     public async Task<Relation> UpsertAsync(
-        Guid columbusUserId, Guid msProfileId, int score, string note, Guid changedBy, Guid? submissionId = null)
+        Guid columbusUserId, Guid msProfileId, int score, string note, Guid changedBy, Guid? submissionId = null,
+        RelationChangeType? changeType = null)
     {
         var existing = await db.Relations
             .SingleOrDefaultAsync(r => r.ColumbusUserId == columbusUserId && r.MsProfileId == msProfileId);
@@ -29,7 +40,7 @@ public class RelationWriter(AppDbContext db)
             OldNote = existing?.Note,
             NewScore = score,
             NewNote = note,
-            ChangeType = existing is null ? RelationChangeType.Created : RelationChangeType.Updated,
+            ChangeType = changeType ?? (existing is null ? RelationChangeType.Created : RelationChangeType.Updated),
             ChangedByUserId = changedBy,
             SubmissionId = submissionId
         };
@@ -70,7 +81,12 @@ public class RelationWriter(AppDbContext db)
     private static DateTimeOffset TruncateToMicroseconds(DateTimeOffset value) =>
         new(value.Ticks - value.Ticks % 10, value.Offset);
 
-    public async Task RemoveAsync(Guid columbusUserId, Guid msProfileId, Guid changedBy, Guid? submissionId = null)
+    /// <param name="changeType">
+    /// Overrides the change type stamped on the history row; see the same parameter on
+    /// <see cref="UpsertAsync"/>. Defaults to <see cref="RelationChangeType.Removed"/>.
+    /// </param>
+    public async Task RemoveAsync(Guid columbusUserId, Guid msProfileId, Guid changedBy, Guid? submissionId = null,
+        RelationChangeType? changeType = null)
     {
         var existing = await db.Relations
             .SingleOrDefaultAsync(r => r.ColumbusUserId == columbusUserId && r.MsProfileId == msProfileId);
@@ -83,7 +99,7 @@ public class RelationWriter(AppDbContext db)
             MsProfileId = msProfileId,
             OldScore = existing.Score,
             OldNote = existing.Note,
-            ChangeType = RelationChangeType.Removed,
+            ChangeType = changeType ?? RelationChangeType.Removed,
             ChangedByUserId = changedBy,
             SubmissionId = submissionId
         });
