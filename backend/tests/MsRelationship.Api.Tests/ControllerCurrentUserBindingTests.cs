@@ -139,6 +139,21 @@ public class ControllerCurrentUserBindingTests(PostgresFixture fixture) : IAsync
         Assert.Equal(user.Id, submission!.ColumbusUserId);
     }
 
+    // The moderation queue exposes every user's proposed scores and notes, not just the
+    // caller's own — Pending() now carries [Authorize(Policy = "CanEdit")] to match the write
+    // side (approve/reject), closing the read-side half of the asymmetry the write side was
+    // already fixed for.
+    [Fact]
+    public async Task Pending_is_forbidden_for_a_standard_role_caller()
+    {
+        await using var db = fixture.NewContext();
+        var standard = await Seed.UserAsync(db); // default role is Standard
+
+        var response = await ClientAs(standard).GetAsync("/api/submissions");
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
     [Fact]
     public async Task Approve_binds_ICurrentUser_as_the_deciding_admin_and_requires_CanEdit()
     {

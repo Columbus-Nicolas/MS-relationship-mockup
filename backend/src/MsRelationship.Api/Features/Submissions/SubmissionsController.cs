@@ -13,6 +13,12 @@ public record SubmitRequest(SubmissionDraft[] Items);
 [Route("api/submissions")]
 public class SubmissionsController(AppDbContext db, SubmissionService service) : ControllerBase
 {
+    // The moderation queue exposes every user's proposed scores and notes, not just the caller's
+    // own — without a policy, any authenticated user (including Standard) could read the whole
+    // backlog. Gated to match the write side (approve/reject below): leaving the read half open
+    // while the write half is gated for exactly this reason is the same asymmetry that caused
+    // the original problem (Fix round 1, Critical 1, on Reject).
+    [Authorize(Policy = "CanEdit")]
     [HttpGet]
     public async Task<IReadOnlyList<Submission>> Pending() =>
         await db.Submissions.Where(s => s.Status == SubmissionStatus.Pending)
