@@ -28,9 +28,13 @@ public class ColumbusUsersController(AppDbContext db, UserArchiver archiver) : C
 
     // `id` is the incoming Super Admin; the outgoing Super Admin is the caller (currentUser.Id).
     // SuperAdminTransfer.TransferAsync itself requires the caller to already hold Role ==
-    // SuperAdmin (see its guard), so this is safe to leave under the same authenticated-user
-    // fallback policy as the rest of the API rather than CanEdit/CanAdminister specifically —
-    // the brief names only merge, archive and approve for the CanEdit attribute.
+    // SuperAdmin, so no escalation is reachable even without this attribute — but leaving it off
+    // meant a non-holder's refusal surfaced as an unhandled InvalidOperationException (500)
+    // instead of a clean 403, and CanAdminister (produced by this task) had no consumer at all.
+    // This is the one defensible use of CanAdminister rather than CanEdit: it documents that
+    // super-admin transfer is administration, not ordinary editing, and lets the two policies
+    // diverge later without silently widening who can attempt a transfer.
+    [Authorize(Policy = "CanAdminister")]
     [HttpPost("{id:guid}/promote-super-admin")]
     public async Task<IActionResult> PromoteSuperAdmin(Guid id,
         ICurrentUser currentUser, [FromServices] SuperAdminTransfer transfer)

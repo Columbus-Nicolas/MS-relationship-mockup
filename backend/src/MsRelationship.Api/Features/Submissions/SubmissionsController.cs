@@ -33,6 +33,11 @@ public class SubmissionsController(AppDbContext db, SubmissionService service) :
         return NoContent();
     }
 
+    // Approve and reject are two halves of one moderation decision on the same submission —
+    // both require CanEdit. A Standard or Moderator caller must not be able to permanently
+    // veto another user's pending proposal (RejectAsync's guard is only Status != Pending, with
+    // no role or ownership check of its own).
+    [Authorize(Policy = "CanEdit")]
     [HttpPost("{id:guid}/reject")]
     public async Task<IActionResult> Reject(Guid id, ICurrentUser currentUser)
     {

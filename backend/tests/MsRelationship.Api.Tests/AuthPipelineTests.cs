@@ -197,6 +197,55 @@ public class AuthPipelineTests(PostgresFixture fixture) : IAsyncLifetime
         Assert.Equal(user.Id, currentUser.Id);
     }
 
+    // Fix round 1, Important 4: a token with no oid claim used to be combined into one query
+    // ("EntraObjectId == null || Email == email"), and EF translates a null objectId into
+    // "entra_object_id IS NULL" — matching every user who has never signed in yet. With two or
+    // more such rows in the table (the normal state for any pre-created-but-not-yet-signed-in
+    // roster), SingleOrDefaultAsync throws. The fix looks up by oid alone first and only falls
+    // back to email when there is no oid to look up by, so a missing oid claim resolves via
+    // email cleanly instead of blowing up on an unrelated never-signed-in row.
+    [Fact]
+    public async Task A_missing_oid_claim_falls_back_to_email_without_throwing_on_other_unbound_rows()
+    {
+        await using var db = fixture.NewContext();
+        var target = await Seed.UserAsync(db);
+        await Seed.UserAsync(db); // a second, unrelated, never-signed-in row (EntraObjectId is null)
+
+        var context = AuthenticatedContext("Bearer",
+            new Claim("preferred_username", target.Email)); // no "oid" claim at all
+
+        var (ctx, nextCalled, currentUser) = await InvokeAsync(context, Config());
+
+        Assert.True(nextCalled);
+        Assert.Equal(target.Id, currentUser.Id);
+    }
+
+    // Fix round 1, Important 4 (Minor): a legitimate two-row state — one row already bound to the
+    // caller's real oid, a different, unrelated row that happens to hold the email the caller is
+    // presenting now (e.g. a stale placeholder row, or mid-transition after an address change) —
+    // must resolve via the oid match, not throw. The old combined-OR query would have matched
+    // both rows and thrown, locking the real, already-registered person out.
+    [Fact]
+    public async Task An_oid_match_is_used_even_when_a_different_row_also_matches_the_email()
+    {
+        await using var db = fixture.NewContext();
+        var boundUser = await Seed.UserAsync(db);
+        boundUser.EntraObjectId = "already-bound-oid";
+        var staleRow = await Seed.UserAsync(db); // unrelated row, never signed in
+        staleRow.Email = "shared-address@columbusglobal.com"; // matches the incoming token's email
+        await db.SaveChangesAsync();
+
+        // The token's oid matches boundUser; its email (now) matches the unrelated staleRow.
+        var context = AuthenticatedContext("Bearer",
+            new Claim("oid", "already-bound-oid"),
+            new Claim("preferred_username", staleRow.Email));
+
+        var (ctx, nextCalled, currentUser) = await InvokeAsync(context, Config());
+
+        Assert.True(nextCalled);
+        Assert.Equal(boundUser.Id, currentUser.Id);
+    }
+
     // -- Policy tests: same AddColumbusPolicies() call Program.cs registers, no live IDP needed. --
 
     private static IServiceProvider PolicyServices()

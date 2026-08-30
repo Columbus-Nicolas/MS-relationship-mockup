@@ -47,9 +47,20 @@ public class MembershipMiddleware(RequestDelegate next, IWebHostEnvironment env,
             return;
         }
 
+        // oid is matched first, as its own query, rather than one query with
+        // "EntraObjectId == objectId || Email == email": EF would translate a null objectId into
+        // "entra_object_id IS NULL", which matches every user who has never signed in and either
+        // throws on more than one such row or — worse — silently binds the caller to whichever
+        // never-signed-in row happens to match the email side, regardless of whose oid it
+        // actually is. Trying the oid match alone first also resolves the legitimate case where
+        // a person changed email address and now has one row holding their oid and a different,
+        // stale row holding the new email: the oid lookup finds the right row directly instead
+        // of joining both conditions into a query that would throw on two matches.
         var objectId = context.User.FindFirstValue("oid");
-        var user = await db.ColumbusUsers.SingleOrDefaultAsync(u =>
-            u.EntraObjectId == objectId || u.Email.ToLower() == email.ToLower());
+        var user = objectId is not null
+            ? await db.ColumbusUsers.SingleOrDefaultAsync(u => u.EntraObjectId == objectId)
+            : null;
+        user ??= await db.ColumbusUsers.SingleOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
 
         // Archived users are never deleted (leavers keep their row per FR-10), so the closed
         // list check must also exclude Status != Active — otherwise an archived leaver whose

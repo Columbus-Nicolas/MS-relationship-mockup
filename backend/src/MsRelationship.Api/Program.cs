@@ -51,6 +51,10 @@ builder.Services.AddScoped<ICurrentUser>(sp => sp.GetRequiredService<CurrentUser
 builder.Services.AddAuthorizationBuilder().AddColumbusPolicies();
 
 var app = builder.Build();
+
+// Loud failure, not a silent one: see EntraCredentialsGuard for why this can't just be assumed.
+EntraCredentialsGuard.Validate(app.Configuration, app.Environment);
+
 app.UseAuthentication();
 app.UseMiddleware<MembershipMiddleware>();
 app.UseAuthorization();
