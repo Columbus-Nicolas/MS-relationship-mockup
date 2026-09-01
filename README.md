@@ -4,8 +4,9 @@ A clickable UI mockup of the app that gives Columbus a shared, always-current ov
 relationships to key people at Microsoft Denmark — where we have strong connections, where we are
 missing them, and how that changes when roles and organisations shift on both sides.
 
-This is a **presentation mockup**, not a product. There is no backend, no authentication and no
-persistence. Everything you see is fictional.
+This is a **presentation mockup**. Opened on its own it has no backend, no authentication and no
+persistence — everything you see is fictional. There is now also a real backend it can sign in
+against for local development; see *Running it against the backend* below.
 
 ## How to open it
 
@@ -14,6 +15,35 @@ connection needed.
 
 On the login screen: press **Continue** (or the Entra ID button). Any e-mail — or none at all —
 signs you in as *Mette Kirkegaard* with the **Admin** role.
+
+## Running it against the backend (local development)
+
+The sections above describe the standalone mockup. There is also a real ASP.NET Core backend in
+`backend/`, and a developer mode that lets you sign in and run against a real Postgres database
+seeded with this same synthetic dataset.
+
+```bash
+cp .env.example .env          # then set POSTGRES_PASSWORD, the matching Password= in
+                              # ConnectionStrings__Default, and DEV_MODE=true
+docker compose up -d db mail
+dotnet run --project backend/src/MsRelationship.Api
+```
+
+Then open `index.html` and click **Developer sign-in** on the login page. That button appears
+only while the API is running with `DEV_MODE=true` — it is rendered from a live call to
+`GET /api/dev/session`, a route that exists only in dev mode.
+
+On boot, dev mode applies migrations and seeds the approved dataset (23 Microsoft profiles, 9
+domains, 14 Columbus users and their relations), then adds a `dev@columbusglobal.example`
+Super Admin account to sign in as. All of it is idempotent.
+
+Dev mode is an authentication bypass — it accepts an `X-Dev-Email` header instead of an Entra
+token — so the API refuses to start if it is enabled outside Development. Full details, including
+what changes between dev mode on and off, are in [docs/local-setup.md](docs/local-setup.md).
+
+**The pages still render from the in-memory `state` object.** Dev mode gives you a real database
+and a real authenticated session; it does not yet wire Microsoft Profiles, Domains or Relations
+to the API, because the read endpoints for those do not exist.
 
 ## Demo path for a presentation
 

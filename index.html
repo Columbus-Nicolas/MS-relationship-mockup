@@ -704,6 +704,23 @@ td.actions{text-align:right;white-space:nowrap}
   .pcard:hover{transform:none}
 }
 </style>
+<style>
+/* ============================================================
+   DEV MODE - the local sign-in block on the login page.
+   Every selector below is new and dev__-prefixed, and this is a
+   separate <style> element: nothing above is redefined, so no
+   other page can be affected by anything in here.
+   ============================================================ */
+.dev__slot{margin-top:18px}
+.dev__panel{border:1px solid var(--border);border-radius:10px;padding:14px 16px;background:#f8fafc}
+.dev__head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.dev__badge{background:var(--navy-700);color:#fff;border-radius:20px;padding:2px 9px;
+  font-size:10px;letter-spacing:.06em;text-transform:uppercase;font-weight:700}
+.dev__title{font-size:13px;font-weight:600;color:var(--text)}
+.dev__meta{color:var(--text-muted);font-size:12px;line-height:1.5;margin:0 0 12px}
+.dev__meta b{color:var(--text)}
+.dev__btn{width:100%;justify-content:center}
+</style>
 </head>
 <body>
 <div id="app"></div>
@@ -776,6 +793,114 @@ var CB_DEPARTMENTS = ['Executive','Alliances','Data & AI','Business Applications
    msProfiles are the real Microsoft Denmark intake list.
    The Columbus users, every score and every note are placeholders.
    ============================================================ */
+
+/* ============================================================
+   3. DEV MODE - local sign-in against the running backend
+
+   This page is opened straight off disk. There is no build step, so it cannot
+   read .env and cannot be told at build time whether the backend is running
+   with DEV_MODE=true. So it asks. GET /api/dev/session is mapped only while
+   dev mode is on, which makes "does this route answer" the entire feature
+   flag: dev mode being off, the API not running, and the route 404ing all
+   land in the same branch, and the login page stays exactly as it shipped.
+
+   Nothing here changes where the pages get their data. They still render from
+   the in-memory state below; the backend is only what authenticates the
+   sign-in and holds the seeded copy of that same dataset.
+   ============================================================ */
+
+// No build step, so VITE_API_BASE_URL cannot be injected. This matches the http
+// profile in backend/src/MsRelationship.Api/Properties/launchSettings.json.
+var DEV_API_BASE = 'http://localhost:5080';
+var DEV_EMAIL_HEADER = 'X-Dev-Email';
+var DEV_STORAGE_KEY = 'columbus.devEmail';
+
+// The developer account as the backend reported it, or null until asked.
+var devSession = null;
+
+// sessionStorage access throws outright on a file:// origin in some browsers, so
+// every use is guarded. Losing it only costs persistence across a reload.
+function devStore(key, value){
+  try {
+    if (value === undefined) return sessionStorage.getItem(key);
+    if (value === null) sessionStorage.removeItem(key); else sessionStorage.setItem(key, value);
+  } catch (e) { /* no-op */ }
+  return null;
+}
+
+// Identity header for calls to the backend. Empty unless signed in through dev
+// mode, so it is safe to attach to every request unconditionally.
+function devHeaders(){
+  var email = devStore(DEV_STORAGE_KEY), h = {};
+  if (email) h[DEV_EMAIL_HEADER] = email;
+  return h;
+}
+
+function devFetch(path, opts){
+  opts = opts || {};
+  var headers = devHeaders();
+  for (var k in (opts.headers || {})) headers[k] = opts.headers[k];
+  opts.headers = headers;
+  return fetch(DEV_API_BASE + path, opts);
+}
+
+// Fills the placeholder viewLogin() leaves behind. Deliberately not cached: the
+// probe is one local request, and re-asking means toggling DEV_MODE and
+// restarting the API is picked up by a plain page reload.
+function devRenderSignin(){
+  var slot = document.getElementById('dev-signin');
+  if (!slot) return;
+  devFetch('/api/dev/session')
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(data){
+      if (!data || !data.enabled || !data.user) return;  // dev mode off - leave the page alone
+      devSession = data.user;
+      slot.innerHTML = devPanel(data.user);
+    })
+    .catch(function(){ /* backend not running - leave the page alone */ });
+}
+
+function devPanel(user){
+  var role = devRoleId(user.role);
+  return '' +
+  '<div class="dev__panel">' +
+    '<div class="dev__head">' +
+      '<span class="dev__badge">Dev mode</span>' +
+      '<span class="dev__title">Developer sign-in</span>' +
+    '</div>' +
+    '<p class="dev__meta">Signs in as <b>' + esc(user.name) + '</b> with the <b>' +
+      esc(roleName(role)) + '</b> role, authenticated against the local backend. ' +
+      'This block appears only while the API runs with <b>DEV_MODE=true</b>.</p>' +
+    '<button type="button" class="btn btn--primary dev__btn" data-action="dev-login">' +
+      'Continue as ' + esc(user.name) + '</button>' +
+  '</div>';
+}
+
+// The API reports the enum as written in C# ("SuperAdmin"); the mockup keys roles
+// by lower-case id. Anything unrecognised falls back to the least privileged role
+// rather than guessing upwards.
+function devRoleId(role){
+  var id = String(role || '').toLowerCase();
+  return byId(ROLES, id) ? id : 'standard';
+}
+
+// Mirrors the seeded row into the mockup's own state, so every page that resolves
+// a user by id keeps working unchanged. Department is left blank to match the
+// database row, which has no department either.
+function devSignIn(){
+  if (!devSession) return;
+  var role = devRoleId(devSession.role);
+  devStore(DEV_STORAGE_KEY, devSession.email);
+  if (!cb('dev')) {
+    state.columbusProfiles.push({
+      id:'dev', name:devSession.name, title:'Local development account',
+      department:'', skills:[], role:role, email:devSession.email, lastSurvey:null
+    });
+  }
+  state.session = { userId:'dev', role:role };
+  state.ui.myDraft = null;
+  go('dashboard');
+}
 
 var state = {
   session: { userId:'c1', role:'admin' },
@@ -1113,7 +1238,11 @@ function render(){
   var route = state.ui.route;
   syncEcoPeople();
 
-  if (route === 'login') { document.getElementById('app').innerHTML = viewLogin(); return; }
+  if (route === 'login') {
+    document.getElementById('app').innerHTML = viewLogin();
+    devRenderSignin();   // async; fills in only if the backend is in dev mode
+    return;
+  }
 
   // Fall back to the first page the current role is allowed to see.
   if (!canOpen(route, state.session.role)) {
@@ -1212,6 +1341,7 @@ function viewLogin(){
         '<input id="loginmail" type="email" placeholder="firstname.lastname@columbusglobal.com" autocomplete="off"></div>' +
       '<div style="height:14px"></div>' +
       '<button type="submit" class="btn btn--primary" style="width:100%;justify-content:center">Continue</button>' +
+      '<div class="dev__slot" id="dev-signin"></div>' +
       '<div class="login__note"><b>Mockup:</b> authentication is not implemented. Any e-mail - or none at all - signs you in as ' +
         esc(me().name) + ' with the <b>Admin</b> role. In the real app this is Microsoft Entra ID, restricted to Columbus mail addresses.</div>' +
     '</form></div>' +
@@ -2660,9 +2790,12 @@ document.addEventListener('click', function(e){
 
   switch (a) {
     /* --- shell --- */
+    case 'dev-login': devSignIn(); break;
     case 'logout':
       state.ui.msDetail = null; state.ui.modal = null; state.ui.myDraft = null;
-      state.session.role = 'admin';
+      // Drop the dev identity too, so signing out really does sign out of the backend.
+      devStore(DEV_STORAGE_KEY, null); devSession = null;
+      state.session = { userId:'c1', role:'admin' };
       renderLayer();
       location.hash = '#/login';
       break;

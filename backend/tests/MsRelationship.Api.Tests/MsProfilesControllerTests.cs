@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using MsRelationship.Api.Auth;
 using MsRelationship.Api.Data.Entities;
 using MsRelationship.Api.Features.MsProfiles;
 using Xunit;
@@ -40,7 +41,10 @@ public class MsProfilesControllerTests(PostgresFixture fixture) : IAsyncLifetime
             builder.ConfigureAppConfiguration((_, cfg) =>
                 cfg.AddInMemoryCollection(new Dictionary<string, string?>
                 {
-                    ["ConnectionStrings:Default"] = fixture.ConnectionString
+                    ["ConnectionStrings:Default"] = fixture.ConnectionString,
+                    // Pinned off so a developer's local .env can never change what these tests
+                    // exercise; dev mode swaps the authentication scheme wholesale.
+                    [DevModeGuard.ConfigKey] = "false"
                 }));
             builder.ConfigureTestServices(services =>
             {

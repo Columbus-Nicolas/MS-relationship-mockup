@@ -67,7 +67,16 @@ public class EntraCredentialsGuardTests
     public void The_real_app_refuses_to_start_in_production_with_the_shipped_placeholder()
     {
         using var factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-            builder.UseEnvironment("Production"));
+        {
+            builder.UseEnvironment("Production");
+            // Pinned off so the refusal proved here is unambiguously this guard's, and not
+            // DevModeGuard tripping first on a stray flag.
+            builder.ConfigureAppConfiguration((_, cfg) =>
+                cfg.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    [DevModeGuard.ConfigKey] = "false"
+                }));
+        });
 
         Assert.ThrowsAny<Exception>(() => factory.Server);
     }
