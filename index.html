@@ -134,6 +134,10 @@ a{color:var(--navy-600)}
 }
 .nav a:hover{background:rgba(255,255,255,.06);color:#fff}
 .nav a.active{background:rgba(242,163,60,.13);color:#fff;border-left-color:var(--accent);font-weight:600}
+/* A graphics page sits under its own dashboard, so it is indented and a shade
+   quieter - the pairing has to be readable at a glance once there are four. */
+.nav a.nav__child{margin-left:16px;font-size:12.5px;color:#a9bfd4}
+.nav a.nav__child .ico{opacity:.6}
 .nav a .ico{width:18px;text-align:center;opacity:.85;font-style:normal}
 .nav a .pill{margin-left:auto;background:var(--accent);color:#3a2708;border-radius:20px;
   font-size:11px;font-weight:700;padding:1px 7px}
@@ -460,6 +464,15 @@ td.actions{text-align:right;white-space:nowrap}
 .gv-panel__head p{margin:3px 0 0;font-size:11.5px;line-height:1.45;color:var(--e-muted)}
 .gv-panel__body{padding:16px 18px 18px}
 
+/* The people behind one bar. Sits inside the panel body, separated by a rule
+   rather than a card of its own - it belongs to the chart above it. */
+.gv-drill{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.gv-drill__head{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.gv-drill__head b{display:block;font-size:13px;font-weight:650;color:var(--e-navy)}
+.gv-drill__head span{display:block;margin-top:2px;font-size:11.5px;color:var(--text-muted)}
+.gv-drill__head button{margin-left:auto}
+.gv-drill table{font-size:12.5px}
+
 .gv-tools{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:18px}
 .gv-tools > b{font-size:9.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--text-faint)}
 .gv-tools .spacer{flex:1;min-width:8px}
@@ -468,6 +481,7 @@ td.actions{text-align:right;white-space:nowrap}
 .bars{display:flex;flex-direction:column;gap:7px}
 .bars__row{display:grid;grid-template-columns:minmax(96px,168px) 1fr 54px;align-items:center;
   gap:12px;min-height:26px;border-radius:6px;cursor:help;outline:none}
+.bars__row[data-action]{cursor:pointer}
 .bars__row:hover,.bars__row:focus-visible{background:#f7f9fc}
 .bars__lbl{font-size:12px;line-height:1.3;color:var(--text)}
 .bars__plot{position:relative;height:18px}
@@ -741,22 +755,38 @@ function roleName(id){ for (var i=0;i<ROLES.length;i++){ if (ROLES[i].id===id) r
 var NAV_SECTIONS = ['Dashboards', 'Administration', 'Submissions & Relations'];
 
 // Which pages each role may open. Drives the left menu AND route guarding.
+/* The fixed pages. The two pages every dashboard has - its board and its
+   graphics - are generated per board in allPages(), so a board added from the UI
+   gets its menu entries and its route guard without a code change. */
 var PAGES = [
-  { route:'dashboard',         title:'Dashboard',           sub:'Overview',                    icon:'▦', section:'Dashboards',             roles:['superadmin','admin','moderator'] },
-  { route:'graphic-view',      title:'Graphic View',        sub:'Numbers & breakdowns',       icon:'◈', section:'Dashboards',             roles:['superadmin','admin','moderator'] },
+  { route:'dashboards',        title:'Dashboards',          sub:'Boards & their panels',       icon:'▩', section:'Administration',         roles:['superadmin','admin'] },
   { route:'ms-domains',        title:'Microsoft Domains',   sub:'Categories & mapping',        icon:'◆', section:'Administration',         roles:['superadmin','admin'] },
   { route:'ms-profiles',       title:'Microsoft Profiles',  sub:'Approved Microsoft contacts', icon:'●', section:'Administration',         roles:['superadmin','admin','moderator'] },
   { route:'columbus-profiles', title:'Columbus Profiles',   sub:'Internal users & relations',  icon:'▲', section:'Administration',         roles:['superadmin','admin','moderator'] },
   { route:'submissions',       title:'Pending Submissions', sub:'Surveys awaiting approval',   icon:'■', section:'Submissions & Relations',roles:['superadmin','admin'] },
   { route:'my-relations',      title:'My Relations',        sub:'Your own Microsoft contacts', icon:'★', section:'Submissions & Relations',roles:['superadmin','admin','moderator','standard'] }
 ];
-function pageFor(route){ for (var i=0;i<PAGES.length;i++){ if (PAGES[i].route===route) return PAGES[i]; } return null; }
+function allPages(){
+  var out = [];
+  state.boards.forEach(function(b){
+    out.push({ route:b.dashboard, title:'Dashboard - ' + b.label, sub:'Overview', icon:'\u25a6',
+               section:'Dashboards', roles:['superadmin','admin','moderator'] });
+    out.push({ route:b.graphics, title:'Graphics - ' + b.label, sub:'Numbers & breakdowns', icon:'\u25c8',
+               section:'Dashboards', child:true, roles:['superadmin','admin','moderator'] });
+  });
+  return out.concat(PAGES);
+}
+function pageFor(route){
+  var all = allPages();
+  for (var i=0;i<all.length;i++){ if (all[i].route===route) return all[i]; }
+  return null;
+}
 function canOpen(route, role){ var p = pageFor(route); return !!p && p.roles.indexOf(role) !== -1; }
 // Only Admin / Super Admin may change data. Moderator is read-only (spec, page 3+4).
 function canEdit(){ return state.session.role === 'admin' || state.session.role === 'superadmin'; }
 
 var MS_GROUPS  = ['Leadership','Account Team','Technical Specialist','Partner Development','Marketing'];
-var MS_SOURCES = ['Ayla\'s list','Microsoft DK leadership page','LinkedIn / MS Pulse','LinkedIn / Thomas\' deck','Survey','Manual entry','Unconfirmed'];
+var MS_SOURCES = ['Ayla\'s list','Microsoft DK leadership page','LinkedIn / MS Pulse','LinkedIn / Thomas\' deck','Survey','Microsoft DK org chart','Manual entry','Unconfirmed'];
 // The system domain every unplaced Microsoft profile falls back to.
 var UNMARKED_ID = 'd0';
 
@@ -784,24 +814,48 @@ var state = {
   surveySchedule: { enabled:true, cadence:'quarterly', lastSent:'2026-07-01' },
 
   // Domains live separately from the profiles so the mapping is easy to restructure.
+  /* The dashboards themselves are data, so one can be added from the UI. The two
+     seeded boards keep their hand-tuned panel layouts in ECOS below; a board
+     added later derives its panels from the domains assigned to it.
+     `system` marks the board that cannot be deleted - the app needs a landing page. */
+  boards: [
+    { id:'data-ai',  label:'Data & AI', dashboard:'dashboard',          graphics:'graphic-view',
+      subtitle:'Who we know at Microsoft Denmark, and how well',
+      updated:'August 2026', version:'v0.3 draft', owner:'owner not yet assigned', system:true },
+    { id:'dynamics', label:'Dynamics',  dashboard:'dashboard-dynamics', graphics:'graphic-view-dynamics',
+      subtitle:'Who we know in Microsoft\u2019s Business Applications organisation',
+      updated:'May 2026', version:'v0.1 draft', owner:'owner not yet assigned' }
+  ],
+
   domains: [
-    { id:'d1', name:'Azure & AI - Sales',             owner:'Mette Kirkegaard', desc:'Cloud & AI platform sales, Azure and Data & AI sales specialists.' },
-    { id:'d2', name:'Strategic & Partner Leadership', owner:'Mette Kirkegaard', desc:'Enterprise partner solutions and partner development - our formal route in.' },
-    { id:'d3', name:'Azure & AI - Specialist',        owner:'Jonas Ravn',       desc:'Cloud solution architects, AI solution engineers and Azure specialists.' },
-    { id:'d4', name:'Business Applications',          owner:'Sofie Bang',       desc:'Dynamics 365, Power Platform and Copilot motions.' },
-    { id:'d5', name:'SMC & SMB',                      owner:'Anders Holmgaard', desc:'Small, medium and corporate segment across DK / NO.' },
-    { id:'d6', name:'Fabric Partner Success',         owner:'Rikke Dalsgaard',  desc:'Microsoft Fabric partner ecosystem and joint success motions.' },
-    { id:'d7', name:'Funding & Programs',             owner:'Sofie Bang',       desc:'Co-sell, incentives, MCI and Azure Accelerate deployment funding.' },
-    { id:'d8', name:'Wider network',                  owner:'Jonas Ravn',       desc:'Contacts we hold but have not yet placed against a domain.' },
+    { dept:'data-ai', id:'d1', name:'Azure & AI - Sales',             owner:'Mette Kirkegaard', desc:'Cloud & AI platform sales, Azure and Data & AI sales specialists.' },
+    { dept:'data-ai', id:'d2', name:'Strategic & Partner Leadership', owner:'Mette Kirkegaard', desc:'Enterprise partner solutions and partner development - our formal route in.' },
+    { dept:'data-ai', id:'d3', name:'Azure & AI - Specialist',        owner:'Jonas Ravn',       desc:'Cloud solution architects, AI solution engineers and Azure specialists.' },
+    { dept:'data-ai', id:'d4', name:'Business Applications',          owner:'Sofie Bang',       desc:'Dynamics 365, Power Platform and Copilot motions.' },
+    { dept:'data-ai', id:'d5', name:'SMC & SMB',                      owner:'Anders Holmgaard', desc:'Small, medium and corporate segment across DK / NO.' },
+    { dept:'data-ai', id:'d6', name:'Fabric Partner Success',         owner:'Rikke Dalsgaard',  desc:'Microsoft Fabric partner ecosystem and joint success motions.' },
+    { dept:'data-ai', id:'d7', name:'Funding & Programs',             owner:'Sofie Bang',       desc:'Co-sell, incentives, MCI and Azure Accelerate deployment funding.' },
+    { dept:'data-ai', id:'d8', name:'Wider network',                  owner:'Jonas Ravn',       desc:'Contacts we hold but have not yet placed against a domain.' },
+    // ---- Dynamics dashboard domains. Same eight panels as the board below;
+    // three of them (Microsoft leadership, Partner & Alliance, ATU sales) hold
+    // people who also sit on the Data & AI board - that is the dual membership.
+    { dept:'dynamics', id:'dy1', name:'BizApp STU Leadership',      owner:'Thomas Johansson',   desc:'Solution Tech Unit leads for Business Applications - Enterprise, SME-C and SMB.' },
+    { dept:'dynamics', id:'dy2', name:'Enterprise BizApp Sellers',  owner:'Carsten Møberg',     desc:'Solution Sales Professionals on Dynamics 365 and Power Platform, enterprise accounts.' },
+    { dept:'dynamics', id:'dy3', name:'SME-C BizApp',               owner:'Carsten Møberg',     desc:'AI Business Solutions sellers in the SME-C segment, DK / NO / Iceland.' },
+    { dept:'dynamics', id:'dy4', name:'SMB',                        owner:'Thomas Johansson',   desc:'Small and medium business segment - roughly a thousand customers behind one seller.' },
+    { dept:'dynamics', id:'dy5', name:'Technical Specialists',      owner:'John Sinnbeck',      desc:'TSPs behind the BizApp sellers. Named in the deck, nobody scored yet.' },
+    { dept:'dynamics', id:'dy6', name:'Microsoft DK Leadership',    owner:'Thomas Johansson',   desc:'Country leadership. Shared with the Data & AI board - the same people, one score.' },
+    { dept:'dynamics', id:'dy7', name:'Partner & Alliance',         owner:'Thomas Johansson',   desc:'Partner development and alliance roles. Shared with the Data & AI board.' },
+    { dept:'dynamics', id:'dy8', name:'ATU Industry Sales',         owner:'Anders Barslund',    desc:'Account teams per industry - manufacturing, retail, OCI. They sell everything, Dynamics included.' },
     // System domain. Never shown on the dashboard - it is the landing place for
     // Microsoft profiles that have no domain, including the ones left behind
     // when a domain is deleted. It cannot be renamed or removed.
-    { id:UNMARKED_ID, name:'Unmarked', system:true, owner:'\u2014', desc:'Microsoft profiles that are not placed in a domain yet, plus everyone left behind when a domain is deleted.' }
+    { dept:null, id:UNMARKED_ID, name:'Unmarked', system:true, owner:'\u2014', desc:'Microsoft profiles that are not placed in a domain yet, plus everyone left behind when a domain is deleted.' }
   ],
 
   msProfiles: [
-    { id:'m1',  name:'Nina Due',               title:'Director, Enterprise Partner Solutions',                      domainIds:['d2'], group:'Leadership',           source:'Microsoft DK leadership page', email:'', notes:'Listed on the Microsoft DK leadership page.', updatedAt:'2026-08-19' },
-    { id:'m2',  name:'Christian Koch-Bentzen', title:'Sr. Partner Development Manager',                             domainIds:['d2'], group:'Partner Development',  source:'Ayla\'s list',                 email:'', notes:'', updatedAt:'2026-08-19' },
+    { id:'m1',  name:'Nina Due',               title:'Director, Enterprise Partner Solutions',                      domainIds:['d2','dy7'], group:'Leadership',           source:'Microsoft DK leadership page', email:'', notes:'Listed on the Microsoft DK leadership page.', updatedAt:'2026-08-19' },
+    { id:'m2',  name:'Christian Koch-Bentzen', title:'Sr. Partner Development Manager',                             domainIds:['d2','dy7'], group:'Partner Development',  source:'Ayla\'s list',                 email:'', notes:'', updatedAt:'2026-08-19' },
     { id:'m3',  name:'Claus Iversen',          title:'Partner Solution Sales Manager, Cloud & AI Platform / Azure', domainIds:['d1'], group:'Partner Development',  source:'Ayla\'s list',                 email:'', notes:'', updatedAt:'2026-08-19' },
     { id:'m4',  name:'Kris Rozanka',           title:'Cloud & AI Sales Consultant',                                 domainIds:['d1'], group:'Account Team',         source:'Ayla\'s list',                 email:'', notes:'', updatedAt:'2026-08-19' },
     { id:'m5',  name:'Arthur Gentit',          title:'Sales Specialist, Data & AI',                                 domainIds:['d1'], group:'Account Team',         source:'Ayla\'s list',                 email:'', notes:'', updatedAt:'2026-08-19' },
@@ -810,11 +864,11 @@ var state = {
     { id:'m8',  name:'Nikhil Makkar',          title:'Senior Cloud Solutions Architect',                            domainIds:['d3'], group:'Technical Specialist', source:'Ayla\'s list',                 email:'', notes:'', updatedAt:'2026-08-19' },
     { id:'m9',  name:'Chandana Ramesh',        title:'Cloud Solution Architect',                                    domainIds:['d3'], group:'Technical Specialist', source:'Ayla\'s list',                 email:'', notes:'', updatedAt:'2026-08-19' },
     { id:'m10', name:'Marcus Quistgaard',      title:'Azure Specialist',                                            domainIds:['d3'], group:'Technical Specialist', source:'Ayla\'s list',                 email:'', notes:'', updatedAt:'2026-08-19' },
-    { id:'m11', name:'Bo Kaaber Brandt',       title:'GTM Lead, Dynamics 365 & Power Platform',                     domainIds:['d4'], group:'Leadership',           source:'LinkedIn / MS Pulse',          email:'', notes:'', updatedAt:'2026-08-19' },
+    { id:'m11', name:'Bo Kaaber Brandt',       title:'GTM Lead, Dynamics 365 & Power Platform',                     domainIds:['d4','dy2'], group:'Leadership',           source:'LinkedIn / MS Pulse',          email:'', notes:'', updatedAt:'2026-08-19' },
     { id:'m12', name:'Anders Fjordhøj',        title:'Sr. Technical Specialist, Power Platform & AI',               domainIds:['d4'], group:'Technical Specialist', source:'LinkedIn / MS Pulse',          email:'', notes:'', updatedAt:'2026-08-19' },
-    { id:'m13', name:'Jesper N. Pedersen',     title:'Solution Sales Professional, BizApps',                        domainIds:['d4'], group:'Account Team',         source:'LinkedIn / MS Pulse',          email:'', notes:'', updatedAt:'2026-08-19' },
-    { id:'m14', name:'Bo Larsen',              title:'Solution Sales Professional, BizApps',                        domainIds:['d4'], group:'Account Team',         source:'Unconfirmed',                  email:'', tentative:true, notes:'Role and placement still to be confirmed.', updatedAt:'2026-08-19' },
-    { id:'m15', name:'Sarah McKenna',          title:'SMC & SMB Lead, DK / NO',                                     domainIds:['d5'], group:'Leadership',           source:'LinkedIn / Thomas\' deck',     email:'', notes:'', updatedAt:'2026-08-19' },
+    { id:'m13', name:'Jesper N. Pedersen',     title:'Solution Sales Professional, BizApps',                        domainIds:['d4','dy2'], group:'Account Team',         source:'LinkedIn / MS Pulse',          email:'', notes:'', updatedAt:'2026-08-19' },
+    { id:'m14', name:'Bo Larsen',              title:'Solution Sales Professional, BizApps',                        domainIds:['d4','dy2'], group:'Account Team',         source:'Unconfirmed',                  email:'', tentative:true, notes:'Role and placement still to be confirmed.', updatedAt:'2026-08-19' },
+    { id:'m15', name:'Sarah McKenna',          title:'SMC & SMB Lead, DK / NO',                                     domainIds:['d5','dy4'], group:'Leadership',           source:'LinkedIn / Thomas\' deck',     email:'', notes:'', updatedAt:'2026-08-19' },
     { id:'m16', name:'Thomas Lundgren',        title:'SMC Azure Lead',                                              domainIds:['d5'], group:'Leadership',           source:'Ayla\'s list',                 email:'', notes:'', updatedAt:'2026-08-19' },
     { id:'m17', name:'Kasper N. Nielsen',      title:'Senior Sales Executive, Aalborg',                             domainIds:['d5'], group:'Account Team',         source:'LinkedIn / Thomas\' deck',     email:'', notes:'', updatedAt:'2026-08-19' },
     { id:'m18', name:'Prashant Gutala',        title:'Fabric Partner Ecosystem Lead',                               domainIds:['d6'], group:'Partner Development',  source:'Ayla\'s list',                 email:'', notes:'', updatedAt:'2026-08-19' },
@@ -822,7 +876,90 @@ var state = {
     { id:'m20', name:'Azure Accelerate Team',  title:'Deployment funding, guidance',                                domainIds:['d7'], group:'Partner Development',  source:'Ayla\'s list',                 email:'', notes:'A Microsoft team, not a single named contact.', updatedAt:'2026-08-19' },
     { id:'m21', name:'Frederikke Smidt',       title:'Sr. Customer Success Account Mgr',                            domainIds:['d8'], group:'Account Team',         source:'Ayla\'s list',                 email:'', notes:'Domain placement still to be decided.', updatedAt:'2026-08-19' },
     { id:'m22', name:'Malte Vilain',           title:'Account Executive',                                           domainIds:['d8'], group:'Account Team',         source:'Ayla\'s list',                 email:'', notes:'Domain placement still to be decided.', updatedAt:'2026-08-19' },
-    { id:'m23', name:'Lars-Bo Heidemann',      title:'Cyber Security Professional',                                 domainIds:['d8'], group:'Technical Specialist', source:'Ayla\'s list',                 email:'', notes:'Domain placement still to be decided.', updatedAt:'2026-08-19' }
+    { id:'m23', name:'Lars-Bo Heidemann',      title:'Cyber Security Professional',                                 domainIds:['d8'], group:'Technical Specialist', source:'Ayla\'s list',                 email:'', notes:'Domain placement still to be decided.', updatedAt:'2026-08-19' },
+
+    /* ---- From “Microsoft Denmark Organization” (Thomas Johansson, 27 May 2026).
+       Draft data for the Dynamics board. Phone and e-mail are deliberately empty:
+       the deck holds none, and nothing here is invented. ---- */
+    { id:'dm1',   name:'Abed Danial',               title:'SSP BizApp',                                        domainIds:['dy3'], group:'Account Team',        source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm2',   name:'Ana-Maria Cibotari',        title:'SSP BizApp',                                        domainIds:['dy2'], group:'Account Team',        source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm3',   name:'Anders Andersen',           title:'TSP',                                               domainIds:['dy5'], group:'Technical Specialist', source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm4',   name:'Anders Helmo Larsen',       title:'Sr Account Tech Strategist',                        domainIds:['dy8'], group:'Technical Specialist', source:'Microsoft DK org chart',      email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm5',   name:'Artur Bagrancev',           title:'TSP',                                               domainIds:['dy5'], group:'Technical Specialist', source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm6',   name:'Bashar Shahmorad',          title:'SME-C sales',                                       domainIds:['dy3'], group:'Account Team',        source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm7',   name:'Bo Brandt',                 title:'SSP BizApp',                                        domainIds:['dy2'], group:'Account Team',        source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'Possibly the same person as Bo Kaaber Brandt - the deck lists them separately.', updatedAt:'2026-05-27', tentative:true },
+    { id:'dm8',   name:'Brian Guldborg',            title:'STU Lead, Solution TechUnit',                      domainIds:['dy1'], group:'Technical Specialist', source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm9',   name:'Brian Laustsen',            title:'Account Tech Strategist',                           domainIds:['dy8'], group:'Technical Specialist', source:'Microsoft DK org chart',      email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm10',  name:'Camilla Anker Schösser',    title:'Account Executive',                                 domainIds:['dy8'], group:'Account Team',        source:'Microsoft DK org chart',      email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm11',  name:'Charlotte Burmeister',      title:'Sales Manger (ATU) - Manufacturing',                domainIds:['dy8'], group:'Account Team',        source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm12',  name:'Christian Schønau',         title:'Sr Account Executive',                              domainIds:['dy8'], group:'Account Team',        source:'Microsoft DK org chart',      email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm13',  name:'Dann Andersen',             title:'Sr Account Executive',                              domainIds:['dy8'], group:'Account Team',        source:'Microsoft DK org chart',      email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm14',  name:'Darren Murphy',             title:'Sr Account Tech Strategist',                        domainIds:['dy8'], group:'Technical Specialist', source:'Microsoft DK org chart',      email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm15',  name:'Esben Holtum',              title:'Sr Account Tech Strategist, Major',                 domainIds:['dy8'], group:'Technical Specialist', source:'Microsoft DK org chart',      email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm16',  name:'Fillip Knudsen',            title:'Sr Strategic Account Tech Strategist',              domainIds:['dy8'], group:'Technical Specialist', source:'Microsoft DK org chart',      email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm17',  name:'Helle Huss',                title:'Commercial Lead EOU',                               domainIds:['dy8'], group:'Account Team',        source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm18',  name:'Henrik Ditlevsen',          title:'Ent. Sales',                                        domainIds:['dy2'], group:'Account Team',        source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm19',  name:'Jacob Louis Vagn Jensen',   title:'Sales Manager (ATU Retail and Professional services)', domainIds:['dy8'], group:'Account Team',        source:'Microsoft DK org chart',      email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm20',  name:'Jakub Federowicz',          title:'Account Executive Intern',                          domainIds:['dy8'], group:'Account Team',        source:'Microsoft DK org chart',      email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm21',  name:'Jan Akselbo',               title:'SME-C Sales',                                       domainIds:['dy3'], group:'Account Team',        source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm22',  name:'Jan Christensen',           title:'Sr. Technical Specialsit',                          domainIds:['dy5'], group:'Technical Specialist', source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm23',  name:'Jannic Jensen',             title:'Account Technology Strategist',                     domainIds:['dy8'], group:'Technical Specialist', source:'Microsoft DK org chart',      email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm24',  name:'Jens Fjeldal',              title:'Account Executive',                                 domainIds:['dy8'], group:'Account Team',        source:'Microsoft DK org chart',      email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm25',  name:'Jens Kofod',                title:'TSP',                                               domainIds:['dy5'], group:'Technical Specialist', source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm26',  name:'Jens Østvang',              title:'SME-C sales',                                       domainIds:['dy3'], group:'Account Team',        source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm27',  name:'Jeppe Skovhus Gerholt',     title:'COO',                                               domainIds:['dy6'], group:'Leadership',          source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm28',  name:'Jeshri',                    title:'AI Biz SSP, SME-C',                 domainIds:['dy3'], group:'Account Team',        source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'Microsoft alias from the deck; full name not resolved.', updatedAt:'2026-05-27', tentative:true },
+    { id:'dm29',  name:'Jesper Nielsen',            title:'TSP',                                               domainIds:['dy5'], group:'Technical Specialist', source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm30',  name:'Jette Nedergaard Madsen',   title:'Account Executive',                                 domainIds:['dy8'], group:'Account Team',        source:'Microsoft DK org chart',      email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm31',  name:'Johan Grene',               title:'TSP',                                               domainIds:['dy5'], group:'Technical Specialist', source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm32',  name:'Jon Edmonds',               title:'Director, Strategic Sales - Mærsk',                 domainIds:['dy8'], group:'Account Team',        source:'Microsoft DK org chart',      email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm33',  name:'Jonas Rolsted',             title:'Sr Account Executive',                              domainIds:['dy8'], group:'Account Team',        source:'Microsoft DK org chart',      email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm34',  name:'Jonathan Sørensen',         title:'TSP',                                               domainIds:['dy5'], group:'Technical Specialist', source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm35',  name:'Juliane Maack',             title:'TSP',                                               domainIds:['dy5'], group:'Technical Specialist', source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'Listed both as a TSP and as an SME-C AI Biz SSP - placement to confirm.', updatedAt:'2026-05-27', tentative:true },
+    { id:'dm36',  name:'Julie Aabo',                title:'Strategic Account Tech Strategist',                 domainIds:['dy8'], group:'Technical Specialist', source:'Microsoft DK org chart',      email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm37',  name:'Julie Nadelmann',           title:'Global partner solution director',                  domainIds:['dy7'], group:'Partner Development', source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm38',  name:'Kasper Vedel Mørch',        title:'SSP BizApp',                                        domainIds:['dy2'], group:'Account Team',        source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm39',  name:'Katarina Larsson',          title:'EMEA marketing GTM Lead Bizzapps',                  domainIds:['dy7'], group:'Marketing',           source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm40',  name:'Katherina Hansen',          title:'Account Executive',                                 domainIds:['dy8'], group:'Account Team',        source:'Microsoft DK org chart',      email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm41',  name:'Kristian Albertsen',        title:'Account Executive',                                 domainIds:['dy8'], group:'Account Team',        source:'Microsoft DK org chart',      email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm42',  name:'Kristoffer Rosenmeier',     title:'Ent. STU/ Sales lead - Security',                   domainIds:['dy1'], group:'Leadership',          source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm43',  name:'Lene Stone',                title:'Account Executive',                                 domainIds:['dy8'], group:'Account Team',        source:'Microsoft DK org chart',      email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm44',  name:'Liang Ye',                  title:'SSP BizApp',                                        domainIds:['dy2'], group:'Account Team',        source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm45',  name:'Line Sinding Skøtt',        title:'PS Lead',                                           domainIds:['dy6'], group:'Leadership',          source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm46',  name:'Liv Tornquist',             title:'TSP',                                               domainIds:['dy5'], group:'Technical Specialist', source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm47',  name:'Louise Elsberg',            title:'Manufacturing Industry Lead',                       domainIds:['dy1'], group:'Leadership',          source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm48',  name:'Lukkas Hamann',             title:'Strategic Account Executive',                       domainIds:['dy8'], group:'Account Team',        source:'Microsoft DK org chart',      email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm49',  name:'Lynn Friedland',            title:'TSP',                                               domainIds:['dy5'], group:'Technical Specialist', source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm50',  name:'Mads Kjærsgaard',           title:'Sr Sales Manager (ATU) - FSI',                      domainIds:['dy8'], group:'Account Team',        source:'Microsoft DK org chart',      email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm51',  name:'Malou Reedorf',             title:'AE',                                                domainIds:['dy2'], group:'Account Team',        source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm52',  name:'Marc Solling',              title:'TSP',                                               domainIds:['dy5'], group:'Technical Specialist', source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm53',  name:'Maria Moeslund Hansen',     title:'Account Executive',                                 domainIds:['dy8'], group:'Account Team',        source:'Microsoft DK org chart',      email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm54',  name:'Matilda Varvne',            title:'Account Executive, Major',                          domainIds:['dy8'], group:'Account Team',        source:'Microsoft DK org chart',      email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm55',  name:'Mette Louise Kaagaard',     title:'GM DK',                                             domainIds:['dy6'], group:'Leadership',          source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm56',  name:'Mette Nygaard Ørnbo',       title:'Account Tech Strategist, Major',                    domainIds:['dy8'], group:'Technical Specialist', source:'Microsoft DK org chart',      email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm57',  name:'Mia dong',                  title:'TSP',                                               domainIds:['dy5'], group:'Technical Specialist', source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm58',  name:'Michael Olsson',            title:'Sr Account Tech Strategist',                        domainIds:['dy8'], group:'Technical Specialist', source:'Microsoft DK org chart',      email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm59',  name:'Mikkel Schausen',           title:'SSP BizApp',                                        domainIds:['dy2'], group:'Account Team',        source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm60',  name:'Morten Kvist Thomsen',      title:'CSU Lead',                                          domainIds:['dy6'], group:'Leadership',          source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm61',  name:'Nicolas Richardot',         title:'Sr Strategic Account Executive',                    domainIds:['dy8'], group:'Account Team',        source:'Microsoft DK org chart',      email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm62',  name:'Niels Grønning',            title:'Ent. STU/ Sales lead - Data/AI',                    domainIds:['dy1'], group:'Leadership',          source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm63',  name:'Pepijn van den Brink',      title:'Account Executive',                                 domainIds:['dy8'], group:'Account Team',        source:'Microsoft DK org chart',      email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm64',  name:'Peter Basbøll',             title:'Sr Strategic Account Executive',                    domainIds:['dy8'], group:'Account Team',        source:'Microsoft DK org chart',      email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm65',  name:'Peter Lippert',             title:'TSP',                                               domainIds:['dy5'], group:'Technical Specialist', source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm66',  name:'Poul Jørgensen',            title:'Sales Manager AI business solutions',               domainIds:['dy1'], group:'Leadership',          source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm67',  name:'Rasmus Knudsen',            title:'Account Executive, Major',                          domainIds:['dy8'], group:'Account Team',        source:'Microsoft DK org chart',      email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm68',  name:'Sarah McGeller',            title:'STU Lead, SME-C BizApp', domainIds:['dy1'], group:'Technical Specialist', source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'Possibly the same person as Sarah McKenna - to confirm.', updatedAt:'2026-05-27', tentative:true },
+    { id:'dm69',  name:'Sigrid Wallin',             title:'TSP',                                               domainIds:['dy5'], group:'Technical Specialist', source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm70',  name:'Simon Bolther',             title:'TSM AI BizApp',                              domainIds:['dy1'], group:'Leadership',          source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'The deck writes Ørsted beside his name - that is his account, not part of his title.', updatedAt:'2026-05-27' },
+    { id:'dm71',  name:'Siri Venning',              title:'TSP',                                               domainIds:['dy5'], group:'Technical Specialist', source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm72',  name:'Tanya Helene Christensen',  title:'SSM AI BizApp',                                     domainIds:['dy1'], group:'Leadership',          source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm73',  name:'Thomas Christensen',        title:'Account Tech Strategist',                           domainIds:['dy8'], group:'Technical Specialist', source:'Microsoft DK org chart',      email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm74',  name:'Thomas Redder',             title:'STU SSP, AI BizApp Denmark', domainIds:['dy4'], group:'Technical Specialist', source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm75',  name:'Tim Holbek',                title:'Account Executive',                                 domainIds:['dy8'], group:'Account Team',        source:'Microsoft DK org chart',      email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm76',  name:'Tine Haaber',               title:'Sr Sales Manager – OCI (pharma, energy, other industries)', domainIds:['dy8'], group:'Account Team',        source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm77',  name:'Trine Lumby',               title:'Ent. Sales',                                        domainIds:['dy2'], group:'Account Team',        source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm78',  name:'Uche Ojimadu',              title:'SME-C Sales Account manager AI business',           domainIds:['dy3'], group:'Account Team',        source:'LinkedIn / Thomas\' deck',    email:'', phone:'', notes:'', updatedAt:'2026-05-27' },
+    { id:'dm79',  name:'Zenia Harpsoe',             title:'Account Executive',                                 domainIds:['dy8'], group:'Account Team',        source:'Microsoft DK org chart',      email:'', phone:'', notes:'', updatedAt:'2026-05-27' }
   ],
 
   columbusProfiles: [
@@ -839,7 +976,22 @@ var state = {
     { id:'c11', name:'Louise Damgaard',       title:'D365 CE Consultant',          department:'Business Applications',    skills:['D365 CE','Power Platform'],               role:'standard',   email:'louise.damgaard@columbusglobal.example',  lastSurvey:'2026-07-15' },
     { id:'c12', name:'Martin Østergaard',title:'Delivery Manager',            department:'Delivery',                 skills:['Delivery','PMO'],                         role:'standard',   email:'martin.oestergaard@columbusglobal.example',lastSurvey:'2026-03-11' },
     { id:'c13', name:'Sara Lykke',            title:'Presales Lead, Data & AI',    department:'Data & AI',                skills:['Presales','AI','Copilot'],                role:'standard',   email:'sara.lykke@columbusglobal.example',       lastSurvey:'2026-07-15' },
-    { id:'c14', name:'Daniel Hvid',           title:'Bid Manager',                 department:'Sales',                    skills:['Bids','Public tenders'],                  role:'standard',   email:'daniel.hvid@columbusglobal.example',      lastSurvey:'2026-06-02' }
+    { id:'c14', name:'Daniel Hvid',           title:'Bid Manager',                 department:'Sales',                    skills:['Bids','Public tenders'],                  role:'standard',   email:'daniel.hvid@columbusglobal.example',      lastSurvey:'2026-06-02' },
+
+    /* Relationship owners named in Thomas’ deck. Titles are not in the source,
+       so they carry a neutral one; e-mail is left empty rather than guessed. */
+    { id:'c15', name:'Thomas Johansson',      title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', lastSurvey:null, fromDeck:true },
+    { id:'c16', name:'Anders Barslund',       title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', lastSurvey:null, fromDeck:true },
+    { id:'c17', name:'Anders Skibild',        title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', lastSurvey:null, fromDeck:true },
+    { id:'c18', name:'Brian B. Jørgensen',    title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', lastSurvey:null, fromDeck:true },
+    { id:'c19', name:'Carsten Møberg',        title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', lastSurvey:null, fromDeck:true },
+    { id:'c20', name:'Christian Poppe',       title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', lastSurvey:null, fromDeck:true },
+    { id:'c21', name:'John Sinnbeck',         title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', lastSurvey:null, fromDeck:true },
+    { id:'c22', name:'Stig B. Madsen',        title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', lastSurvey:null, fromDeck:true },
+    { id:'c23', name:'Søren Krogh',           title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', lastSurvey:null, fromDeck:true },
+    { id:'c24', name:'Lars Verning',          title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', lastSurvey:null, fromDeck:true },
+    { id:'c25', name:'Niels Viskum',          title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', lastSurvey:null, fromDeck:true },
+    { id:'c26', name:'Frederik Jørgensen',    title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', lastSurvey:null, fromDeck:true }
   ],
 
   // The many-to-many join: one Columbus person can know many Microsoft people and vice versa.
@@ -874,7 +1026,50 @@ var state = {
     { id:'r28', columbusId:'c7',   msProfileId:'m18',  score: 3, note:'First call on anything Fabric.', updatedAt:'2026-08-19' },
     { id:'r29', columbusId:'c13',  msProfileId:'m18',  score: 3, note:'Brings us into Fabric partner motions.', updatedAt:'2026-08-19' },
     { id:'r30', columbusId:'c1',   msProfileId:'m19',  score: 1, note:'Contact for funding and incentive questions.', updatedAt:'2026-08-19' },
-    { id:'r31', columbusId:'c5',   msProfileId:'m23',  score:-3, note:'Repeated attempts at contact unanswered.', updatedAt:'2026-08-19' }
+    { id:'r31', columbusId:'c5',   msProfileId:'m23',  score:-3, note:'Repeated attempts at contact unanswered.', updatedAt:'2026-08-19' },
+
+    /* Dynamics draft: 23 scores read off the deck's boards. Where the deck names an
+       owner but shows no badge, the relation is recorded as 0 (Neutral). People with
+       no owner at all get no relation, so they stay unscored on the board. */
+    { id:'dr1',    columbusId:'c16',  msProfileId:'dm1',   score: 2, note:'From Thomas’ deck, 27 May 2026.', updatedAt:'2026-05-27' },
+    { id:'dr2',    columbusId:'c18',  msProfileId:'dm2',   score: 2, note:'From Thomas’ deck, 27 May 2026.', updatedAt:'2026-05-27' },
+    { id:'dr3',    columbusId:'c19',  msProfileId:'dm6',   score: 3, note:'From Thomas’ deck, 27 May 2026.', updatedAt:'2026-05-27' },
+    { id:'dr4',    columbusId:'c16',  msProfileId:'dm7',   score: 2, note:'From Thomas’ deck, 27 May 2026.', updatedAt:'2026-05-27' },
+    { id:'dr5',    columbusId:'c16',  msProfileId:'m11',   score: 0, note:'Owner named in the deck, no score given — recorded as 0.', updatedAt:'2026-05-27' },
+    { id:'dr6',    columbusId:'c16',  msProfileId:'m14',   score: 0, note:'From Thomas’ deck, 27 May 2026.', updatedAt:'2026-05-27' },
+    { id:'dr7',    columbusId:'c19',  msProfileId:'m14',   score: 0, note:'From Thomas’ deck, 27 May 2026.', updatedAt:'2026-05-27' },
+    { id:'dr8',    columbusId:'c19',  msProfileId:'dm8',   score: 0, note:'From Thomas’ deck, 27 May 2026.', updatedAt:'2026-05-27' },
+    { id:'dr9',    columbusId:'c15',  msProfileId:'dm8',   score: 0, note:'From Thomas’ deck, 27 May 2026.', updatedAt:'2026-05-27' },
+    { id:'dr10',   columbusId:'c24',  msProfileId:'dm11',  score: 0, note:'Owner named in the deck, no score given — recorded as 0.', updatedAt:'2026-05-27' },
+    { id:'dr11',   columbusId:'c15',  msProfileId:'m2',    score: 0, note:'Owner named in the deck, no score given — recorded as 0.', updatedAt:'2026-05-27' },
+    { id:'dr12',   columbusId:'c15',  msProfileId:'dm17',  score: 0, note:'From Thomas’ deck, 27 May 2026.', updatedAt:'2026-05-27' },
+    { id:'dr13',   columbusId:'c18',  msProfileId:'dm18',  score: 2, note:'From Thomas’ deck, 27 May 2026.', updatedAt:'2026-05-27' },
+    { id:'dr14',   columbusId:'c22',  msProfileId:'dm21',  score: 0, note:'Owner named in the deck, no score given — recorded as 0.', updatedAt:'2026-05-27' },
+    { id:'dr15',   columbusId:'c21',  msProfileId:'dm22',  score: 0, note:'Owner named in the deck, no score given — recorded as 0.', updatedAt:'2026-05-27' },
+    { id:'dr16',   columbusId:'c19',  msProfileId:'dm26',  score: 0, note:'Owner named in the deck, no score given — recorded as 0.', updatedAt:'2026-05-27' },
+    { id:'dr17',   columbusId:'c19',  msProfileId:'dm28',  score: 3, note:'From Thomas’ deck, 27 May 2026.', updatedAt:'2026-05-27' },
+    { id:'dr18',   columbusId:'c16',  msProfileId:'m13',   score: 1, note:'From Thomas’ deck, 27 May 2026.', updatedAt:'2026-05-27' },
+    { id:'dr19',   columbusId:'c19',  msProfileId:'m13',   score: 1, note:'From Thomas’ deck, 27 May 2026.', updatedAt:'2026-05-27' },
+    { id:'dr20',   columbusId:'c20',  msProfileId:'m13',   score: 1, note:'From Thomas’ deck, 27 May 2026.', updatedAt:'2026-05-27' },
+    { id:'dr21',   columbusId:'c24',  msProfileId:'dm37',  score: 0, note:'Owner named in the deck, no score given — recorded as 0.', updatedAt:'2026-05-27' },
+    { id:'dr22',   columbusId:'c17',  msProfileId:'dm38',  score: 0, note:'From Thomas’ deck, 27 May 2026.', updatedAt:'2026-05-27' },
+    { id:'dr23',   columbusId:'c26',  msProfileId:'dm42',  score: 0, note:'Owner named in the deck, no score given — recorded as 0.', updatedAt:'2026-05-27' },
+    { id:'dr24',   columbusId:'c18',  msProfileId:'dm44',  score: 2, note:'From Thomas’ deck, 27 May 2026.', updatedAt:'2026-05-27' },
+    { id:'dr25',   columbusId:'c24',  msProfileId:'dm47',  score: 0, note:'Owner named in the deck, no score given — recorded as 0.', updatedAt:'2026-05-27' },
+    { id:'dr26',   columbusId:'c18',  msProfileId:'dm51',  score: 0, note:'Owner named in the deck, no score given — recorded as 0.', updatedAt:'2026-05-27' },
+    { id:'dr27',   columbusId:'c23',  msProfileId:'dm55',  score: 0, note:'From Thomas’ deck, 27 May 2026.', updatedAt:'2026-05-27' },
+    { id:'dr28',   columbusId:'c19',  msProfileId:'dm59',  score: 2, note:'From Thomas’ deck, 27 May 2026.', updatedAt:'2026-05-27' },
+    { id:'dr29',   columbusId:'c25',  msProfileId:'dm62',  score: 0, note:'Owner named in the deck, no score given — recorded as 0.', updatedAt:'2026-05-27' },
+    { id:'dr30',   columbusId:'c15',  msProfileId:'m1',    score: 2, note:'From Thomas’ deck, 27 May 2026.', updatedAt:'2026-05-27' },
+    { id:'dr31',   columbusId:'c15',  msProfileId:'dm66',  score: 0, note:'Owner named in the deck, no score given — recorded as 0.', updatedAt:'2026-05-27' },
+    { id:'dr32',   columbusId:'c15',  msProfileId:'m15',   score: 3, note:'From Thomas’ deck, 27 May 2026.', updatedAt:'2026-05-27' },
+    { id:'dr33',   columbusId:'c15',  msProfileId:'dm70',  score: 1, note:'From Thomas’ deck, 27 May 2026.', updatedAt:'2026-05-27' },
+    { id:'dr34',   columbusId:'c20',  msProfileId:'dm72',  score: 1, note:'From Thomas’ deck, 27 May 2026.', updatedAt:'2026-05-27' },
+    { id:'dr35',   columbusId:'c15',  msProfileId:'dm72',  score: 1, note:'From Thomas’ deck, 27 May 2026.', updatedAt:'2026-05-27' },
+    { id:'dr36',   columbusId:'c15',  msProfileId:'dm74',  score: 0, note:'Owner named in the deck, no score given — recorded as 0.', updatedAt:'2026-05-27' },
+    { id:'dr37',   columbusId:'c16',  msProfileId:'dm76',  score: 0, note:'Owner named in the deck, no score given — recorded as 0.', updatedAt:'2026-05-27' },
+    { id:'dr38',   columbusId:'c22',  msProfileId:'dm77',  score: 0, note:'Owner named in the deck, no score given — recorded as 0.', updatedAt:'2026-05-27' },
+    { id:'dr39',   columbusId:'c16',  msProfileId:'dm78',  score: 0, note:'Owner named in the deck, no score given — recorded as 0.', updatedAt:'2026-05-27' }
   ],
 
   // Survey responses / edits waiting for an Admin to approve them.
@@ -903,12 +1098,12 @@ var state = {
   // Transient UI state - survives re-renders, not reloads.
   ui: {
     route:'login',
-    msSearch:'', msDomain:'', msGroup:'', msSource:'', msBand:'', msSort:'name', msDir:1, msDetail:null,
+    msSearch:'', msBoard:'', msDomain:'', msGroup:'', msSource:'', msBand:'', msSort:'name', msDir:1, msDetail:null,
     cbSearch:'', cbDept:'', cbRole:'', cbSort:'name', cbDir:1, cbOpen:null,
     subOpen:null,
     myDraft:null, myPicker:'',
     ecoFilter:'', ecoPick:null,
-    gvDim:'domain', gvMeasure:'mean', gvView:'chart'
+    gvDim:'domain', gvMeasure:'mean', gvView:'chart', gvDrill:null
   }
 };
 
@@ -1105,6 +1300,7 @@ function go(route){
 }
 function readHash(){
   var r = (location.hash || '').replace(/^#\/?/, '') || 'login';
+  if (r !== state.ui.route) state.ui.gvDrill = null;   // it belongs to one page
   state.ui.route = r;
 }
 window.addEventListener('hashchange', function(){ readHash(); render(); });
@@ -1117,14 +1313,18 @@ function render(){
 
   // Fall back to the first page the current role is allowed to see.
   if (!canOpen(route, state.session.role)) {
-    var allowed = PAGES.filter(function(p){ return p.roles.indexOf(state.session.role) !== -1; })[0];
+    var allowed = allPages().filter(function(p){ return p.roles.indexOf(state.session.role) !== -1; })[0];
     route = state.ui.route = allowed ? allowed.route : 'my-relations';
     if (location.hash !== '#/' + route) { location.hash = '#/' + route; return; }
   }
 
   var body = '';
-  if (route === 'dashboard')              body = viewDashboard();
-  else if (route === 'graphic-view')      body = viewGraphicView();
+  /* Every board renders through the same two views - which one they show comes
+     from the route, via activeBoard(). */
+  var routeBoard = boardForRoute(route);
+  if (routeBoard && routeBoard.dashboard === route)     body = viewDashboard();
+  else if (routeBoard && routeBoard.graphics === route) body = viewGraphicView();
+  else if (route === 'dashboards')         body = viewDashboards();
   else if (route === 'ms-profiles')       body = viewMsProfiles();
   else if (route === 'ms-domains')        body = viewMsDomains();
   else if (route === 'columbus-profiles') body = viewColumbusProfiles();
@@ -1144,12 +1344,13 @@ function sidebar(route){
 
   // One block per section; a section with no pages for this role is skipped entirely.
   var nav = NAV_SECTIONS.map(function(section){
-    var items = PAGES.filter(function(p){
+    var items = allPages().filter(function(p){
       return p.section === section && p.roles.indexOf(role) !== -1;
     }).map(function(p){
       var pill = (p.route === 'submissions' && pendingCount())
         ? '<span class="pill">' + pendingCount() + '</span>' : '';
-      return '<a href="#/' + p.route + '" class="' + (p.route === route ? 'active' : '') + '">' +
+      var cls = (p.route === route ? 'active' : '') + (p.child ? ' nav__child' : '');
+      return '<a href="#/' + p.route + '" class="' + cls.trim() + '">' +
              '<i class="ico">' + p.icon + '</i>' + esc(p.title) + pill + '</a>';
     }).join('');
     return items ? '<div class="nav__label">' + esc(section) + '</div>' + items : '';
@@ -1298,7 +1499,21 @@ function ecoIcon(name){
    The board config. This is the whole data model from the brief:
    org, meta, groups[] (with people[]) and collaborationModes[].
    ------------------------------------------------------------ */
-var ECO = {
+/* The footer block under the ring. Shared, so every board - seeded or added in
+   the UI - carries the same five collaboration modes. */
+var ECO_MODES = [
+  { icon:'target',    label:'Strategic alignment' },
+  { icon:'coins',     label:'Co-sell & pipeline' },
+  { icon:'wrench',    label:'Technical collaboration' },
+  { icon:'flag',      label:'Program & funding' },
+  { icon:'smile',     label:'Customer success' }
+];
+
+/* Hand-tuned layouts for the two seeded boards. A board added from the UI has no
+   entry here and derives its panels from its domains instead - see ecoConfig(). */
+var ECOS = {};
+
+ECOS['data-ai'] = {
   org:  { name:'Columbus', domain:'Data & AI' },
   meta: {
     subtitle:'Who we know at Microsoft Denmark, and how well',
@@ -1329,14 +1544,127 @@ var ECO = {
     { id:'wider', title:'Wider network', subtitle:'placement to be decided', accent:'slate',
       icon:'globe', layout:'bare', position:'bottom-2', connect:false, domainId:'d8', people:[] }
   ],
-  collaborationModes: [
-    { icon:'target',    label:'Strategic alignment' },
-    { icon:'coins',     label:'Co-sell & pipeline' },
-    { icon:'wrench',    label:'Technical collaboration' },
-    { icon:'flag',      label:'Program & funding' },
-    { icon:'smile',     label:'Customer success' }
-  ]
+  collaborationModes: ECO_MODES
 };
+
+
+/* The Dynamics board. Same slots, same accents, same eight-panel ring as
+   Data & AI - only the content differs. Panels holding a long tail carry a
+   `max`: the board shows the scored people first and counts the rest, so a
+   fifteen-name specialist list cannot grow down through the panel below it. */
+ECOS['dynamics'] = {
+  org:  { name:'Columbus', domain:'Dynamics' },
+  meta: {
+    subtitle:'Who we know in Microsoft’s Business Applications organisation',
+    updated:'May 2026', version:'v0.1 draft', owner:'owner not yet assigned'
+  },
+  groups: [
+    { id:'dyn-enterprise', title:'Enterprise BizApp Sellers', subtitle:'Dynamics 365 & Power Platform', accent:'rose',
+      icon:'building', layout:'grid-2', position:'left-1', connect:true, domainId:'dy2', max:4, people:[] },
+
+    { id:'dyn-stu-lead', title:'BizApp STU Leadership', subtitle:null, accent:'blue',
+      icon:'lightbulb', layout:'rows', position:'centre-top', connect:true, domainId:'dy1', max:3, people:[] },
+
+    { id:'dyn-smec', title:'SME-C BizApp', subtitle:'DK, NO & Iceland', accent:'teal',
+      icon:'users', layout:'grid-2', position:'right-1', connect:true, domainId:'dy3', max:4, people:[] },
+
+    { id:'dyn-leadership', title:'Microsoft DK Leadership', subtitle:'shared with Data & AI', accent:'violet',
+      icon:'crown', layout:'grid-2', position:'left-2', connect:true, domainId:'dy6', max:4, people:[] },
+
+    { id:'dyn-atu', title:'ATU Industry Sales', subtitle:'account teams per industry', accent:'green',
+      icon:'briefcase', layout:'grid-2', position:'right-2', connect:true, domainId:'dy8', max:4, people:[] },
+
+    { id:'dyn-tsp', title:'Technical Specialists', subtitle:null, accent:'orange',
+      icon:'wrench', layout:'rows', position:'centre-bottom', connect:true, domainId:'dy5', max:3, people:[] },
+
+    { id:'dyn-smb', title:'SMB', subtitle:'~1.000 customers', accent:'amber',
+      icon:'globe', layout:'bare', position:'bottom-1', connect:false, domainId:'dy4', people:[] },
+
+    { id:'dyn-partner', title:'Partner & Alliance', subtitle:'shared with Data & AI', accent:'slate',
+      icon:'link', layout:'bare', position:'bottom-2', connect:false, domainId:'dy7', max:4, people:[] }
+  ],
+  collaborationModes: ECO_MODES
+};
+
+/* Which board a route belongs to, and the config behind it. */
+function boards(){ return state.boards; }
+function boardById(id){ return byId(state.boards, id) || state.boards[0]; }
+function boardForRoute(route){
+  for (var i = 0; i < state.boards.length; i++) {
+    if (state.boards[i].dashboard === route || state.boards[i].graphics === route) return state.boards[i];
+  }
+  return null;
+}
+/* The board the current page is showing. Falls back to the first one so the
+   helpers below are safe to call from anywhere. */
+function activeBoard(){ return boardForRoute(state.ui.route) || state.boards[0]; }
+function eco(){ return ecoConfig(activeBoard().id); }
+
+/* Where a board added from the UI puts its panels. One entry per ring slot, in
+   the order the domains are filled into them - the ninth slot is the "How we
+   work together" block, which is why eight is the ceiling. The two seeded boards
+   use the same slots, hand-assigned, so a derived board looks like they do. */
+var ECO_DERIVED_SLOTS = [
+  { position:'left-1',        accent:'violet', icon:'trending-up', layout:'grid-2', connect:true,  max:4 },
+  { position:'centre-top',    accent:'blue',   icon:'lightbulb',   layout:'rows',   connect:true,  max:3 },
+  { position:'right-1',       accent:'green',  icon:'briefcase',   layout:'grid-2', connect:true,  max:4 },
+  { position:'left-2',        accent:'rose',   icon:'building',    layout:'grid-2', connect:true,  max:4 },
+  { position:'right-2',       accent:'teal',   icon:'users',       layout:'grid-2', connect:true,  max:4 },
+  { position:'centre-bottom', accent:'orange', icon:'layers',      layout:'rows',   connect:true,  max:3 },
+  { position:'bottom-1',      accent:'amber',  icon:'gift',        layout:'bare',   connect:false, max:4 },
+  { position:'bottom-2',      accent:'slate',  icon:'globe',       layout:'bare',   connect:false, max:4 }
+];
+var ECO_PANEL_LIMIT = ECO_DERIVED_SLOTS.length;
+
+/* One panel per domain, in domain order. Rebuilt on every read rather than
+   cached: a domain added, renamed or reassigned then shows up on the board
+   without anything having to remember to invalidate it. */
+function buildBoardConfig(b){
+  var groups = boardDomains(b.id).slice(0, ECO_PANEL_LIMIT).map(function(d, i){
+    var slot = ECO_DERIVED_SLOTS[i];
+    return { id:b.id + '--' + d.id, title:d.name, subtitle:null, accent:slot.accent, icon:slot.icon,
+             layout:slot.layout, position:slot.position, connect:slot.connect, domainId:d.id,
+             max:slot.max, people:ecoPeopleFor(d.id) };
+  });
+  return { org:{}, meta:{}, groups:groups, collaborationModes:ECO_MODES };
+}
+
+/* The board config for one id: the seeded layout where there is one, otherwise
+   derived. Either way org and meta come from the editable board record, so
+   renaming a dashboard renames its hub, its heading and its menu entries. */
+function ecoConfig(id){
+  var b = boardById(id);
+  var cfg = ECOS[id] || buildBoardConfig(b);
+  cfg.org  = { name:'Columbus', domain:b.label };
+  cfg.meta = { subtitle:b.subtitle, updated:b.updated, version:b.version, owner:b.owner };
+  return cfg;
+}
+/* How many domains a board has that the ring has no room for. */
+function boardOverflow(id){ return Math.max(0, boardDomains(id).length - ECO_PANEL_LIMIT); }
+
+/* A board owns its domains; a profile belongs to a board through them. Someone
+   placed in domains from two boards therefore appears on both - that is all the
+   dual membership is, with no second field to keep in sync. */
+function boardDomains(id){
+  return state.domains.filter(function(d){ return !d.system && d.dept === id; });
+}
+function profileInBoard(p, id){
+  var ids = boardDomains(id).map(function(d){ return d.id; });
+  for (var i = 0; i < p.domainIds.length; i++) { if (ids.indexOf(p.domainIds[i]) !== -1) return true; }
+  return false;
+}
+function boardProfiles(id){
+  return state.msProfiles.filter(function(p){ return profileInBoard(p, id); });
+}
+function boardRelations(id){
+  var ids = boardProfiles(id).map(function(p){ return p.id; });
+  return state.relations.filter(function(r){ return ids.indexOf(r.msProfileId) !== -1; });
+}
+/* Every board a person shows up on - used for the Dashboard column and filter
+   on Microsoft Profiles. */
+function boardsOfProfile(p){
+  return state.boards.filter(function(b){ return profileInBoard(p, b.id); });
+}
 
 /* The board is not a second list of people. It reads state.msProfiles, so the
    dashboard and the Microsoft Profiles page can never describe different people.
@@ -1353,7 +1681,10 @@ function ecoPeopleFor(domainId){
     });
 }
 function syncEcoPeople(){
-  ECO.groups.forEach(function(g){ g.people = ecoPeopleFor(g.domainId); });
+  for (var k in ECOS) {
+    if (!ECOS.hasOwnProperty(k)) continue;
+    ECOS[k].groups.forEach(function(g){ g.people = ecoPeopleFor(g.domainId); });
+  }
 }
 syncEcoPeople();
 
@@ -1372,7 +1703,7 @@ function ecoSlotStyle(pos){
    The geometry is filled in by ecoDrawLinks() once the panels have been laid
    out, so a spoke still lands on the right edge when a panel grows. */
 function ecoConnectors(){
-  var lines = ECO.groups.map(function(g){
+  var lines = eco().groups.map(function(g){
     if (!g.connect) return '';
     var a = ECO_ACCENTS[g.accent] || ECO_ACCENTS.slate;
     var pt = ecoSpoke(ECO_SLOTS[g.position]);
@@ -1478,7 +1809,32 @@ function ecoPicker(key, current){
 
 function ecoPanel(g){
   var a = ECO_ACCENTS[g.accent] || ECO_ACCENTS.slate;
-  var people = g.people.map(function(p, i){ return ecoPerson(g, p, i); }).join('');
+  var list = g.people, hidden = 0;
+
+  /* A capped panel shows the scored people first and counts the rest. Without
+     this a 35-name account team would grow straight through the panel below it,
+     and the interesting names would be the ones pushed out of sight. */
+  if (g.max && list.length > g.max) {
+    list = list.slice().sort(function(x, y){
+      var sx = x.strength === null || x.strength === undefined ? -99 : x.strength;
+      var sy = y.strength === null || y.strength === undefined ? -99 : y.strength;
+      return sy - sx;
+    });
+    hidden = list.length - g.max;
+    list = list.slice(0, g.max);
+  }
+
+  var people = list.map(function(p, i){ return ecoPerson(g, p, i); }).join('');
+
+  /* Inline styles, not a class: ecoCss() only carries the .eco/.pcard family
+     into the SVG export, so a new class name would come out unstyled there. */
+  if (hidden) {
+    people += '<div class="pmeta" style="grid-column:1/-1;display:flex;align-items:center;gap:6px;' +
+      'margin-top:2px;font-size:11px;color:' + a.d + '">' +
+      '<b style="font-weight:700">+' + hidden + ' more</b>' +
+      '<span style="color:#7c8ea3">see Microsoft Profiles</span></div>';
+  }
+
   var sub = g.subtitle ? '<small>' + esc(g.subtitle) + '</small>' : '';
 
   return '<section class="eco-panel" data-panel="' + esc(g.id) + '" aria-labelledby="ecoh-' + esc(g.id) + '"' +
@@ -1490,7 +1846,7 @@ function ecoPanel(g){
 }
 
 function ecoModes(){
-  var items = ECO.collaborationModes.map(function(m){
+  var items = eco().collaborationModes.map(function(m){
     return '<li><span>' + ecoIcon(m.icon) + '</span><small>' + esc(m.label) + '</small></li>';
   }).join('');
   return '<div class="eco-modes" style="' + ecoSlotStyle('bottom-3') + '">' +
@@ -1499,8 +1855,23 @@ function ecoModes(){
 
 function viewDashboard(){
   var f = state.ui.ecoFilter;
-  var subtitle = ECO.meta.subtitle + ' · Updated ' + ECO.meta.updated +
-                 ' · ' + ECO.meta.version + ' · ' + ECO.meta.owner;
+  var subtitle = eco().meta.subtitle + ' · Updated ' + eco().meta.updated +
+                 ' · ' + eco().meta.version + ' · ' + eco().meta.owner;
+
+  /* A dashboard added from the UI starts with no domains, so it would otherwise
+     render as an empty ring with no clue about what is missing. */
+  if (!eco().groups.length) {
+    return '<div class="page__head"><div><h2>' + esc(eco().org.name + ' \u00b7 ' + eco().org.domain) + '</h2>' +
+        '<p>' + esc(subtitle) + '</p></div></div>' +
+      '<div class="card"><div class="card__body"><div class="empty" style="margin:0">' +
+        '<b>This dashboard has no panels yet</b>' +
+        'Its panels are the Microsoft domains pointed at it. Add a domain on Microsoft Domains and pick ' +
+        esc(eco().org.domain) + ' as its dashboard - the first eight fill the ring, in the order you ' +
+        'create them.' +
+        '<div style="margin-top:14px"><a class="btn btn--primary" style="text-decoration:none" ' +
+          'href="#/ms-domains">Go to Microsoft Domains</a></div>' +
+      '</div></div></div>';
+  }
 
   var tools =
     '<div class="eco-tools">' +
@@ -1516,14 +1887,14 @@ function viewDashboard(){
 
   var board =
     '<div class="eco-board">' +
-      '<div class="eco-hub"><b>' + esc(ECO.org.name) + '</b><span>' + esc(ECO.org.domain) + '</span></div>' +
-      ECO.groups.map(ecoPanel).join('') +
+      '<div class="eco-hub"><b>' + esc(eco().org.name) + '</b><span>' + esc(eco().org.domain) + '</span></div>' +
+      eco().groups.map(ecoPanel).join('') +
       ecoModes() +
     '</div>';
 
   return '<div class="eco-root eco--ring" id="eco">' + tools +
     '<div class="eco-frame" id="ecoframe"><div class="eco-canvas" id="ecocanvas">' +
-      '<div class="eco-head"><h3>' + esc(ECO.org.name + ' · ' + ECO.org.domain) + '</h3>' +
+      '<div class="eco-head"><h3>' + esc(eco().org.name + ' · ' + eco().org.domain) + '</h3>' +
         '<p>' + esc(subtitle) + '</p></div>' +
       ecoLegend() +
       ecoConnectors() +
@@ -1694,25 +2065,28 @@ function gvMeasure(){ return byId(GV_MEASURES, state.ui.gvMeasure) || GV_MEASURE
 /* One bucket per category: the Microsoft contacts in it and the relations to them. */
 function gvBuckets(){
   var dim = gvDim().id, out = [];
+  /* Every count on this page is the active board's - Data & AI and Dynamics each
+     get their own graphics, so a domain from the other board must not leak in. */
+  var b = activeBoard().id, mine = boardProfiles(b), myRels = boardRelations(b);
   function bucket(label, profiles){
     var ids = profiles.map(function(p){ return p.id; });
-    var rels = state.relations.filter(function(r){ return ids.indexOf(r.msProfileId) !== -1; });
+    var rels = myRels.filter(function(r){ return ids.indexOf(r.msProfileId) !== -1; });
     return { label:label, msIds:ids, rels:rels };
   }
   if (dim === 'domain') {
-    out = realDomains().map(function(d){
-      return bucket(d.name, state.msProfiles.filter(function(p){ return p.domainIds.indexOf(d.id) !== -1; }));
+    out = boardDomains(b).map(function(d){
+      return bucket(d.name, mine.filter(function(p){ return p.domainIds.indexOf(d.id) !== -1; }));
     });
   } else if (dim === 'group' || dim === 'source') {
     var key = dim === 'group' ? 'group' : 'source';
     (dim === 'group' ? MS_GROUPS : MS_SOURCES).forEach(function(v){
-      out.push(bucket(v, state.msProfiles.filter(function(p){ return p[key] === v; })));
+      out.push(bucket(v, mine.filter(function(p){ return p[key] === v; })));
     });
   } else {
-    /* From our side: the contacts a department actually reaches. */
+    /* From our side: the contacts a department actually reaches on this board. */
     CB_DEPARTMENTS.forEach(function(dep){
-      var mine = state.columbusProfiles.filter(function(c){ return c.department === dep; }).map(function(c){ return c.id; });
-      var rels = state.relations.filter(function(r){ return mine.indexOf(r.columbusId) !== -1; });
+      var us = state.columbusProfiles.filter(function(c){ return c.department === dep; }).map(function(c){ return c.id; });
+      var rels = myRels.filter(function(r){ return us.indexOf(r.columbusId) !== -1; });
       var ids = [];
       rels.forEach(function(r){ if (ids.indexOf(r.msProfileId) === -1) ids.push(r.msProfileId); });
       out.push({ label:dep, msIds:ids, rels:rels });
@@ -1738,23 +2112,23 @@ function gvFormat(v, m){
 }
 
 /* --- the marks --- */
-function barRow(label, value, display, tip, max){
+function barRow(label, value, display, tip, max, attrs){
   var w = max > 0 ? Math.max(value / max * 100, value > 0 ? 1.5 : 0) : 0;
-  return '<div class="bars__row" tabindex="0" data-tip="' + esc(tip) + '">' +
+  return '<div class="bars__row" tabindex="0" data-tip="' + esc(tip) + '"' + (attrs || '') + '>' +
     '<span class="bars__lbl">' + esc(label) + '</span>' +
     '<span class="bars__plot"><i class="' + (value ? '' : 'is-zero') + '" style="width:' +
       (value ? w.toFixed(1) : 2) + (value ? '%' : 'px') + '"></i></span>' +
     '<span class="bars__val">' + esc(display) + '</span>' +
   '</div>';
 }
-function divRow(label, value, display, tip){
+function divRow(label, value, display, tip, attrs){
   var step = clampScore(Math.round(value)), lvl = scoreLevel(step);
   var w = Math.min(Math.abs(value) / 3, 1) * 50;
   var bar = Math.abs(value) < 0.05
     ? '<i class="pos" style="left:50%;width:2px;background:var(--s-0)"></i>'
     : '<i class="' + (value > 0 ? 'pos' : 'neg') + '" style="width:' + w.toFixed(1) +
       '%;background:' + lvl.bg + '"></i>';
-  return '<div class="bars__row" tabindex="0" data-tip="' + esc(tip) + '">' +
+  return '<div class="bars__row" tabindex="0" data-tip="' + esc(tip) + '"' + (attrs || '') + '>' +
     '<span class="bars__lbl">' + esc(label) + '</span>' +
     '<span class="dbars__plot"><span class="zline"></span>' + bar + '</span>' +
     '<span class="bars__val">' + esc(display) + '</span>' +
@@ -1777,9 +2151,14 @@ function gvBreakdown(){
     var tip = r.label + '  ·  ' + r.b.msIds.length + ' contact' + (r.b.msIds.length === 1 ? '' : 's') +
               '  ·  ' + r.b.rels.length + ' relation' + (r.b.rels.length === 1 ? '' : 's') +
               (scores.length ? '  ·  mean ' + fmtScore(meanOf(scores)) + ', median ' + fmtScore(medianOf(scores)) : '');
+    /* The bar is the control: clicking it lists the people it counts, just
+       below the chart. Selected state is on the row so it reads as a toggle. */
+    var attrs = ' data-action="gv-drill" data-k="' + esc(r.label) + '" role="button"' +
+                ' aria-expanded="' + (state.ui.gvDrill === r.label) + '"' +
+                (state.ui.gvDrill === r.label ? ' style="background:var(--navy-100)"' : '');
     return m.diverging
-      ? divRow(r.label, r.value, gvFormat(r.value, m), tip)
-      : barRow(r.label, r.value, gvFormat(r.value, m), tip, max);
+      ? divRow(r.label, r.value, gvFormat(r.value, m), tip, attrs)
+      : barRow(r.label, r.value, gvFormat(r.value, m), tip, max, attrs);
   }).join('');
 
   var ticks = m.diverging
@@ -1790,8 +2169,9 @@ function gvBreakdown(){
 }
 
 function gvDistribution(){
+  var mine = boardRelations(activeBoard().id);
   var counts = SCORE_LEVELS.slice().reverse().map(function(l){
-    return { l:l, n:state.relations.filter(function(r){ return r.score === l.v; }).length };
+    return { l:l, n:mine.filter(function(r){ return r.score === l.v; }).length };
   });
   var max = counts.reduce(function(n, c){ return Math.max(n, c.n); }, 0) || 1;
   var cols = counts.map(function(c){
@@ -1806,10 +2186,17 @@ function gvDistribution(){
 }
 
 function gvHolders(){
+  /* Counted per board: someone who holds ten Data & AI relationships and none on
+     Dynamics belongs on one page, not both. */
+  var mine = boardRelations(activeBoard().id);
   var rows = state.columbusProfiles.map(function(c){
-    var st = cbStats(c.id);
+    var rs = mine.filter(function(r){ return r.columbusId === c.id; });
+    var scores = rs.map(function(r){ return r.score; });
+    var st = { count:rs.length, mean:meanOf(scores), median:medianOf(scores) };
     return { label:c.name, value:st.count, st:st, dept:c.department };
-  }).sort(function(a, b){ return b.value - a.value || a.label.localeCompare(b.label); });
+  }).filter(function(r){ return r.value > 0; })
+    .sort(function(a, b){ return b.value - a.value || a.label.localeCompare(b.label); });
+  if (!rows.length) return '<div class="empty"><b>Nothing held yet</b>No Columbus employee has a relationship on this board.</div>';
   var max = rows.reduce(function(n, r){ return Math.max(n, r.value); }, 0);
   return '<div class="bars">' + rows.map(function(r){
     var tip = r.label + '  ·  ' + r.dept + '  ·  ' + r.value + ' relation' + (r.value === 1 ? '' : 's') +
@@ -1817,6 +2204,62 @@ function gvHolders(){
                        : '  ·  holds no Microsoft relationships');
     return barRow(r.label, r.value, String(r.value), tip, max);
   }).join('') + '</div>';
+}
+
+
+/* ------------------------------------------------------------
+   The people behind one bar.
+
+   A count tells you where the white space is; the list tells you who to call.
+   So a bar is clickable and the people it counts appear directly under the
+   chart, with phone and e-mail as columns from the start. Those two are empty:
+   the source deck holds no contact details, and filling them with plausible
+   guesses next to real names would read as data rather than as a gap.
+   ------------------------------------------------------------ */
+function gvDrillPanel(){
+  var k = state.ui.gvDrill;
+  if (!k) return '';
+  var buckets = gvBuckets(), b = null;
+  for (var i = 0; i < buckets.length; i++) { if (buckets[i].label === k) b = buckets[i]; }
+  if (!b) return '';
+
+  var people = b.msIds.map(function(id){ return ms(id); }).filter(function(p){ return !!p; });
+  /* Strongest relationship first, unscored last - the same order the board uses. */
+  people.sort(function(x, y){
+    var sx = msStats(x.id), sy = msStats(y.id);
+    var mx = sx.count ? sx.mean : -99, my = sy.count ? sy.mean : -99;
+    return my - mx || x.name.localeCompare(y.name);
+  });
+
+  var head =
+    '<div class="gv-drill__head">' +
+      '<div><b>' + esc(k) + '</b>' +
+        '<span>' + people.length + ' ' + (people.length === 1 ? 'person' : 'people') +
+        ' &middot; ' + b.rels.length + ' relation' + (b.rels.length === 1 ? '' : 's') + '</span></div>' +
+      '<button type="button" class="btn btn--sm btn--ghost" data-action="gv-drill" data-k="">Close</button>' +
+    '</div>';
+
+  var rows = people.map(function(p){
+    var st = msStats(p.id);
+    return '<tr class="clickable" data-action="ms-open" data-id="' + p.id + '">' +
+      '<td>' + personCell(p.name, p.title) + '</td>' +
+      '<td>' + domainChips(p.domainIds) + '</td>' +
+      '<td>' + (st.count ? scoreChip(clampScore(Math.round(st.mean))) : '<span class="chip chip--muted">not scored</span>') + '</td>' +
+      '<td>' + (p.phone ? esc(p.phone) : '<span class="hint">&mdash;</span>') + '</td>' +
+      '<td>' + (p.email ? esc(p.email) : '<span class="hint">&mdash;</span>') + '</td>' +
+    '</tr>';
+  }).join('');
+
+  var body = people.length
+    ? '<div class="tablewrap"><table><thead><tr>' +
+        '<th>Name</th><th>Domains</th><th>Score</th><th>Phone</th><th>E-mail</th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      '<p class="hint" style="margin:10px 2px 0">Phone and e-mail are not in the source material yet, ' +
+      'so they are left empty rather than invented. Click a row for the full profile.</p>'
+    : '<div class="empty" style="margin:0"><b>Nobody in this category</b>' +
+      'The category exists but holds no Microsoft contacts on this board.</div>';
+
+  return '<div class="gv-drill">' + head + body + '</div>';
 }
 
 /* --- table twins, so no value is only reachable by hovering --- */
@@ -1841,16 +2284,23 @@ function gvBreakdownTable(){
     }));
 }
 function gvDistributionTable(){
+  var mine = boardRelations(activeBoard().id);
   return gvTable(['Level', 'Label', 'Relations'], SCORE_LEVELS.map(function(l){
     return [scoreChip(l.v) + ' ' + esc(l.label), esc(l.desc),
-            state.relations.filter(function(r){ return r.score === l.v; }).length];
+            mine.filter(function(r){ return r.score === l.v; }).length];
   }));
 }
 function gvHoldersTable(){
+  var mine = boardRelations(activeBoard().id);
+  function statFor(id){
+    var scores = mine.filter(function(r){ return r.columbusId === id; }).map(function(r){ return r.score; });
+    return { count:scores.length, mean:meanOf(scores), median:medianOf(scores) };
+  }
   return gvTable(['Columbus employee', 'Relations', 'Mean', 'Median'],
-    state.columbusProfiles.slice().sort(function(a, b){ return cbStats(b.id).count - cbStats(a.id).count; })
+    state.columbusProfiles.filter(function(c){ return statFor(c.id).count > 0; })
+      .sort(function(a, b){ return statFor(b.id).count - statFor(a.id).count; })
       .map(function(c){
-        var st = cbStats(c.id);
+        var st = statFor(c.id);
         return [personCell(c.name, c.department), st.count,
                 st.count ? fmtScore(st.mean) : '&ndash;', st.count ? fmtScore(st.median) : '&ndash;'];
       }));
@@ -1865,10 +2315,13 @@ function seg(action, options, current){
 
 function viewGraphicView(){
   var u = state.ui, m = gvMeasure(), asTable = u.gvView === 'table';
-  var all = state.relations.map(function(r){ return r.score; });
-  var scored = state.msProfiles.filter(function(p){ return msStats(p.id).count > 0; });
-  var covered = state.msProfiles.filter(function(p){ var st = msStats(p.id); return st.count && st.best >= 1; }).length;
-  var single = state.msProfiles.filter(function(p){ return msStats(p.id).count === 1; }).length;
+  /* Each dashboard has its own graphics, so every number here is counted over
+     one board's profiles and relations - never the whole database. */
+  var bid = activeBoard().id, bp = boardProfiles(bid), br = boardRelations(bid);
+  var all = br.map(function(r){ return r.score; });
+  var scored = bp.filter(function(p){ return msStats(p.id).count > 0; });
+  var covered = bp.filter(function(p){ var st = msStats(p.id); return st.count && st.best >= 1; }).length;
+  var single = bp.filter(function(p){ return msStats(p.id).count === 1; }).length;
 
   function kpi(accent, icon, value, label, note){
     var a = ECO_ACCENTS[accent];
@@ -1889,18 +2342,19 @@ function viewGraphicView(){
   }
 
   var head =
-    '<div class="gv-head"><h2>The alliance in numbers</h2>' +
-      '<p>The same relationships as the dashboard, counted. Pick what to break down and what to measure - ' +
-      'every panel below follows the same choice. Hover any bar for the detail behind it.</p></div>';
+    '<div class="gv-head"><h2>The alliance in numbers &middot; ' + esc(eco().org.domain) + '</h2>' +
+      '<p>The same relationships as the ' + esc(eco().org.domain) + ' dashboard, counted. Pick what to break down ' +
+      'and what to measure - every panel below follows the same choice. Hover a bar for the detail behind it, ' +
+      'or <b>click it</b> to list the people it counts.</p></div>';
 
   var kpis =
     '<div class="gv-kpis">' +
-      kpi('blue',   'users',       state.msProfiles.length, 'Microsoft contacts', 'across ' + realDomains().length + ' domains') +
-      kpi('violet', 'link',        state.relations.length,  'Mapped relations',   scored.length + ' contacts scored') +
+      kpi('blue',   'users',       bp.length, 'Microsoft contacts', 'across ' + boardDomains(bid).length + ' domains') +
+      kpi('violet', 'link',        br.length, 'Mapped relations',   scored.length + ' contacts scored') +
       kpi('green',  'trending-up', all.length ? fmtScore(meanOf(all)) : '&ndash;', 'Mean score',
           all.length ? 'median ' + fmtScore(medianOf(all)) : 'nothing scored yet') +
-      kpi('teal',   'target',      Math.round(covered / state.msProfiles.length * 100) + '%', 'Coverage', 'at least one +1 or better') +
-      kpi('amber',  'flag',        state.msProfiles.length - scored.length, 'Not yet scored', 'nobody has rated them') +
+      kpi('teal',   'target',      (bp.length ? Math.round(covered / bp.length * 100) : 0) + '%', 'Coverage', 'at least one +1 or better') +
+      kpi('amber',  'flag',        bp.length - scored.length, 'Not yet scored', 'nobody has rated them') +
       kpi('rose',   'crown',       single, 'Held by one person', 'lost if that person leaves') +
     '</div>';
 
@@ -1914,13 +2368,14 @@ function viewGraphicView(){
 
   return '<div class="gv">' + head + kpis + tools +
     panel('blue', 'layers', m.label + ' by ' + gvDim().label.toLowerCase(), gvDim().note,
-          gvBreakdown, gvBreakdownTable) +
+          function(){ return gvBreakdown() + gvDrillPanel(); },
+          function(){ return gvBreakdownTable() + gvDrillPanel(); }) +
     '<div class="chart-grid">' +
       panel('teal', 'target', 'Where the scores sit',
-            'All ' + state.relations.length + ' approved relationships, by level. Position on the scale carries the sign - the colour repeats it.',
+            'All ' + br.length + ' approved relationships on this board, by level. Position on the scale carries the sign - the colour repeats it.',
             gvDistribution, gvDistributionTable) +
       panel('violet', 'users', 'Who holds the relationships',
-            'Relationships per Columbus employee. Empty rows are people the survey has not reached.',
+            'Relationships per Columbus employee on this board. People the survey has not reached yet are left out.',
             gvHolders, gvHoldersTable) +
     '</div>' +
   '</div>';
@@ -1952,12 +2407,16 @@ function msRows(){
     var s = msStats(p.id);
     return {
       id:p.id, name:p.name, title:p.title, group:p.group, source:p.source,
-      domainIds:p.domainIds, updatedAt:p.updatedAt, email:p.email,
+      domainIds:p.domainIds, updatedAt:p.updatedAt, email:p.email, phone:p.phone,
+      boards:boardsOfProfile(p),
       count:s.count, sum:s.sum, best:s.best, mean:s.mean, median:s.median, band:bandOf(s)
     };
   });
   rows = rows.filter(function(r){
     if (q && (r.name + ' ' + r.title + ' ' + r.email).toLowerCase().indexOf(q) === -1) return false;
+    /* Someone who sits on both boards matches either filter - the point of
+       letting a person belong to two dashboards. */
+    if (u.msBoard && !profileInBoard(r, u.msBoard)) return false;
     if (u.msDomain && r.domainIds.indexOf(u.msDomain) === -1) return false;
     if (u.msGroup  && r.group  !== u.msGroup)  return false;
     if (u.msSource && r.source !== u.msSource) return false;
@@ -2004,7 +2463,16 @@ function viewMsProfiles(){
     '<div class="toolbar">' +
       '<div class="field search"><label>Search</label>' +
         '<input type="search" id="ms-search" data-action="ms-search" placeholder="Name, title or e-mail" value="' + esc(u.msSearch) + '"></div>' +
-      selectField('Domain', 'ms-domain', u.msDomain, state.domains.map(function(d){ return { id:d.id, label:d.name }; }), 'All domains') +
+      selectField('Dashboard', 'ms-board', u.msBoard,
+        boards().map(function(b){ return { id:b.id, label:b.label }; }), 'All dashboards') +
+      /* Domain names alone are ambiguous once two boards own domains, so each
+         option says which board it belongs to. */
+      selectField('Domain', 'ms-domain', u.msDomain, state.domains.filter(function(d){
+        return !u.msBoard || d.dept === u.msBoard || d.system;
+      }).map(function(d){
+        var b = d.dept ? byId(boards(), d.dept) : null;
+        return { id:d.id, label:d.name + (b ? '  (' + b.label + ')' : '') };
+      }), 'All domains') +
       selectField('Group',  'ms-group',  u.msGroup,  MS_GROUPS,  'All groups') +
       selectField('Source', 'ms-source', u.msSource, MS_SOURCES, 'All sources') +
       selectField('Relationship', 'ms-band', u.msBand, BANDS.slice(1), 'All relationship levels') +
@@ -2017,6 +2485,10 @@ function viewMsProfiles(){
     return '<tr class="clickable" data-action="ms-open" data-id="' + r.id + '">' +
       '<td>' + personCell(r.name, r.email) + '</td>' +
       '<td>' + esc(r.title) + '</td>' +
+      '<td>' + (r.boards.length
+        ? '<div class="chips">' + r.boards.map(function(b){
+            return '<span class="chip">' + esc(b.label) + '</span>'; }).join('') + '</div>'
+        : '<span class="hint">No dashboard</span>') + '</td>' +
       '<td>' + domainChips(r.domainIds) + '</td>' +
       '<td><span class="chip chip--muted">' + esc(r.group) + '</span></td>' +
       '<td><span class="chip chip--src">' + esc(r.source) + '</span></td>' +
@@ -2027,12 +2499,12 @@ function viewMsProfiles(){
         '<button class="btn btn--sm" data-action="ms-edit" data-id="' + r.id + '"' + (editable ? '' : ' disabled') + '>Edit</button> ' +
         '<button class="btn btn--sm btn--danger" data-action="ms-delete" data-id="' + r.id + '"' + (editable ? '' : ' disabled') + '>Delete</button>' +
       '</td></tr>';
-  }).join('') : '<tr><td colspan="9"><div class="empty"><b>No profiles match your filters</b>Try clearing the search or filters.</div></td></tr>';
+  }).join('') : '<tr><td colspan="10"><div class="empty"><b>No profiles match your filters</b>Try clearing the search or filters.</div></td></tr>';
 
   var table =
     '<div class="card">' + toolbar + '<div class="tablewrap"><table><thead><tr>' +
       th('Name','name',u.msSort,u.msDir) + th('Title','title',u.msSort,u.msDir) +
-      '<th>Domains</th>' + th('Group','group',u.msSort,u.msDir) + th('Source','source',u.msSort,u.msDir) +
+      '<th>Dashboard</th><th>Domains</th>' + th('Group','group',u.msSort,u.msDir) + th('Source','source',u.msSort,u.msDir) +
       th('Conn.','count',u.msSort,u.msDir) + th('Mean score','mean',u.msSort,u.msDir) +
       th('Updated','updatedAt',u.msSort,u.msDir) + '<th></th>' +
     '</tr></thead><tbody>' + body + '</tbody></table></div></div>';
@@ -2046,6 +2518,74 @@ function viewMsProfiles(){
 }
 
 /* ============================================================
+   7b. PAGE - DASHBOARDS  (Admin only)
+
+   A dashboard is one department's view of Microsoft: its own board, its own
+   graphics page, its own domains. Adding one here is enough - the two menu
+   entries, the routes and the ring all follow from the record, and the panels
+   come from whichever domains are pointed at the board.
+   ============================================================ */
+
+function viewDashboards(){
+  var editable = canEdit();
+
+  var rows = state.boards.map(function(b){
+    var doms = boardDomains(b.id), profiles = boardProfiles(b.id), rels = boardRelations(b.id);
+    var scores = rels.map(function(r){ return r.score; });
+    var over = boardOverflow(b.id);
+    var panels = Math.min(doms.length, ECO_PANEL_LIMIT);
+
+    return '<tr>' +
+      '<td><b>' + esc(b.label) + '</b>' +
+        (b.system ? ' <span class="chip chip--muted" title="The first dashboard is the landing page and cannot be deleted">system</span>' : '') +
+        '<span class="hint" style="display:block;margin-top:2px">' + esc(b.subtitle || 'No subtitle') + '</span></td>' +
+      '<td><a href="#/' + esc(b.dashboard) + '">Board</a> &middot; ' +
+          '<a href="#/' + esc(b.graphics) + '">Graphics</a></td>' +
+      '<td>' + esc(b.owner || '—') + '</td>' +
+      '<td class="num">' + doms.length + '</td>' +
+      '<td class="num">' + panels +
+        (over ? ' <span class="chip chip--muted" title="The ring has eight panel slots">' + over + ' without a panel</span>' : '') + '</td>' +
+      '<td class="num">' + profiles.length + '</td>' +
+      '<td class="num">' + rels.length + '</td>' +
+      '<td>' + (scores.length
+        ? scoreStat({ count:rels.length, sum:scores.reduce(function(a, c){ return a + c; }, 0),
+                      mean:meanOf(scores), median:medianOf(scores) })
+        : '<span class="chip chip--muted">nothing scored</span>') + '</td>' +
+      '<td class="actions">' +
+        '<button class="btn btn--sm" data-action="board-edit" data-id="' + b.id + '"' +
+          (editable ? '' : ' disabled') + '>Edit</button> ' +
+        '<button class="btn btn--sm btn--danger" data-action="board-delete" data-id="' + b.id + '"' +
+          (editable && !b.system ? '' : ' disabled') +
+          (b.system ? ' title="The landing dashboard cannot be deleted"' : '') + '>Delete</button>' +
+      '</td></tr>';
+  }).join('');
+
+  var overflowing = state.boards.filter(function(b){ return boardOverflow(b.id) > 0; });
+  var warning = overflowing.length
+    ? '<div class="readonly-note" style="margin-top:14px"><b>More domains than panels:</b> ' +
+      esc(overflowing.map(function(b){ return b.label + ' (' + boardOverflow(b.id) + ')'; }).join(', ')) +
+      '. The ring has eight panel slots - the ninth is the collaboration block - so the domains beyond ' +
+      'the eighth are counted on the graphics page and listed in Microsoft Profiles, but have no panel ' +
+      'on the board.</div>'
+    : '';
+
+  return '' +
+    '<div class="page__head"><div><h2>Dashboards</h2>' +
+      '<p>One dashboard per department. Each gets a board and a graphics page in the left menu, and its ' +
+      'panels are the domains pointed at it - so a new dashboard starts empty and fills up as you add ' +
+      'domains on <a href="#/ms-domains">Microsoft Domains</a>. A Microsoft profile placed in domains ' +
+      'from two dashboards appears on both, with one shared score.</p></div>' +
+      '<div class="page__actions"><button class="btn btn--primary" data-action="board-new"' +
+        (editable ? '' : ' disabled') + '>+ Add dashboard</button></div></div>' +
+    (editable ? '' : '<div class="readonly-note"><b>Moderator view:</b> you can see the dashboards, but adding and editing is reserved for Admin.</div>') +
+    '<div class="card"><div class="tablewrap"><table><thead><tr>' +
+      '<th>Dashboard</th><th>Pages</th><th>Process owner</th><th>Domains</th><th>Panels</th>' +
+      '<th>Profiles</th><th>Relations</th><th>Mean score</th><th></th>' +
+    '</tr></thead><tbody>' + rows + '</tbody></table></div></div>' +
+    warning;
+}
+
+/* ============================================================
    8. PAGE 3.5 - MICROSOFT DOMAINS  (Admin only)
    ============================================================ */
 
@@ -2054,9 +2594,12 @@ function viewMsDomains(){
   var rows = state.domains.map(function(d){
     var s = domainStats(d.id);
     var lockNote = 'Unmarked is a system domain - it is where profiles land when a domain is deleted';
+    var board = d.dept ? byId(boards(), d.dept) : null;
     return '<tr>' +
       '<td><b>' + esc(d.name) + '</b>' +
         (d.system ? ' <span class="chip chip--muted" title="' + esc(lockNote) + '">system</span>' : '') + '</td>' +
+      '<td>' + (board ? '<span class="chip">' + esc(board.label) + '</span>'
+                      : '<span class="hint">both</span>') + '</td>' +
       '<td style="max-width:360px;color:var(--text-muted)">' + esc(d.desc) + '</td>' +
       '<td>' + esc(d.owner) + '</td>' +
       '<td class="num">' + s.profiles + '</td>' +
@@ -2077,7 +2620,7 @@ function viewMsDomains(){
       '<p>Domains are stored separately from the profiles, so Microsoft people can be re-mapped when their organisation changes without touching the relationship data.</p></div>' +
       '<div class="page__actions"><button class="btn btn--primary" data-action="dom-new"' + (editable ? '' : ' disabled') + '>+ Add domain</button></div></div>' +
     '<div class="card"><div class="tablewrap"><table><thead><tr>' +
-      '<th>Domain</th><th>Description</th><th>Process owner</th><th>Profiles</th><th>Connections</th>' +
+      '<th>Domain</th><th>Dashboard</th><th>Description</th><th>Process owner</th><th>Profiles</th><th>Connections</th>' +
       '<th>Mean score</th><th>Coverage</th><th></th>' +
     '</tr></thead><tbody>' + rows + '</tbody></table></div></div>' +
     '<p class="hint" style="margin-top:12px">Coverage = share of the domain\'s Microsoft profiles where at least one Columbus employee has a score of +1 or better. Mean score is the average of every individual relation in the domain - hover it for the median.</p>' +
@@ -2387,6 +2930,7 @@ function drawerMs(id){
   return '<div class="drawer"><div class="drawer__bg" data-action="close-layer"></div><div class="drawer__panel">' +
     '<div class="drawer__head"><div>' + personCell(p.name, p.title) +
       '<p>' + (p.email ? esc(p.email) : '<span class="hint">No e-mail on file</span>') + '</p></div>' +
+
       '<div style="margin-left:auto"><button class="btn btn--sm btn--ghost" data-action="close-layer">&#10005;</button></div></div>' +
     '<div class="drawer__body">' +
       '<div class="stats" style="margin:0;grid-template-columns:1fr 1fr">' +
@@ -2395,7 +2939,13 @@ function drawerMs(id){
           '<em>' + (s.count ? 'median ' + fmtScore(s.median) + ' \u00b7 sum ' + signed(s.sum) : 'no connections yet') + '</em></div>' +
       '</div>' +
       '<dl class="kv">' +
+        '<dt>Dashboards</dt><dd>' + (boardsOfProfile(p).length
+          ? '<div class="chips">' + boardsOfProfile(p).map(function(b){
+              return '<span class="chip">' + esc(b.label) + '</span>'; }).join('') + '</div>'
+          : '<span class="hint">Not on a dashboard yet</span>') + '</dd>' +
         '<dt>Domains</dt><dd>' + domainChips(p.domainIds) + '</dd>' +
+        '<dt>Phone</dt><dd>' + (p.phone ? esc(p.phone) : '<span class="hint">Not on file</span>') + '</dd>' +
+        '<dt>E-mail</dt><dd>' + (p.email ? esc(p.email) : '<span class="hint">Not on file</span>') + '</dd>' +
         '<dt>Group</dt><dd>' + esc(p.group) + '</dd>' +
         '<dt>Source</dt><dd><span class="chip chip--src">' + esc(p.source) + '</span></dd>' +
         '<dt>Last updated</dt><dd>' + fmtDate(p.updatedAt) + '</dd>' +
@@ -2415,31 +2965,65 @@ function modalMarkup(m){
       '<button class="btn ' + (m.danger ? 'btn--danger' : 'btn--primary') + '" data-action="confirm-yes">' + esc(m.okLabel || 'Confirm') + '</button>');
   }
   if (m.type === 'ms') {
-    var p = m.id ? ms(m.id) : { name:'', title:'', email:'', group:MS_GROUPS[2], source:MS_SOURCES[3], domainIds:[], notes:'' };
+    var p = m.id ? ms(m.id) : { name:'', title:'', email:'', phone:'', group:MS_GROUPS[2], source:MS_SOURCES[3], domainIds:[], notes:'' };
     return shellModal(m.id ? 'Edit Microsoft profile' : 'Add Microsoft profile',
       'Microsoft Denmark contact. Domains can be changed later without touching the relationships.',
       '<div class="form-grid">' +
         inputField('f-name', 'Full name', p.name, 'full') +
         inputField('f-title', 'Title / role', p.title) +
         inputField('f-email', 'E-mail', p.email) +
+        inputField('f-phone', 'Phone', p.phone || '') +
         selField('f-group', 'Group', MS_GROUPS, p.group) +
         selField('f-source', 'Source', MS_SOURCES, p.source) +
-        '<div class="field full"><label>Domains</label><div class="checks">' + state.domains.map(function(d){
-          return '<label><input type="checkbox" class="f-dom" value="' + d.id + '"' +
-                 (p.domainIds.indexOf(d.id) !== -1 ? ' checked' : '') + '>' + esc(d.name) + '</label>';
-        }).join('') + '</div>' +
+        /* Grouped per dashboard, and ticking domains from two boards is how a
+           person ends up on both - the many-to-many is the feature. */
+        '<div class="field full"><label>Domains</label><div class="checks">' +
+          boards().map(function(b){
+            return '<b style="grid-column:1/-1;font-size:10.5px;text-transform:uppercase;' +
+                   'letter-spacing:.07em;color:var(--text-faint);margin-top:4px">' + esc(b.label) + '</b>' +
+              boardDomains(b.id).map(function(d){
+                return '<label><input type="checkbox" class="f-dom" value="' + d.id + '"' +
+                       (p.domainIds.indexOf(d.id) !== -1 ? ' checked' : '') + '>' + esc(d.name) + '</label>';
+              }).join('');
+          }).join('') +
+          state.domains.filter(function(d){ return d.system; }).map(function(d){
+            return '<label><input type="checkbox" class="f-dom" value="' + d.id + '"' +
+                   (p.domainIds.indexOf(d.id) !== -1 ? ' checked' : '') + '>' + esc(d.name) + '</label>';
+          }).join('') + '</div>' +
         '<p class="hint" style="margin-top:6px">Leave everything unticked and the profile lands in <b>Unmarked</b>.</p></div>' +
         '<div class="field full"><label>Notes</label><textarea id="f-notes" rows="3">' + esc(p.notes) + '</textarea></div>' +
       '</div>',
       '<button class="btn" data-action="close-layer">Cancel</button>' +
       '<button class="btn btn--primary" data-action="ms-save" data-id="' + (m.id || '') + '">Save profile</button>');
   }
+  if (m.type === 'board') {
+    var b = m.id ? boardById(m.id) : { label:'', subtitle:'', owner:'', version:'v0.1 draft', updated:'' };
+    var routeNote = m.id
+      ? 'Renaming changes the heading, the hub and the menu entries. The two page addresses ' +
+        '(<code>#/' + esc(b.dashboard) + '</code>, <code>#/' + esc(b.graphics) + '</code>) stay as they are, ' +
+        'so links already shared keep working.'
+      : 'The board and graphics pages are created with it and appear in the left menu straight away. ' +
+        'It starts empty - give it panels by pointing domains at it on Microsoft Domains.';
+    return shellModal(m.id ? 'Edit dashboard' : 'Add dashboard', 'One dashboard per department.',
+      '<div class="form-grid">' +
+        inputField('f-blabel', 'Dashboard name', b.label, 'full') +
+        inputField('f-bsub', 'Subtitle', b.subtitle || '', 'full') +
+        inputField('f-bowner', 'Process owner', b.owner || '') +
+        inputField('f-bversion', 'Version', b.version || '') +
+        inputField('f-bupdated', 'Updated', b.updated || '') +
+        '<p class="hint full" style="margin:2px 0 0">' + routeNote + '</p>' +
+      '</div>',
+      '<button class="btn" data-action="close-layer">Cancel</button>' +
+      '<button class="btn btn--primary" data-action="board-save" data-id="' + (m.id || '') + '">' +
+        (m.id ? 'Save dashboard' : 'Create dashboard') + '</button>');
+  }
   if (m.type === 'dom') {
-    var d = m.id ? dom(m.id) : { name:'', owner:'', desc:'' };
+    var d = m.id ? dom(m.id) : { name:'', owner:'', desc:'', dept:activeBoard().id };
     return shellModal(m.id ? 'Edit domain' : 'Add domain',
-      'Domains group the Microsoft profiles. Process owner is a role, not necessarily a single person.',
+      'Domains group the Microsoft profiles, and the dashboard they belong to decides which board shows them.',
       '<div class="form-grid">' +
         inputField('f-dname', 'Domain name', d.name, 'full') +
+        selField('f-ddept', 'Dashboard', boards().map(function(b){ return { id:b.id, label:b.label }; }), d.dept || boards()[0].id) +
         inputField('f-downer', 'Process owner', d.owner, 'full') +
         '<div class="field full"><label>Description</label><textarea id="f-ddesc" rows="3">' + esc(d.desc) + '</textarea></div>' +
       '</div>',
@@ -2474,9 +3058,15 @@ function inputField(id, label, value, cls){
   return '<div class="field ' + (cls||'') + '"><label for="' + id + '">' + esc(label) + '</label>' +
          '<input type="text" id="' + id + '" value="' + esc(value) + '"></div>';
 }
+/* Takes either plain strings or { id, label } pairs, so a select can carry an
+   id that is not the text shown (the dashboard picker needs that). */
 function selField(id, label, options, value){
   return '<div class="field"><label for="' + id + '">' + esc(label) + '</label><select id="' + id + '">' +
-    options.map(function(o){ return '<option' + (o === value ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') +
+    options.map(function(o){
+      var v = (o && o.id !== undefined) ? o.id : o;
+      var t = (o && o.label !== undefined) ? o.label : o;
+      return '<option value="' + esc(v) + '"' + (v === value ? ' selected' : '') + '>' + esc(t) + '</option>';
+    }).join('') +
     '</select></div>';
 }
 function val(id){ var el = document.getElementById(id); return el ? el.value.trim() : ''; }
@@ -2484,6 +3074,25 @@ function val(id){ var el = document.getElementById(id); return el ? el.value.tri
 /* ============================================================
    13. MUTATIONS
    ============================================================ */
+
+/* Route-safe id for a new dashboard: a slug of the name, suffixed if taken. The
+   id is what the two routes are built from, so it never changes afterwards. */
+function boardSlug(name){
+  var base = String(name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'board';
+  var id = base, n = 2;
+  while (byId(state.boards, id)) { id = base + '-' + n; n++; }
+  return id;
+}
+/* Only ever called on an empty board - the handler blocks it otherwise, so no
+   domain or relationship can be orphaned by this. */
+function deleteBoard(id){
+  var b = boardById(id);
+  state.boards = state.boards.filter(function(x){ return x.id !== id; });
+  delete ECOS[id];
+  toast('Deleted ' + (b ? b.label : 'dashboard'), 'ok');
+  if (state.ui.route === b.dashboard || state.ui.route === b.graphics) go(state.boards[0].dashboard);
+  else render();
+}
 
 function deleteMsProfile(id){
   var p = ms(id);
@@ -2545,7 +3154,7 @@ function submitMyRelations(){
 /* Set (or clear) one person's relationship strength on the ecosystem map. */
 function ecoSetStrength(key, v){
   var parts = String(key).split(':'), g = null, i;
-  for (i = 0; i < ECO.groups.length; i++) { if (ECO.groups[i].id === parts[0]) g = ECO.groups[i]; }
+  for (i = 0; i < eco().groups.length; i++) { if (eco().groups[i].id === parts[0]) g = eco().groups[i]; }
   if (!g) return;
   var p = g.people[Number(parts[1])];
   if (!p) return;
@@ -2615,6 +3224,7 @@ document.addEventListener('change', function(e){
     toast('Now viewing the app as ' + roleName(el.value));
     render();
   }
+  else if (a === 'ms-board')  { state.ui.msBoard = el.value; state.ui.msDomain = ''; render(); }
   else if (a === 'ms-domain') { state.ui.msDomain = el.value; render(); }
   else if (a === 'ms-group')  { state.ui.msGroup  = el.value; render(); }
   else if (a === 'ms-source') { state.ui.msSource = el.value; render(); }
@@ -2674,9 +3284,18 @@ document.addEventListener('click', function(e){
       break;
 
     /* --- dashboard: ecosystem map --- */
-    case 'gv-dim':     state.ui.gvDim     = el.getAttribute('data-id'); render(); break;
+    /* A new breakdown means the open drill-down belongs to a category that may
+       no longer exist, so it closes with the change. */
+    case 'gv-dim':     state.ui.gvDim = el.getAttribute('data-id'); state.ui.gvDrill = null; render(); break;
     case 'gv-measure': state.ui.gvMeasure = el.getAttribute('data-id'); render(); break;
     case 'gv-view':    state.ui.gvView    = el.getAttribute('data-id'); render(); break;
+    /* Clicking the open bar again closes it. */
+    case 'gv-drill': {
+      var key = el.getAttribute('data-k') || '';
+      state.ui.gvDrill = (!key || state.ui.gvDrill === key) ? null : key;
+      render();
+      break;
+    }
 
     case 'eco-dot':
       state.ui.ecoPick = state.ui.ecoPick === id ? null : id;
@@ -2697,7 +3316,7 @@ document.addEventListener('click', function(e){
       state.ui.msDir = state.ui.msSort === k ? -state.ui.msDir : 1;
       state.ui.msSort = k; render(); break;
     case 'ms-reset':
-      state.ui.msSearch = ''; state.ui.msDomain = ''; state.ui.msGroup = '';
+      state.ui.msSearch = ''; state.ui.msBoard = ''; state.ui.msDomain = ''; state.ui.msGroup = '';
       state.ui.msSource = ''; state.ui.msBand = ''; render(); break;
     case 'ms-new':  openModal({ type:'ms' }); break;
     case 'ms-edit': state.ui.msDetail = null; openModal({ type:'ms', id:id }); break;
@@ -2715,11 +3334,50 @@ document.addEventListener('click', function(e){
       // Unmarked is a fallback, never a co-domain: it applies only when nothing else does.
       var real = doms.filter(function(x){ return x !== UNMARKED_ID; });
       doms = real.length ? real : [UNMARKED_ID];
-      var payload = { name:name, title:val('f-title'), email:val('f-email'), group:val('f-group'),
-                      source:val('f-source'), domainIds:doms, notes:val('f-notes'), updatedAt:today() };
+      var payload = { name:name, title:val('f-title'), email:val('f-email'), phone:val('f-phone'),
+                      group:val('f-group'), source:val('f-source'), domainIds:doms,
+                      notes:val('f-notes'), updatedAt:today() };
       if (id) { var t = ms(id); for (var key in payload) t[key] = payload[key]; toast('Updated ' + name, 'ok'); }
       else { payload.id = uid('m'); state.msProfiles.push(payload); toast('Added ' + name, 'ok'); }
       closeLayer(); render();
+      break;
+
+    /* --- Dashboards --- */
+    case 'board-new':  openModal({ type:'board' }); break;
+    case 'board-edit': openModal({ type:'board', id:id }); break;
+    case 'board-save':
+      var blabel = val('f-blabel');
+      if (!blabel) { toast('A dashboard name is required', 'err'); return; }
+      if (id) {
+        var eb = boardById(id);
+        eb.label = blabel; eb.subtitle = val('f-bsub'); eb.owner = val('f-bowner');
+        eb.version = val('f-bversion'); eb.updated = val('f-bupdated');
+        toast('Updated ' + blabel, 'ok');
+        closeLayer(); render();
+      } else {
+        var slug = boardSlug(blabel);
+        var nb = { id:slug, label:blabel, dashboard:'dashboard-' + slug, graphics:'graphic-view-' + slug,
+                   subtitle:val('f-bsub'), owner:val('f-bowner'),
+                   version:val('f-bversion') || 'v0.1 draft', updated:val('f-bupdated') };
+        state.boards.push(nb);
+        toast('Added ' + blabel + ' - it has no domains yet', 'ok');
+        closeLayer();
+        go(nb.dashboard);          // land on the new board, empty state and all
+      }
+      break;
+    case 'board-delete':
+      var db = boardById(id);
+      if (!db || db.system) { toast('The landing dashboard cannot be deleted', 'err'); return; }
+      var dbDoms = boardDomains(id).length;
+      if (dbDoms) {
+        toast('Move or delete its ' + dbDoms + ' domain(s) first', 'err');
+        return;
+      }
+      pendingConfirm = function(){ deleteBoard(id); };
+      openModal({ type:'confirm', title:'Delete dashboard', sub:'This cannot be undone in the mockup.',
+        body:'Delete <b>' + esc(db.label) + '</b>? It holds no domains, so no Microsoft profile or ' +
+             'relationship is affected - only the two pages disappear from the menu.',
+        okLabel:'Delete', danger:true });
       break;
 
     /* --- Microsoft domains --- */
@@ -2751,12 +3409,14 @@ document.addEventListener('click', function(e){
     case 'dom-save':
       var dn = val('f-dname');
       if (!dn) { toast('A domain name is required', 'err'); return; }
-      if (id) { var dd = dom(id); dd.name = dn; dd.owner = val('f-downer'); dd.desc = val('f-ddesc'); toast('Updated ' + dn, 'ok'); }
+      if (id) { var dd = dom(id); dd.name = dn; dd.owner = val('f-downer'); dd.desc = val('f-ddesc');
+                dd.dept = val('f-ddept') || dd.dept; toast('Updated ' + dn, 'ok'); }
       else {
         // Unmarked always sits last, so insert ahead of it.
         var at = state.domains.length;
         state.domains.forEach(function(x, i){ if (x.system && i < at) at = i; });
-        state.domains.splice(at, 0, { id:uid('d'), name:dn, owner:val('f-downer'), desc:val('f-ddesc') });
+        state.domains.splice(at, 0, { id:uid('d'), dept:val('f-ddept') || boards()[0].id,
+                                      name:dn, owner:val('f-downer'), desc:val('f-ddesc') });
         toast('Added ' + dn, 'ok');
       }
       closeLayer(); render();
