@@ -75,14 +75,19 @@ refilled by editing that object alone.
 | Filters | *Only unscored* / *Only +2 and stronger* — non-matching people **dim** rather than disappear, so the shape of the map never changes |
 | Hover | The group's spoke brightens, the other seven panels drop to 70% |
 | Export | **Export SVG** downloads the board as a vector file; **Print** lays it out on one landscape page |
-| Responsive | ≥1100px the full ring, scaled to fit; 700–1100px the spokes drop and the panels reflow into two columns under a hub banner; <700px a single column |
+| Responsive | ≥1100px the full ring, scaled so the **whole board fits the window at once** — the largest scale that fits both the width and the height left below the toolbar, centred, with the leftover split evenly; 700–1100px the spokes drop and the panels reflow into two columns under a hub banner; <700px a single column |
+| Layout pass | Vertical positions are settled after render from measured heights (`ecoLayout`): the panel above the hub hangs from the circle and grows upward, anything that still does not fit pushes what is below it down, and the canvas ends where the content does |
 
 Two deliberate departures from the brief, both forced:
 
-- **Canvas is 1150 × 862, not 1150 × 630.** Two rows of 2×2 person cards plus a header strip and the
-  bottom band do not fit in 630 units at the specified type and avatar sizes. Since the brief also says
-  panels must grow rather than truncate text, the canvas grew instead. Aspect ratio is still fixed and
-  the board still scales to fit.
+- **Canvas is 1150 wide and at least 862 tall, not 1150 × 630.** Two rows of 2×2 person cards plus a
+  header strip and the bottom band do not fit in 630 units at the specified type and avatar sizes.
+  Since the brief also says panels must grow rather than truncate text, the canvas grew instead — and
+  because panels really do grow, the height is now measured rather than fixed: 862 for the Data & AI
+  board, more when a board's content needs it. The width is fixed, so the board still scales as one
+  piece and the SVG export carries the measured height. A taller board therefore fits the screen at a
+  smaller scale — the board is one picture with one aspect ratio, so filling the width and showing the
+  whole thing cannot both be true at once, and showing the whole thing wins.
 - **No PNG export.** Rasterising HTML in the browser means painting it through an SVG `foreignObject`,
   and every engine taints the canvas when you do — `toBlob()` is refused. A real PNG needs a rendering
   library, which would break the one-file, no-dependency rule. The SVG is a true vector export and

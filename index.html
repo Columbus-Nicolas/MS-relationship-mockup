@@ -165,6 +165,7 @@ a{color:var(--navy-600)}
 .who span{display:block;font-size:11.5px;color:var(--text-faint)}
 
 .page{padding:26px;max-width:1640px;width:100%}
+.page--wide{max-width:none}
 .page__head{display:flex;align-items:flex-start;gap:18px;margin-bottom:18px;flex-wrap:wrap}
 .page__head h2{font-size:20px}
 .page__head p{margin:5px 0 0;color:var(--text-muted);max-width:80ch;line-height:1.55}
@@ -759,10 +760,12 @@ var NAV_SECTIONS = ['Dashboards', 'Administration', 'Submissions & Relations'];
    graphics - are generated per board in allPages(), so a board added from the UI
    gets its menu entries and its route guard without a code change. */
 var PAGES = [
-  { route:'dashboards',        title:'Dashboards',          sub:'Boards & their panels',       icon:'▩', section:'Administration',         roles:['superadmin','admin'] },
-  { route:'ms-domains',        title:'Microsoft Domains',   sub:'Categories & mapping',        icon:'◆', section:'Administration',         roles:['superadmin','admin'] },
-  { route:'ms-profiles',       title:'Microsoft Profiles',  sub:'Approved Microsoft contacts', icon:'●', section:'Administration',         roles:['superadmin','admin','moderator'] },
-  { route:'columbus-profiles', title:'Columbus Profiles',   sub:'Internal users & relations',  icon:'▲', section:'Administration',         roles:['superadmin','admin','moderator'] },
+  /* `wide` drops the reading-width cap: the boards and the administration tables
+     are wide by nature and were leaving a strip of empty page on a large screen. */
+  { route:'dashboards',        title:'Dashboards',          sub:'Boards & their panels',       icon:'▩', section:'Administration', wide:true, roles:['superadmin','admin'] },
+  { route:'ms-domains',        title:'Microsoft Domains',   sub:'Categories & mapping',        icon:'◆', section:'Administration', wide:true, roles:['superadmin','admin'] },
+  { route:'ms-profiles',       title:'Microsoft Profiles',  sub:'Approved Microsoft contacts', icon:'●', section:'Administration', wide:true, roles:['superadmin','admin','moderator'] },
+  { route:'columbus-profiles', title:'Columbus Profiles',   sub:'Internal users & relations',  icon:'▲', section:'Administration', wide:true, roles:['superadmin','admin','moderator'] },
   { route:'submissions',       title:'Pending Submissions', sub:'Surveys awaiting approval',   icon:'■', section:'Submissions & Relations',roles:['superadmin','admin'] },
   { route:'my-relations',      title:'My Relations',        sub:'Your own Microsoft contacts', icon:'★', section:'Submissions & Relations',roles:['superadmin','admin','moderator','standard'] }
 ];
@@ -770,9 +773,9 @@ function allPages(){
   var out = [];
   state.boards.forEach(function(b){
     out.push({ route:b.dashboard, title:'Dashboard - ' + b.label, sub:'Overview', icon:'\u25a6',
-               section:'Dashboards', roles:['superadmin','admin','moderator'] });
+               section:'Dashboards', wide:true, roles:['superadmin','admin','moderator'] });
     out.push({ route:b.graphics, title:'Graphics - ' + b.label, sub:'Numbers & breakdowns', icon:'\u25c8',
-               section:'Dashboards', child:true, roles:['superadmin','admin','moderator'] });
+               section:'Dashboards', child:true, wide:true, roles:['superadmin','admin','moderator'] });
   });
   return out.concat(PAGES);
 }
@@ -1331,9 +1334,14 @@ function render(){
   else if (route === 'submissions')       body = viewSubmissions();
   else if (route === 'my-relations')      body = viewMyRelations();
 
+  /* Prose reads better with a measured line length, so the page is capped by
+     default - but the pages that carry a board or a wide table say so for
+     themselves, and use whatever screen they are given. */
+  var pageCls = (pageFor(route) || {}).wide ? 'page page--wide' : 'page';
+
   document.getElementById('app').innerHTML =
     '<div class="shell">' + sidebar(route) + '<div class="main">' + topbar(route) +
-    '<div class="page">' + body + '</div></div></div>';
+    '<div class="' + pageCls + '">' + body + '</div></div></div>';
 
   restoreFocus();
   ecoMount();
@@ -1837,7 +1845,8 @@ function ecoPanel(g){
 
   var sub = g.subtitle ? '<small>' + esc(g.subtitle) + '</small>' : '';
 
-  return '<section class="eco-panel" data-panel="' + esc(g.id) + '" aria-labelledby="ecoh-' + esc(g.id) + '"' +
+  return '<section class="eco-panel" data-panel="' + esc(g.id) + '" data-slot="' + esc(g.position) + '"' +
+      ' aria-labelledby="ecoh-' + esc(g.id) + '"' +
       ' style="--a:' + a.c + ';--a-dark:' + a.d + ';' + ecoSlotStyle(g.position) + '">' +
     '<div class="eco-panel__head"><span class="eco-ico">' + ecoIcon(g.icon) + '</span>' +
       '<div><h4 id="ecoh-' + esc(g.id) + '">' + esc(g.title) + '</h4>' + sub + '</div></div>' +
@@ -1849,7 +1858,7 @@ function ecoModes(){
   var items = eco().collaborationModes.map(function(m){
     return '<li><span>' + ecoIcon(m.icon) + '</span><small>' + esc(m.label) + '</small></li>';
   }).join('');
-  return '<div class="eco-modes" style="' + ecoSlotStyle('bottom-3') + '">' +
+  return '<div class="eco-modes" data-slot="bottom-3" style="' + ecoSlotStyle('bottom-3') + '">' +
     '<b>How we work together</b><ul>' + items + '</ul></div>';
 }
 
@@ -1902,11 +1911,96 @@ function viewDashboard(){
     '</div></div></div>';
 }
 
+
+/* ------------------------------------------------------------
+   Settling the vertical positions after render.
+
+   The slot table gives every panel a position and a *minimum* height, and a
+   panel grows when its text does - that is the rule the board was built on.
+   The three boxes in the centre column share their vertical space with the hub
+   circle, so a panel that grows there runs straight under the hub, which draws
+   on top of it. The same growth pushes the lower panels through the bottom row
+   and, on a full board, past the bottom of the canvas.
+
+   None of that shows up in the slot table, because the table is written in
+   nominal heights. So the vertical positions are settled here instead, from
+   measured ones: the panel above the hub hangs from the hub's top edge and
+   grows upward into empty canvas; anything that still does not fit pushes what
+   is below it further down; and the canvas ends where the content does.
+
+   Columns and widths are never touched - they cannot collide. A board whose
+   panels all fit their slots comes out exactly where the slot table put it.
+   ------------------------------------------------------------ */
+var ECO_GAP = 14;                                   /* breathing room between boxes */
+var ECO_HUB_BOX = { top:301, size:130, ring:9 };    /* mirrors .eco--ring .eco-hub */
+var ecoH = ECO_H;                                   /* measured canvas height */
+
+function ecoLayout(){
+  var root = document.getElementById('eco');
+  var canvas = document.getElementById('ecocanvas');
+  if (!root || !canvas) return;
+  if (root.className.indexOf('eco--ring') === -1) {   /* the reflowed layouts stack normally */
+    ecoH = ECO_H;
+    canvas.style.height = '';
+    return;
+  }
+
+  function at(slot){ return root.querySelector('[data-slot="' + slot + '"]'); }
+  function put(el, top){ if (el) el.style.top = Math.round(top) + 'px'; }
+  function under(el){ return el ? el.offsetTop + el.offsetHeight : 0; }
+
+  var hub  = root.querySelector('.eco-hub');
+  var head = root.querySelector('.eco-head');
+  var headBottom = head ? head.offsetTop + head.offsetHeight : 80;
+
+  /* 1. The panel above the hub hangs from the circle instead of sitting on a
+        fixed top, so its growth goes upward, away from it. If it is taller than
+        the room between the header and the hub, the hub gives way instead. */
+  var ct = at('centre-top');
+  var ctH = ct ? ct.offsetHeight : 0;
+  var hubTop = ECO_HUB_BOX.top;
+  var ctTop = hubTop - ECO_HUB_BOX.ring - ECO_GAP - ctH;
+  var ceiling = headBottom + 10;
+  if (ct && ctTop < ceiling) {
+    ctTop = ceiling;
+    hubTop = ctTop + ctH + ECO_GAP + ECO_HUB_BOX.ring;
+  }
+  put(ct, ctTop);
+  if (hub) hub.style.top = Math.round(hubTop) + 'px';
+  ECO_HUB.y = hubTop + ECO_HUB_BOX.size / 2;        /* the spokes aim at the circle */
+  var hubBottom = hubTop + ECO_HUB_BOX.size + ECO_HUB_BOX.ring;
+
+  /* 2. The second band moves as one, so the row stays level, and only when the
+        band above it or the hub has grown into it. */
+  var band1 = Math.max(under(at('left-1')), under(at('right-1')));
+  var drop2 = Math.max(0,
+    band1 + ECO_GAP - ECO_SLOTS['left-2'].y,
+    hubBottom + ECO_GAP - ECO_SLOTS['centre-bottom'].y);
+  ['left-2', 'right-2', 'centre-bottom'].forEach(function(s){ put(at(s), ECO_SLOTS[s].y + drop2); });
+
+  /* 3. The bottom row, the same way. */
+  var band2 = Math.max(under(at('left-2')), under(at('right-2')), under(at('centre-bottom')));
+  var drop3 = Math.max(0, band2 + ECO_GAP - ECO_SLOTS['bottom-1'].y);
+  var floor = 0;
+  ['bottom-1', 'bottom-2', 'bottom-3'].forEach(function(s){
+    var el = at(s);
+    if (!el) return;
+    put(el, ECO_SLOTS[s].y + drop3);
+    floor = Math.max(floor, under(el));
+  });
+
+  /* 4. The canvas ends where the content does - never shorter than the design. */
+  ecoH = Math.max(ECO_H, Math.round(floor + 20));
+  canvas.style.height = ecoH + 'px';
+  var links = root.querySelector('.eco-links');
+  if (links) links.setAttribute('viewBox', '0 0 ' + ECO_W + ' ' + ecoH);
+}
+
 /* ------------------------------------------------------------
    Fit the fixed-ratio canvas to whatever width it has been given,
    and drop to the reflowed layouts on narrow screens.
    ------------------------------------------------------------ */
-var ecoRO = null, ecoLastW = -1;
+var ecoRO = null, ecoLastW = -1, ecoLastH = -1;
 
 function ecoFit(){
   var root = document.getElementById('eco');
@@ -1914,17 +2008,44 @@ function ecoFit(){
   var frame = document.getElementById('ecoframe');
   var canvas = document.getElementById('ecocanvas');
   var w = frame.clientWidth;
-  if (w === ecoLastW) return;            // our own height change must not re-trigger this
-  ecoLastW = w;
+
+  /* What is left of the window below the board's own top edge. The board is
+     scaled to fit inside this, so the whole thing is visible at once.
+
+     Measured against the document, not the viewport: read straight off
+     getBoundingClientRect() the answer would change as soon as the page is
+     scrolled, and the board would resize under the reader. 32 leaves room for
+     the page's own bottom padding, so fitting it does not still hand you a
+     scrollbar ten pixels tall. */
+  var top = frame.getBoundingClientRect().top + (window.scrollY || 0);
+  var avail = Math.max(360, window.innerHeight - top - 32);
+
+  if (w === ecoLastW && avail === ecoLastH) return;   // our own height change must not re-trigger this
+  ecoLastW = w; ecoLastH = avail;
 
   if (w < 700)       root.className = 'eco-root eco--flow eco--narrow';
   else if (w < 1100) root.className = 'eco-root eco--flow';
   else               root.className = 'eco-root eco--ring';
 
-  if (w < 1100) { canvas.style.transform = ''; frame.style.height = ''; return; }
-  var k = Math.min(w / ECO_W, 1.25);
-  canvas.style.transform = 'scale(' + k + ')';
-  frame.style.height = Math.round(ECO_H * k) + 'px';
+  if (w < 1100) { canvas.style.transform = ''; frame.style.height = ''; ecoLayout(); return; }
+
+  /* Settle the vertical positions before scaling - the measured height is what
+     the scale and the frame are computed from. */
+  ecoLayout();
+
+  /* Fit the whole board on screen: the largest scale where it fits both the
+     width it has been given and the height left in the window. The board is one
+     fixed-ratio picture, so only one of the two can be filled exactly - whichever
+     is left over is split evenly rather than dumped on one side.
+
+     The floor stops a short window from shrinking the board past readable; below
+     it, scrolling is the better trade. The ceiling stops a wall display from
+     magnifying it absurdly. */
+  var k = Math.min(w / ECO_W, avail / ecoH, 2.5);
+  k = Math.max(k, 0.6);
+  var slack = Math.max(0, w - ECO_W * k);
+  canvas.style.transform = (slack ? 'translateX(' + Math.round(slack / 2) + 'px) ' : '') + 'scale(' + k + ')';
+  frame.style.height = Math.round(ecoH * k) + 'px';
   ecoDrawLinks();
 }
 
@@ -1932,7 +2053,7 @@ function ecoMount(){
   if (ecoRO) { ecoRO.disconnect(); ecoRO = null; }
   var frame = document.getElementById('ecoframe');
   if (!frame) return;
-  ecoLastW = -1;
+  ecoLastW = -1; ecoLastH = -1;
   ecoFit();
   ecoDrawLinks();
   if (window.ResizeObserver) { ecoRO = new ResizeObserver(ecoFit); ecoRO.observe(frame); }
@@ -1987,8 +2108,8 @@ function ecoSvgString(){
   var dim = clone.querySelectorAll('.is-dim, .is-hot');
   for (i=0;i<dim.length;i++) dim[i].classList.remove('is-dim', 'is-hot');
 
-  return '<svg xmlns="http://www.w3.org/2000/svg" width="' + ECO_W + '" height="' + ECO_H +
-      '" viewBox="0 0 ' + ECO_W + ' ' + ECO_H + '">' +
+  return '<svg xmlns="http://www.w3.org/2000/svg" width="' + ECO_W + '" height="' + ecoH +
+      '" viewBox="0 0 ' + ECO_W + ' ' + ecoH + '">' +
       '<foreignObject x="0" y="0" width="100%" height="100%">' +
       '<div xmlns="http://www.w3.org/1999/xhtml" class="eco-root eco--ring">' +
       '<style>' + ecoCss() + '</style>' + clone.outerHTML +
@@ -2024,7 +2145,7 @@ function ecoPrint(){
   root.className = 'eco-root eco--ring';
   var k = 1040 / ECO_W;                       // A4 landscape at 96dpi, 10mm margins
   canvas.style.transform = 'scale(' + k + ')';
-  frame.style.height = Math.round(ECO_H * k) + 'px';
+  frame.style.height = Math.round(ecoH * k) + 'px';
   ecoDrawLinks();
 
   var restore = function(){
