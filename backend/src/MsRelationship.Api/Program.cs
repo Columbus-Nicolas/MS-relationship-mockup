@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using MsRelationship.Api.Auth;
 using MsRelationship.Api.Data;
 using MsRelationship.Api.Features.Dashboards;
 using MsRelationship.Api.Features.MsProfiles;
@@ -10,10 +11,22 @@ builder.Services.AddDbContext<AppDbContext>(o => o
     .UseSnakeCaseNamingConvention());
 builder.Services.AddScoped<DashboardService>();
 builder.Services.AddScoped<MsProfileMatcher>();
+builder.Services.AddScoped<CurrentUser>();
+builder.Services.AddScoped<ICurrentUser>(sp => sp.GetRequiredService<CurrentUser>());
+
+var devAuth = builder.Configuration.GetValue("DEV_AUTH", builder.Environment.IsDevelopment());
 
 var app = builder.Build();
 app.MapControllers();
 app.MapGet("/health", () => Results.Text("ok"));
+
+if (devAuth)
+{
+    app.UseMiddleware<DevUserMiddleware>();
+    app.MapGet("/api/dev/whoami", (ICurrentUser me) =>
+        me.IsSignedIn ? Results.Ok(new { me.Id, me.Email }) : Results.Unauthorized());
+}
+
 app.Run();
 
 /// <summary>Exposed so WebApplicationFactory can boot the real composition root in tests.</summary>
