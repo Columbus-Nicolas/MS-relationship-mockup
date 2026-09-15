@@ -17,7 +17,8 @@ public class ColumbusUserTests
         db.ColumbusUsers.Add(user);
         await db.SaveChangesAsync();
 
-        var saved = await db.ColumbusUsers.SingleAsync(u => u.Id == user.Id);
+        await using var verify = _pg.NewContext();
+        var saved = await verify.ColumbusUsers.SingleAsync(u => u.Id == user.Id);
         Assert.Equal(UserRole.Editor, saved.Role);
         Assert.Equal(UserStatus.Active, saved.Status);
     }
