@@ -16,4 +16,17 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- MockupSeeder reads this at AppContext.BaseDirectory/Data/Seed/seed.json.
+         The Web SDK already includes it as an implicit Content item (hence
+         Update, not Include — Include would duplicate it); it just carries no
+         CopyToOutputDirectory metadata by default. The test project needs the
+         file too — a ProjectReference copies a referenced project's own Content
+         items along with its assembly, which is how it reaches the test host's
+         output directory as well. -->
+    <Content Update="Data\Seed\seed.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

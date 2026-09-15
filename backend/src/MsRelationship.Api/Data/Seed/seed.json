@@ -1,0 +1,2789 @@
+{
+ "customers": [
+  {
+   "id": "cu1",
+   "name": "AMBU A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu2",
+   "name": "Interactive Sports Games A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu3",
+   "name": "Topsøe A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu4",
+   "name": "VELUX A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu5",
+   "name": "Viking Lifesavings",
+   "type": "unknown"
+  },
+  {
+   "id": "cu6",
+   "name": "Energinet",
+   "type": "unknown"
+  },
+  {
+   "id": "cu7",
+   "name": "Netcompany",
+   "type": "unknown"
+  },
+  {
+   "id": "cu8",
+   "name": "Air Greenland",
+   "type": "unknown"
+  },
+  {
+   "id": "cu9",
+   "name": "Royal Greenland",
+   "type": "unknown"
+  },
+  {
+   "id": "cu10",
+   "name": "Tele Greenland",
+   "type": "unknown"
+  },
+  {
+   "id": "cu11",
+   "name": "Grønlands Selvstyre",
+   "type": "unknown"
+  },
+  {
+   "id": "cu12",
+   "name": "Arla Foods Amba",
+   "type": "unknown"
+  },
+  {
+   "id": "cu13",
+   "name": "Bestseller A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu14",
+   "name": "Danish Agro",
+   "type": "unknown"
+  },
+  {
+   "id": "cu15",
+   "name": "Danish Crown Amba",
+   "type": "unknown"
+  },
+  {
+   "id": "cu16",
+   "name": "ECCO SKO A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu17",
+   "name": "Danfoss A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu18",
+   "name": "Jysk A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu19",
+   "name": "Salling Group A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu20",
+   "name": "GRUNDFOS DK",
+   "type": "unknown"
+  },
+  {
+   "id": "cu21",
+   "name": "Hempel A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu22",
+   "name": "Alm Brand Af 1792",
+   "type": "unknown"
+  },
+  {
+   "id": "cu23",
+   "name": "Ap Pension A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu24",
+   "name": "Danske Bank Group",
+   "type": "unknown"
+  },
+  {
+   "id": "cu25",
+   "name": "JN Data",
+   "type": "unknown"
+  },
+  {
+   "id": "cu26",
+   "name": "Nordea A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu27",
+   "name": "Pensiondanmark",
+   "type": "unknown"
+  },
+  {
+   "id": "cu28",
+   "name": "PFA Pension",
+   "type": "unknown"
+  },
+  {
+   "id": "cu29",
+   "name": "Saxo Bank A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu30",
+   "name": "SDC A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu31",
+   "name": "Tryg",
+   "type": "unknown"
+  },
+  {
+   "id": "cu32",
+   "name": "NOVO NORDISK",
+   "type": "unknown"
+  },
+  {
+   "id": "cu33",
+   "name": "Vestas Wind Systems",
+   "type": "unknown"
+  },
+  {
+   "id": "cu34",
+   "name": "Andel a.m.b.a.",
+   "type": "unknown"
+  },
+  {
+   "id": "cu35",
+   "name": "Blue Water Shipping A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu36",
+   "name": "DSV A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu37",
+   "name": "Flsmidth & Co A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu38",
+   "name": "GN Store Nord A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu39",
+   "name": "Københavns Lufthavne A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu40",
+   "name": "LEGO GROUP",
+   "type": "unknown"
+  },
+  {
+   "id": "cu41",
+   "name": "Norlys",
+   "type": "unknown"
+  },
+  {
+   "id": "cu42",
+   "name": "Orsted A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu43",
+   "name": "A.P. Møller – Maersk Group",
+   "type": "unknown"
+  },
+  {
+   "id": "cu44",
+   "name": "COOP DANMARK A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu45",
+   "name": "DFDS A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu46",
+   "name": "Egmont",
+   "type": "unknown"
+  },
+  {
+   "id": "cu47",
+   "name": "ISS A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu48",
+   "name": "Kamstrup Energi A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu49",
+   "name": "NILFISK-ADVANCE A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu50",
+   "name": "Pandora Holding A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu51",
+   "name": "Ramboll Gruppen A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu52",
+   "name": "Semler Gruppen A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu53",
+   "name": "Stark Group A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu54",
+   "name": "Coloplast A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu55",
+   "name": "Genmab A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu56",
+   "name": "H. Lundbeck A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu57",
+   "name": "LEO Pharma A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu58",
+   "name": "Novonesis Group",
+   "type": "unknown"
+  },
+  {
+   "id": "cu59",
+   "name": "OTICON A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu60",
+   "name": "Cowi A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu61",
+   "name": "Falck A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu62",
+   "name": "PER AARSLEFF A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu63",
+   "name": "TDC A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu64",
+   "name": "Aktieselskabet Schouw & Co.",
+   "type": "unknown"
+  },
+  {
+   "id": "cu65",
+   "name": "Bang & Olufsen A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu66",
+   "name": "NKT Holding A/S",
+   "type": "unknown"
+  },
+  {
+   "id": "cu67",
+   "name": "Rockwool International",
+   "type": "unknown"
+  },
+  {
+   "id": "cu68",
+   "name": "Scandinavian Tobacco Group",
+   "type": "unknown"
+  },
+  {
+   "id": "cu69",
+   "name": "Carlsberg Group",
+   "type": "unknown"
+  },
+  {
+   "id": "cu70",
+   "name": "Ferring Pharmaceuticals A/S",
+   "type": "unknown"
+  }
+ ],
+ "contacts": [],
+ "boards": [
+  {
+   "id": "data-ai",
+   "label": "Data & AI",
+   "dashboard": "dashboard",
+   "graphics": "graphic-view",
+   "subtitle": "Who we know at Microsoft Denmark, and how well",
+   "updated": "August 2026",
+   "version": "v0.3 draft",
+   "owner": "owner not yet assigned",
+   "system": true
+  },
+  {
+   "id": "dynamics",
+   "label": "Dynamics",
+   "dashboard": "dashboard-dynamics",
+   "graphics": "graphic-view-dynamics",
+   "subtitle": "Who we know in Microsoft’s Business Applications organisation",
+   "updated": "May 2026",
+   "version": "v0.1 draft",
+   "owner": "owner not yet assigned"
+  }
+ ],
+ "domains": [
+  {
+   "dept": "data-ai",
+   "id": "d1",
+   "name": "Azure & AI - Sales",
+   "owner": "Mette Kirkegaard",
+   "desc": "Cloud & AI platform sales, Azure and Data & AI sales specialists."
+  },
+  {
+   "dept": "data-ai",
+   "id": "d2",
+   "name": "Strategic & Partner Leadership",
+   "owner": "Mette Kirkegaard",
+   "desc": "Enterprise partner solutions and partner development - our formal route in."
+  },
+  {
+   "dept": "data-ai",
+   "id": "d3",
+   "name": "Azure & AI - Specialist",
+   "owner": "Jonas Ravn",
+   "desc": "Cloud solution architects, AI solution engineers and Azure specialists."
+  },
+  {
+   "dept": "data-ai",
+   "id": "d4",
+   "name": "Business Applications",
+   "owner": "Sofie Bang",
+   "desc": "Dynamics 365, Power Platform and Copilot motions."
+  },
+  {
+   "dept": "data-ai",
+   "id": "d5",
+   "name": "SMC & SMB",
+   "owner": "Anders Holmgaard",
+   "desc": "Small, medium and corporate segment across DK / NO."
+  },
+  {
+   "dept": "data-ai",
+   "id": "d6",
+   "name": "Fabric Partner Success",
+   "owner": "Rikke Dalsgaard",
+   "desc": "Microsoft Fabric partner ecosystem and joint success motions."
+  },
+  {
+   "dept": "data-ai",
+   "id": "d7",
+   "name": "Funding & Programs",
+   "owner": "Sofie Bang",
+   "desc": "Co-sell, incentives, MCI and Azure Accelerate deployment funding."
+  },
+  {
+   "dept": "data-ai",
+   "id": "d8",
+   "name": "Wider network",
+   "owner": "Jonas Ravn",
+   "desc": "Contacts we hold but have not yet placed against a domain."
+  },
+  {
+   "dept": "dynamics",
+   "id": "dy1",
+   "name": "BizApp STU Leadership",
+   "owner": "Thomas Johansson",
+   "desc": "Solution Tech Unit leads for Business Applications - Enterprise, SME-C and SMB."
+  },
+  {
+   "dept": "dynamics",
+   "id": "dy2",
+   "name": "Enterprise BizApp Sellers",
+   "owner": "Carsten Møberg",
+   "desc": "Solution Sales Professionals on Dynamics 365 and Power Platform, enterprise accounts."
+  },
+  {
+   "dept": "dynamics",
+   "id": "dy3",
+   "name": "SME-C BizApp",
+   "owner": "Carsten Møberg",
+   "desc": "AI Business Solutions sellers in the SME-C segment, DK / NO / Iceland."
+  },
+  {
+   "dept": "dynamics",
+   "id": "dy4",
+   "name": "SMB",
+   "owner": "Thomas Johansson",
+   "desc": "Small and medium business segment - roughly a thousand customers behind one seller."
+  },
+  {
+   "dept": "dynamics",
+   "id": "dy5",
+   "name": "Technical Specialists",
+   "owner": "John Sinnbeck",
+   "desc": "TSPs behind the BizApp sellers. Named in the deck, nobody scored yet."
+  },
+  {
+   "dept": "dynamics",
+   "id": "dy6",
+   "name": "Microsoft DK Leadership",
+   "owner": "Thomas Johansson",
+   "desc": "Country leadership. Shared with the Data & AI board - the same people, one score."
+  },
+  {
+   "dept": "dynamics",
+   "id": "dy7",
+   "name": "Partner & Alliance",
+   "owner": "Thomas Johansson",
+   "desc": "Partner development and alliance roles. Shared with the Data & AI board."
+  },
+  {
+   "dept": "dynamics",
+   "id": "dy8",
+   "name": "ATU Industry Sales",
+   "owner": "Anders Barslund",
+   "desc": "Account teams per industry - manufacturing, retail, OCI. They sell everything, Dynamics included."
+  },
+  {
+   "dept": null,
+   "id": "d0",
+   "name": "Unmarked",
+   "system": true,
+   "owner": "—",
+   "desc": "Microsoft profiles that are not placed in a domain yet, plus everyone left behind when a domain is deleted."
+  }
+ ],
+ "msProfiles": [
+  {
+   "id": "m1",
+   "name": "Nina Due",
+   "title": "Director, Enterprise Partner Solutions",
+   "domainIds": [
+    "d2",
+    "dy7"
+   ],
+   "group": "Leadership",
+   "source": "Microsoft DK leadership page",
+   "email": "",
+   "notes": "Listed on the Microsoft DK leadership page.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "m2",
+   "name": "Christian Koch-Bentzen",
+   "title": "Sr. Partner Development Manager",
+   "domainIds": [
+    "d2",
+    "dy7"
+   ],
+   "group": "Partner Development",
+   "source": "Ayla's list",
+   "email": "",
+   "notes": "",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "m3",
+   "name": "Claus Iversen",
+   "title": "Partner Solution Sales Manager, Cloud & AI Platform / Azure",
+   "domainIds": [
+    "d1"
+   ],
+   "group": "Partner Development",
+   "source": "Ayla's list",
+   "email": "",
+   "notes": "",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "m4",
+   "name": "Kris Rozanka",
+   "title": "Cloud & AI Sales Consultant",
+   "domainIds": [
+    "d1"
+   ],
+   "group": "Account Team",
+   "source": "Ayla's list",
+   "email": "",
+   "notes": "",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "m5",
+   "name": "Arthur Gentit",
+   "title": "Sales Specialist, Data & AI",
+   "domainIds": [
+    "d1"
+   ],
+   "group": "Account Team",
+   "source": "Ayla's list",
+   "email": "",
+   "notes": "",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "m6",
+   "name": "Aybike Bozkurt",
+   "title": "Azure Cloud Solution Sales Executive",
+   "domainIds": [
+    "d1"
+   ],
+   "group": "Account Team",
+   "source": "Ayla's list",
+   "email": "",
+   "notes": "",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "m7",
+   "name": "Mauro Dalvit",
+   "title": "AI Solution Engineer",
+   "domainIds": [
+    "d3"
+   ],
+   "group": "Technical Specialist",
+   "source": "Ayla's list",
+   "email": "",
+   "notes": "",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "m8",
+   "name": "Nikhil Makkar",
+   "title": "Senior Cloud Solutions Architect",
+   "domainIds": [
+    "d3"
+   ],
+   "group": "Technical Specialist",
+   "source": "Ayla's list",
+   "email": "",
+   "notes": "",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "m9",
+   "name": "Chandana Ramesh",
+   "title": "Cloud Solution Architect",
+   "domainIds": [
+    "d3"
+   ],
+   "group": "Technical Specialist",
+   "source": "Ayla's list",
+   "email": "",
+   "notes": "",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "m10",
+   "name": "Marcus Quistgaard",
+   "title": "Azure Specialist",
+   "domainIds": [
+    "d3"
+   ],
+   "group": "Technical Specialist",
+   "source": "Ayla's list",
+   "email": "",
+   "notes": "",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "m11",
+   "name": "Bo Kaaber Brandt",
+   "title": "GTM Lead, Dynamics 365 & Power Platform",
+   "domainIds": [
+    "d4",
+    "dy2"
+   ],
+   "group": "Leadership",
+   "source": "LinkedIn / MS Pulse",
+   "email": "",
+   "notes": "",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "m12",
+   "name": "Anders Fjordhøj",
+   "title": "Sr. Technical Specialist, Power Platform & AI",
+   "domainIds": [
+    "d4"
+   ],
+   "group": "Technical Specialist",
+   "source": "LinkedIn / MS Pulse",
+   "email": "",
+   "notes": "",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "m13",
+   "name": "Jesper N. Pedersen",
+   "title": "Solution Sales Professional, BizApps",
+   "domainIds": [
+    "d4",
+    "dy2"
+   ],
+   "group": "Account Team",
+   "source": "LinkedIn / MS Pulse",
+   "email": "",
+   "notes": "",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "m14",
+   "name": "Bo Larsen",
+   "title": "Solution Sales Professional, BizApps",
+   "domainIds": [
+    "d4",
+    "dy2"
+   ],
+   "group": "Account Team",
+   "source": "Unconfirmed",
+   "email": "",
+   "tentative": true,
+   "notes": "Role and placement still to be confirmed.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "m15",
+   "name": "Sarah McKenna",
+   "title": "SMC & SMB Lead, DK / NO",
+   "domainIds": [
+    "d5",
+    "dy4"
+   ],
+   "group": "Leadership",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "notes": "",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "m16",
+   "name": "Thomas Lundgren",
+   "title": "SMC Azure Lead",
+   "domainIds": [
+    "d5"
+   ],
+   "group": "Leadership",
+   "source": "Ayla's list",
+   "email": "",
+   "notes": "",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "m17",
+   "name": "Kasper N. Nielsen",
+   "title": "Senior Sales Executive, Aalborg",
+   "domainIds": [
+    "d5"
+   ],
+   "group": "Account Team",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "notes": "",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "m18",
+   "name": "Prashant Gutala",
+   "title": "Fabric Partner Ecosystem Lead",
+   "domainIds": [
+    "d6"
+   ],
+   "group": "Partner Development",
+   "source": "Ayla's list",
+   "email": "",
+   "notes": "",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "m19",
+   "name": "Mads Hammerbak",
+   "title": "Funding & programs",
+   "domainIds": [
+    "d7"
+   ],
+   "group": "Partner Development",
+   "source": "Ayla's list",
+   "email": "",
+   "notes": "",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "m20",
+   "name": "Azure Accelerate Team",
+   "title": "Deployment funding, guidance",
+   "domainIds": [
+    "d7"
+   ],
+   "group": "Partner Development",
+   "source": "Ayla's list",
+   "email": "",
+   "notes": "A Microsoft team, not a single named contact.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "m21",
+   "name": "Frederikke Smidt",
+   "title": "Sr. Customer Success Account Mgr",
+   "domainIds": [
+    "d8"
+   ],
+   "group": "Account Team",
+   "source": "Ayla's list",
+   "email": "",
+   "notes": "Domain placement still to be decided.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "m22",
+   "name": "Malte Vilain",
+   "title": "Account Executive",
+   "domainIds": [
+    "d8"
+   ],
+   "group": "Account Team",
+   "source": "Ayla's list",
+   "email": "",
+   "notes": "Domain placement still to be decided.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "m23",
+   "name": "Lars-Bo Heidemann",
+   "title": "Cyber Security Professional",
+   "domainIds": [
+    "d8"
+   ],
+   "group": "Technical Specialist",
+   "source": "Ayla's list",
+   "email": "",
+   "notes": "Domain placement still to be decided.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "dm1",
+   "name": "Abed Danial",
+   "title": "SSP BizApp",
+   "domainIds": [
+    "dy3"
+   ],
+   "group": "Account Team",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm2",
+   "name": "Ana-Maria Cibotari",
+   "title": "SSP BizApp",
+   "domainIds": [
+    "dy2"
+   ],
+   "group": "Account Team",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm3",
+   "name": "Anders Andersen",
+   "title": "TSP",
+   "domainIds": [
+    "dy5"
+   ],
+   "group": "Technical Specialist",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm4",
+   "name": "Anders Helmo Larsen",
+   "title": "Sr Account Tech Strategist",
+   "domainIds": [
+    "dy8"
+   ],
+   "group": "Technical Specialist",
+   "source": "Microsoft DK org chart",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm5",
+   "name": "Artur Bagrancev",
+   "title": "TSP",
+   "domainIds": [
+    "dy5"
+   ],
+   "group": "Technical Specialist",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm6",
+   "name": "Bashar Shahmorad",
+   "title": "SME-C sales",
+   "domainIds": [
+    "dy3"
+   ],
+   "group": "Account Team",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm7",
+   "name": "Bo Brandt",
+   "title": "SSP BizApp",
+   "domainIds": [
+    "dy2"
+   ],
+   "group": "Account Team",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "Possibly the same person as Bo Kaaber Brandt - the deck lists them separately.",
+   "updatedAt": "2026-05-27",
+   "tentative": true
+  },
+  {
+   "id": "dm8",
+   "name": "Brian Guldborg",
+   "title": "STU Lead, Solution TechUnit",
+   "domainIds": [
+    "dy1"
+   ],
+   "group": "Technical Specialist",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm9",
+   "name": "Brian Laustsen",
+   "title": "Account Tech Strategist",
+   "domainIds": [
+    "dy8"
+   ],
+   "group": "Technical Specialist",
+   "source": "Microsoft DK org chart",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm10",
+   "name": "Camilla Anker Schösser",
+   "title": "Account Executive",
+   "domainIds": [
+    "dy8"
+   ],
+   "group": "Account Team",
+   "source": "Microsoft DK org chart",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm11",
+   "name": "Charlotte Burmeister",
+   "title": "Sales Manger (ATU) - Manufacturing",
+   "domainIds": [
+    "dy8"
+   ],
+   "group": "Account Team",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm12",
+   "name": "Christian Schønau",
+   "title": "Sr Account Executive",
+   "domainIds": [
+    "dy8"
+   ],
+   "group": "Account Team",
+   "source": "Microsoft DK org chart",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm13",
+   "name": "Dann Andersen",
+   "title": "Sr Account Executive",
+   "domainIds": [
+    "dy8"
+   ],
+   "group": "Account Team",
+   "source": "Microsoft DK org chart",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm14",
+   "name": "Darren Murphy",
+   "title": "Sr Account Tech Strategist",
+   "domainIds": [
+    "dy8"
+   ],
+   "group": "Technical Specialist",
+   "source": "Microsoft DK org chart",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm15",
+   "name": "Esben Holtum",
+   "title": "Sr Account Tech Strategist, Major",
+   "domainIds": [
+    "dy8"
+   ],
+   "group": "Technical Specialist",
+   "source": "Microsoft DK org chart",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm16",
+   "name": "Fillip Knudsen",
+   "title": "Sr Strategic Account Tech Strategist",
+   "domainIds": [
+    "dy8"
+   ],
+   "group": "Technical Specialist",
+   "source": "Microsoft DK org chart",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm17",
+   "name": "Helle Huss",
+   "title": "Commercial Lead EOU",
+   "domainIds": [
+    "dy8"
+   ],
+   "group": "Account Team",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm18",
+   "name": "Henrik Ditlevsen",
+   "title": "Ent. Sales",
+   "domainIds": [
+    "dy2"
+   ],
+   "group": "Account Team",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm19",
+   "name": "Jacob Louis Vagn Jensen",
+   "title": "Sales Manager (ATU Retail and Professional services)",
+   "domainIds": [
+    "dy8"
+   ],
+   "group": "Account Team",
+   "source": "Microsoft DK org chart",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm20",
+   "name": "Jakub Federowicz",
+   "title": "Account Executive Intern",
+   "domainIds": [
+    "dy8"
+   ],
+   "group": "Account Team",
+   "source": "Microsoft DK org chart",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm21",
+   "name": "Jan Akselbo",
+   "title": "SME-C Sales",
+   "domainIds": [
+    "dy3"
+   ],
+   "group": "Account Team",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm22",
+   "name": "Jan Christensen",
+   "title": "Sr. Technical Specialsit",
+   "domainIds": [
+    "dy5"
+   ],
+   "group": "Technical Specialist",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm23",
+   "name": "Jannic Jensen",
+   "title": "Account Technology Strategist",
+   "domainIds": [
+    "dy8"
+   ],
+   "group": "Technical Specialist",
+   "source": "Microsoft DK org chart",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm24",
+   "name": "Jens Fjeldal",
+   "title": "Account Executive",
+   "domainIds": [
+    "dy8"
+   ],
+   "group": "Account Team",
+   "source": "Microsoft DK org chart",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm25",
+   "name": "Jens Kofod",
+   "title": "TSP",
+   "domainIds": [
+    "dy5"
+   ],
+   "group": "Technical Specialist",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm26",
+   "name": "Jens Østvang",
+   "title": "SME-C sales",
+   "domainIds": [
+    "dy3"
+   ],
+   "group": "Account Team",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm27",
+   "name": "Jeppe Skovhus Gerholt",
+   "title": "COO",
+   "domainIds": [
+    "dy6"
+   ],
+   "group": "Leadership",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm28",
+   "name": "Jeshri",
+   "title": "AI Biz SSP, SME-C",
+   "domainIds": [
+    "dy3"
+   ],
+   "group": "Account Team",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "Microsoft alias from the deck; full name not resolved.",
+   "updatedAt": "2026-05-27",
+   "tentative": true
+  },
+  {
+   "id": "dm29",
+   "name": "Jesper Nielsen",
+   "title": "TSP",
+   "domainIds": [
+    "dy5"
+   ],
+   "group": "Technical Specialist",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm30",
+   "name": "Jette Nedergaard Madsen",
+   "title": "Account Executive",
+   "domainIds": [
+    "dy8"
+   ],
+   "group": "Account Team",
+   "source": "Microsoft DK org chart",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm31",
+   "name": "Johan Grene",
+   "title": "TSP",
+   "domainIds": [
+    "dy5"
+   ],
+   "group": "Technical Specialist",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm32",
+   "name": "Jon Edmonds",
+   "title": "Director, Strategic Sales - Mærsk",
+   "domainIds": [
+    "dy8"
+   ],
+   "group": "Account Team",
+   "source": "Microsoft DK org chart",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm33",
+   "name": "Jonas Rolsted",
+   "title": "Sr Account Executive",
+   "domainIds": [
+    "dy8"
+   ],
+   "group": "Account Team",
+   "source": "Microsoft DK org chart",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm34",
+   "name": "Jonathan Sørensen",
+   "title": "TSP",
+   "domainIds": [
+    "dy5"
+   ],
+   "group": "Technical Specialist",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm35",
+   "name": "Juliane Maack",
+   "title": "TSP",
+   "domainIds": [
+    "dy5"
+   ],
+   "group": "Technical Specialist",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "Listed both as a TSP and as an SME-C AI Biz SSP - placement to confirm.",
+   "updatedAt": "2026-05-27",
+   "tentative": true
+  },
+  {
+   "id": "dm36",
+   "name": "Julie Aabo",
+   "title": "Strategic Account Tech Strategist",
+   "domainIds": [
+    "dy8"
+   ],
+   "group": "Technical Specialist",
+   "source": "Microsoft DK org chart",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm37",
+   "name": "Julie Nadelmann",
+   "title": "Global partner solution director",
+   "domainIds": [
+    "dy7"
+   ],
+   "group": "Partner Development",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm38",
+   "name": "Kasper Vedel Mørch",
+   "title": "SSP BizApp",
+   "domainIds": [
+    "dy2"
+   ],
+   "group": "Account Team",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm39",
+   "name": "Katarina Larsson",
+   "title": "EMEA marketing GTM Lead Bizzapps",
+   "domainIds": [
+    "dy7"
+   ],
+   "group": "Marketing",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm40",
+   "name": "Katherina Hansen",
+   "title": "Account Executive",
+   "domainIds": [
+    "dy8"
+   ],
+   "group": "Account Team",
+   "source": "Microsoft DK org chart",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm41",
+   "name": "Kristian Albertsen",
+   "title": "Account Executive",
+   "domainIds": [
+    "dy8"
+   ],
+   "group": "Account Team",
+   "source": "Microsoft DK org chart",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm42",
+   "name": "Kristoffer Rosenmeier",
+   "title": "Ent. STU/ Sales lead - Security",
+   "domainIds": [
+    "dy1"
+   ],
+   "group": "Leadership",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm43",
+   "name": "Lene Stone",
+   "title": "Account Executive",
+   "domainIds": [
+    "dy8"
+   ],
+   "group": "Account Team",
+   "source": "Microsoft DK org chart",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm44",
+   "name": "Liang Ye",
+   "title": "SSP BizApp",
+   "domainIds": [
+    "dy2"
+   ],
+   "group": "Account Team",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm45",
+   "name": "Line Sinding Skøtt",
+   "title": "PS Lead",
+   "domainIds": [
+    "dy6"
+   ],
+   "group": "Leadership",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm46",
+   "name": "Liv Tornquist",
+   "title": "TSP",
+   "domainIds": [
+    "dy5"
+   ],
+   "group": "Technical Specialist",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm47",
+   "name": "Louise Elsberg",
+   "title": "Manufacturing Industry Lead",
+   "domainIds": [
+    "dy1"
+   ],
+   "group": "Leadership",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm48",
+   "name": "Lukkas Hamann",
+   "title": "Strategic Account Executive",
+   "domainIds": [
+    "dy8"
+   ],
+   "group": "Account Team",
+   "source": "Microsoft DK org chart",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm49",
+   "name": "Lynn Friedland",
+   "title": "TSP",
+   "domainIds": [
+    "dy5"
+   ],
+   "group": "Technical Specialist",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm50",
+   "name": "Mads Kjærsgaard",
+   "title": "Sr Sales Manager (ATU) - FSI",
+   "domainIds": [
+    "dy8"
+   ],
+   "group": "Account Team",
+   "source": "Microsoft DK org chart",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm51",
+   "name": "Malou Reedorf",
+   "title": "AE",
+   "domainIds": [
+    "dy2"
+   ],
+   "group": "Account Team",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm52",
+   "name": "Marc Solling",
+   "title": "TSP",
+   "domainIds": [
+    "dy5"
+   ],
+   "group": "Technical Specialist",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm53",
+   "name": "Maria Moeslund Hansen",
+   "title": "Account Executive",
+   "domainIds": [
+    "dy8"
+   ],
+   "group": "Account Team",
+   "source": "Microsoft DK org chart",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm54",
+   "name": "Matilda Varvne",
+   "title": "Account Executive, Major",
+   "domainIds": [
+    "dy8"
+   ],
+   "group": "Account Team",
+   "source": "Microsoft DK org chart",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm55",
+   "name": "Mette Louise Kaagaard",
+   "title": "GM DK",
+   "domainIds": [
+    "dy6"
+   ],
+   "group": "Leadership",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm56",
+   "name": "Mette Nygaard Ørnbo",
+   "title": "Account Tech Strategist, Major",
+   "domainIds": [
+    "dy8"
+   ],
+   "group": "Technical Specialist",
+   "source": "Microsoft DK org chart",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm57",
+   "name": "Mia dong",
+   "title": "TSP",
+   "domainIds": [
+    "dy5"
+   ],
+   "group": "Technical Specialist",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm58",
+   "name": "Michael Olsson",
+   "title": "Sr Account Tech Strategist",
+   "domainIds": [
+    "dy8"
+   ],
+   "group": "Technical Specialist",
+   "source": "Microsoft DK org chart",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm59",
+   "name": "Mikkel Schausen",
+   "title": "SSP BizApp",
+   "domainIds": [
+    "dy2"
+   ],
+   "group": "Account Team",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm60",
+   "name": "Morten Kvist Thomsen",
+   "title": "CSU Lead",
+   "domainIds": [
+    "dy6"
+   ],
+   "group": "Leadership",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm61",
+   "name": "Nicolas Richardot",
+   "title": "Sr Strategic Account Executive",
+   "domainIds": [
+    "dy8"
+   ],
+   "group": "Account Team",
+   "source": "Microsoft DK org chart",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm62",
+   "name": "Niels Grønning",
+   "title": "Ent. STU/ Sales lead - Data/AI",
+   "domainIds": [
+    "dy1"
+   ],
+   "group": "Leadership",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm63",
+   "name": "Pepijn van den Brink",
+   "title": "Account Executive",
+   "domainIds": [
+    "dy8"
+   ],
+   "group": "Account Team",
+   "source": "Microsoft DK org chart",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm64",
+   "name": "Peter Basbøll",
+   "title": "Sr Strategic Account Executive",
+   "domainIds": [
+    "dy8"
+   ],
+   "group": "Account Team",
+   "source": "Microsoft DK org chart",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm65",
+   "name": "Peter Lippert",
+   "title": "TSP",
+   "domainIds": [
+    "dy5"
+   ],
+   "group": "Technical Specialist",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm66",
+   "name": "Poul Jørgensen",
+   "title": "Sales Manager AI business solutions",
+   "domainIds": [
+    "dy1"
+   ],
+   "group": "Leadership",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm67",
+   "name": "Rasmus Knudsen",
+   "title": "Account Executive, Major",
+   "domainIds": [
+    "dy8"
+   ],
+   "group": "Account Team",
+   "source": "Microsoft DK org chart",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm68",
+   "name": "Sarah McGeller",
+   "title": "STU Lead, SME-C BizApp",
+   "domainIds": [
+    "dy1"
+   ],
+   "group": "Technical Specialist",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "Possibly the same person as Sarah McKenna - to confirm.",
+   "updatedAt": "2026-05-27",
+   "tentative": true
+  },
+  {
+   "id": "dm69",
+   "name": "Sigrid Wallin",
+   "title": "TSP",
+   "domainIds": [
+    "dy5"
+   ],
+   "group": "Technical Specialist",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm70",
+   "name": "Simon Bolther",
+   "title": "TSM AI BizApp",
+   "domainIds": [
+    "dy1"
+   ],
+   "group": "Leadership",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "The deck writes Ørsted beside his name - that is his account, not part of his title.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm71",
+   "name": "Siri Venning",
+   "title": "TSP",
+   "domainIds": [
+    "dy5"
+   ],
+   "group": "Technical Specialist",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm72",
+   "name": "Tanya Helene Christensen",
+   "title": "SSM AI BizApp",
+   "domainIds": [
+    "dy1"
+   ],
+   "group": "Leadership",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm73",
+   "name": "Thomas Christensen",
+   "title": "Account Tech Strategist",
+   "domainIds": [
+    "dy8"
+   ],
+   "group": "Technical Specialist",
+   "source": "Microsoft DK org chart",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm74",
+   "name": "Thomas Redder",
+   "title": "STU SSP, AI BizApp Denmark",
+   "domainIds": [
+    "dy4"
+   ],
+   "group": "Technical Specialist",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm75",
+   "name": "Tim Holbek",
+   "title": "Account Executive",
+   "domainIds": [
+    "dy8"
+   ],
+   "group": "Account Team",
+   "source": "Microsoft DK org chart",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm76",
+   "name": "Tine Haaber",
+   "title": "Sr Sales Manager – OCI (pharma, energy, other industries)",
+   "domainIds": [
+    "dy8"
+   ],
+   "group": "Account Team",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm77",
+   "name": "Trine Lumby",
+   "title": "Ent. Sales",
+   "domainIds": [
+    "dy2"
+   ],
+   "group": "Account Team",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm78",
+   "name": "Uche Ojimadu",
+   "title": "SME-C Sales Account manager AI business",
+   "domainIds": [
+    "dy3"
+   ],
+   "group": "Account Team",
+   "source": "LinkedIn / Thomas' deck",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dm79",
+   "name": "Zenia Harpsoe",
+   "title": "Account Executive",
+   "domainIds": [
+    "dy8"
+   ],
+   "group": "Account Team",
+   "source": "Microsoft DK org chart",
+   "email": "",
+   "phone": "",
+   "notes": "",
+   "updatedAt": "2026-05-27"
+  }
+ ],
+ "columbusProfiles": [
+  {
+   "id": "c1",
+   "name": "Mette Kirkegaard",
+   "title": "Partner Alliance Manager",
+   "department": "Alliances",
+   "skills": [
+    "Alliances",
+    "Co-sell",
+    "Governance"
+   ],
+   "role": "admin",
+   "email": "mette.kirkegaard@columbusglobal.example"
+  },
+  {
+   "id": "c2",
+   "name": "Jesper Winther",
+   "title": "Managing Director, Denmark",
+   "department": "Executive",
+   "skills": [
+    "Strategy",
+    "Executive sponsor"
+   ],
+   "role": "superadmin",
+   "email": "jesper.winther@columbusglobal.example"
+  },
+  {
+   "id": "c3",
+   "name": "Sofie Bang",
+   "title": "Business Applications Director",
+   "department": "Business Applications",
+   "skills": [
+    "D365 F&O",
+    "ERP",
+    "Presales"
+   ],
+   "role": "admin",
+   "email": "sofie.bang@columbusglobal.example"
+  },
+  {
+   "id": "c4",
+   "name": "Jonas Ravn",
+   "title": "Cloud Practice Lead",
+   "department": "Cloud & Infrastructure",
+   "skills": [
+    "Azure",
+    "Migration",
+    "Architecture"
+   ],
+   "role": "moderator",
+   "email": "jonas.ravn@columbusglobal.example"
+  },
+  {
+   "id": "c5",
+   "name": "Rikke Dalsgaard",
+   "title": "Security Lead",
+   "department": "Cloud & Infrastructure",
+   "skills": [
+    "Security",
+    "Entra",
+    "Compliance"
+   ],
+   "role": "moderator",
+   "email": "rikke.dalsgaard@columbusglobal.example"
+  },
+  {
+   "id": "c6",
+   "name": "Anders Holmgaard",
+   "title": "Modern Work Consultant",
+   "department": "Modern Work",
+   "skills": [
+    "M365",
+    "Teams",
+    "Adoption"
+   ],
+   "role": "standard",
+   "email": "anders.holmgaard@columbusglobal.example"
+  },
+  {
+   "id": "c7",
+   "name": "Line Aagaard",
+   "title": "Data & AI Consultant",
+   "department": "Data & AI",
+   "skills": [
+    "Fabric",
+    "Power BI",
+    "Data platform"
+   ],
+   "role": "standard",
+   "email": "line.aagaard@columbusglobal.example"
+  },
+  {
+   "id": "c8",
+   "name": "Peter Sandholm",
+   "title": "Enterprise Account Manager",
+   "department": "Sales",
+   "skills": [
+    "Sales",
+    "Public sector"
+   ],
+   "role": "standard",
+   "email": "peter.sandholm@columbusglobal.example"
+  },
+  {
+   "id": "c9",
+   "name": "Amalie Friis",
+   "title": "Marketing Manager",
+   "department": "Marketing",
+   "skills": [
+    "Campaigns",
+    "Events"
+   ],
+   "role": "standard",
+   "email": "amalie.friis@columbusglobal.example"
+  },
+  {
+   "id": "c10",
+   "name": "Christian Bloch",
+   "title": "Solution Architect",
+   "department": "Cloud & Infrastructure",
+   "skills": [
+    "Azure",
+    "Landing zones"
+   ],
+   "role": "standard",
+   "email": "christian.bloch@columbusglobal.example"
+  },
+  {
+   "id": "c11",
+   "name": "Louise Damgaard",
+   "title": "D365 CE Consultant",
+   "department": "Business Applications",
+   "skills": [
+    "D365 CE",
+    "Power Platform"
+   ],
+   "role": "standard",
+   "email": "louise.damgaard@columbusglobal.example"
+  },
+  {
+   "id": "c12",
+   "name": "Martin Østergaard",
+   "title": "Delivery Manager",
+   "department": "Delivery",
+   "skills": [
+    "Delivery",
+    "PMO"
+   ],
+   "role": "standard",
+   "email": "martin.oestergaard@columbusglobal.example"
+  },
+  {
+   "id": "c13",
+   "name": "Sara Lykke",
+   "title": "Presales Lead, Data & AI",
+   "department": "Data & AI",
+   "skills": [
+    "Presales",
+    "AI",
+    "Copilot"
+   ],
+   "role": "standard",
+   "email": "sara.lykke@columbusglobal.example"
+  },
+  {
+   "id": "c14",
+   "name": "Daniel Hvid",
+   "title": "Bid Manager",
+   "department": "Sales",
+   "skills": [
+    "Bids",
+    "Public tenders"
+   ],
+   "role": "standard",
+   "email": "daniel.hvid@columbusglobal.example"
+  },
+  {
+   "id": "c15",
+   "name": "Thomas Johansson",
+   "title": "Microsoft relationship owner",
+   "department": "Business Applications",
+   "skills": [],
+   "role": "standard",
+   "email": "",
+   "phone": "",
+   "fromDeck": true
+  },
+  {
+   "id": "c16",
+   "name": "Anders Barslund",
+   "title": "Microsoft relationship owner",
+   "department": "Business Applications",
+   "skills": [],
+   "role": "standard",
+   "email": "",
+   "phone": "",
+   "fromDeck": true
+  },
+  {
+   "id": "c17",
+   "name": "Anders Skibild",
+   "title": "Microsoft relationship owner",
+   "department": "Business Applications",
+   "skills": [],
+   "role": "standard",
+   "email": "",
+   "phone": "",
+   "fromDeck": true
+  },
+  {
+   "id": "c18",
+   "name": "Brian B. Jørgensen",
+   "title": "Microsoft relationship owner",
+   "department": "Business Applications",
+   "skills": [],
+   "role": "standard",
+   "email": "",
+   "phone": "",
+   "fromDeck": true
+  },
+  {
+   "id": "c19",
+   "name": "Carsten Møberg",
+   "title": "Microsoft relationship owner",
+   "department": "Business Applications",
+   "skills": [],
+   "role": "standard",
+   "email": "",
+   "phone": "",
+   "fromDeck": true
+  },
+  {
+   "id": "c20",
+   "name": "Christian Poppe",
+   "title": "Microsoft relationship owner",
+   "department": "Business Applications",
+   "skills": [],
+   "role": "standard",
+   "email": "",
+   "phone": "",
+   "fromDeck": true
+  },
+  {
+   "id": "c21",
+   "name": "John Sinnbeck",
+   "title": "Microsoft relationship owner",
+   "department": "Business Applications",
+   "skills": [],
+   "role": "standard",
+   "email": "",
+   "phone": "",
+   "fromDeck": true
+  },
+  {
+   "id": "c22",
+   "name": "Stig B. Madsen",
+   "title": "Microsoft relationship owner",
+   "department": "Business Applications",
+   "skills": [],
+   "role": "standard",
+   "email": "",
+   "phone": "",
+   "fromDeck": true
+  },
+  {
+   "id": "c23",
+   "name": "Søren Krogh",
+   "title": "Microsoft relationship owner",
+   "department": "Business Applications",
+   "skills": [],
+   "role": "standard",
+   "email": "",
+   "phone": "",
+   "fromDeck": true
+  },
+  {
+   "id": "c24",
+   "name": "Lars Verning",
+   "title": "Microsoft relationship owner",
+   "department": "Business Applications",
+   "skills": [],
+   "role": "standard",
+   "email": "",
+   "phone": "",
+   "fromDeck": true
+  },
+  {
+   "id": "c25",
+   "name": "Niels Viskum",
+   "title": "Microsoft relationship owner",
+   "department": "Business Applications",
+   "skills": [],
+   "role": "standard",
+   "email": "",
+   "phone": "",
+   "fromDeck": true
+  },
+  {
+   "id": "c26",
+   "name": "Frederik Jørgensen",
+   "title": "Microsoft relationship owner",
+   "department": "Business Applications",
+   "skills": [],
+   "role": "standard",
+   "email": "",
+   "phone": "",
+   "fromDeck": true
+  }
+ ],
+ "relations": [
+  {
+   "id": "r1",
+   "columbusId": "c1",
+   "msProfileId": "m1",
+   "score": 3,
+   "note": "Alliance sponsor - regular executive dialogue.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "r2",
+   "columbusId": "c2",
+   "msProfileId": "m1",
+   "score": 3,
+   "note": "Executive sponsor relationship.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "r3",
+   "columbusId": "c1",
+   "msProfileId": "m2",
+   "score": 3,
+   "note": "Our main partner contact - weekly cadence.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "r4",
+   "columbusId": "c3",
+   "msProfileId": "m2",
+   "score": 1,
+   "note": "Occasional contact through Business Applications planning.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "r5",
+   "columbusId": "c1",
+   "msProfileId": "m3",
+   "score": 3,
+   "note": "Joint pipeline reviews on Azure & AI.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "r6",
+   "columbusId": "c4",
+   "msProfileId": "m3",
+   "score": 3,
+   "note": "Regular technical and commercial alignment.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "r7",
+   "columbusId": "c4",
+   "msProfileId": "m4",
+   "score": 2,
+   "note": "Ongoing dialogue on Azure opportunities.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "r8",
+   "columbusId": "c10",
+   "msProfileId": "m4",
+   "score": 2,
+   "note": "Works with us on architecture-led deals.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "r9",
+   "columbusId": "c7",
+   "msProfileId": "m5",
+   "score": 1,
+   "note": "Occasional contact on Data & AI pursuits.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "r10",
+   "columbusId": "c13",
+   "msProfileId": "m5",
+   "score": 1,
+   "note": "Met on a few joint pursuits.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "r11",
+   "columbusId": "c10",
+   "msProfileId": "m6",
+   "score": 1,
+   "note": "Introduced on a shared Azure opportunity.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "r12",
+   "columbusId": "c8",
+   "msProfileId": "m6",
+   "score": -1,
+   "note": "One-sided contact so far.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "r13",
+   "columbusId": "c13",
+   "msProfileId": "m7",
+   "score": 2,
+   "note": "Co-runs AI solution workshops with us.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "r14",
+   "columbusId": "c7",
+   "msProfileId": "m7",
+   "score": 2,
+   "note": "Regular contact on AI engagements.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "r15",
+   "columbusId": "c10",
+   "msProfileId": "m8",
+   "score": 2,
+   "note": "Joint architecture design sessions.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "r16",
+   "columbusId": "c4",
+   "msProfileId": "m8",
+   "score": 0,
+   "note": "Aware of each other, nothing active.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "r17",
+   "columbusId": "c10",
+   "msProfileId": "m9",
+   "score": 2,
+   "note": "Technical counterpart on Azure migrations.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "r18",
+   "columbusId": "c3",
+   "msProfileId": "m11",
+   "score": 2,
+   "note": "Ongoing Business Applications alignment.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "r19",
+   "columbusId": "c11",
+   "msProfileId": "m11",
+   "score": 2,
+   "note": "Regular dialogue on D365 and Power Platform.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "r20",
+   "columbusId": "c11",
+   "msProfileId": "m12",
+   "score": 1,
+   "note": "Occasional contact on Power Platform topics.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "r21",
+   "columbusId": "c3",
+   "msProfileId": "m12",
+   "score": 1,
+   "note": "Good rapport, no fixed cadence.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "r22",
+   "columbusId": "c11",
+   "msProfileId": "m13",
+   "score": -1,
+   "note": "Limited contact - hard to reach.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "r23",
+   "columbusId": "c8",
+   "msProfileId": "m15",
+   "score": 1,
+   "note": "Introduced at an SMC partner session.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "r24",
+   "columbusId": "c1",
+   "msProfileId": "m15",
+   "score": 1,
+   "note": "Occasional alliance contact.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "r25",
+   "columbusId": "c8",
+   "msProfileId": "m16",
+   "score": 0,
+   "note": "No real working relationship yet.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "r26",
+   "columbusId": "c4",
+   "msProfileId": "m16",
+   "score": 0,
+   "note": "Aware of each other only.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "r27",
+   "columbusId": "c8",
+   "msProfileId": "m17",
+   "score": -2,
+   "note": "Momentum lost after the last joint pursuit.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "r28",
+   "columbusId": "c7",
+   "msProfileId": "m18",
+   "score": 3,
+   "note": "First call on anything Fabric.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "r29",
+   "columbusId": "c13",
+   "msProfileId": "m18",
+   "score": 3,
+   "note": "Brings us into Fabric partner motions.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "r30",
+   "columbusId": "c1",
+   "msProfileId": "m19",
+   "score": 1,
+   "note": "Contact for funding and incentive questions.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "r31",
+   "columbusId": "c5",
+   "msProfileId": "m23",
+   "score": -3,
+   "note": "Repeated attempts at contact unanswered.",
+   "updatedAt": "2026-08-19"
+  },
+  {
+   "id": "dr1",
+   "columbusId": "c16",
+   "msProfileId": "dm1",
+   "score": 2,
+   "note": "From Thomas’ deck, 27 May 2026.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr2",
+   "columbusId": "c18",
+   "msProfileId": "dm2",
+   "score": 2,
+   "note": "From Thomas’ deck, 27 May 2026.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr3",
+   "columbusId": "c19",
+   "msProfileId": "dm6",
+   "score": 3,
+   "note": "From Thomas’ deck, 27 May 2026.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr4",
+   "columbusId": "c16",
+   "msProfileId": "dm7",
+   "score": 2,
+   "note": "From Thomas’ deck, 27 May 2026.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr5",
+   "columbusId": "c16",
+   "msProfileId": "m11",
+   "score": 0,
+   "note": "Owner named in the deck, no score given — recorded as 0.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr6",
+   "columbusId": "c16",
+   "msProfileId": "m14",
+   "score": 0,
+   "note": "From Thomas’ deck, 27 May 2026.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr7",
+   "columbusId": "c19",
+   "msProfileId": "m14",
+   "score": 0,
+   "note": "From Thomas’ deck, 27 May 2026.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr8",
+   "columbusId": "c19",
+   "msProfileId": "dm8",
+   "score": 0,
+   "note": "From Thomas’ deck, 27 May 2026.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr9",
+   "columbusId": "c15",
+   "msProfileId": "dm8",
+   "score": 0,
+   "note": "From Thomas’ deck, 27 May 2026.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr10",
+   "columbusId": "c24",
+   "msProfileId": "dm11",
+   "score": 0,
+   "note": "Owner named in the deck, no score given — recorded as 0.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr11",
+   "columbusId": "c15",
+   "msProfileId": "m2",
+   "score": 0,
+   "note": "Owner named in the deck, no score given — recorded as 0.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr12",
+   "columbusId": "c15",
+   "msProfileId": "dm17",
+   "score": 0,
+   "note": "From Thomas’ deck, 27 May 2026.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr13",
+   "columbusId": "c18",
+   "msProfileId": "dm18",
+   "score": 2,
+   "note": "From Thomas’ deck, 27 May 2026.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr14",
+   "columbusId": "c22",
+   "msProfileId": "dm21",
+   "score": 0,
+   "note": "Owner named in the deck, no score given — recorded as 0.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr15",
+   "columbusId": "c21",
+   "msProfileId": "dm22",
+   "score": 0,
+   "note": "Owner named in the deck, no score given — recorded as 0.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr16",
+   "columbusId": "c19",
+   "msProfileId": "dm26",
+   "score": 0,
+   "note": "Owner named in the deck, no score given — recorded as 0.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr17",
+   "columbusId": "c19",
+   "msProfileId": "dm28",
+   "score": 3,
+   "note": "From Thomas’ deck, 27 May 2026.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr18",
+   "columbusId": "c16",
+   "msProfileId": "m13",
+   "score": 1,
+   "note": "From Thomas’ deck, 27 May 2026.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr19",
+   "columbusId": "c19",
+   "msProfileId": "m13",
+   "score": 1,
+   "note": "From Thomas’ deck, 27 May 2026.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr20",
+   "columbusId": "c20",
+   "msProfileId": "m13",
+   "score": 1,
+   "note": "From Thomas’ deck, 27 May 2026.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr21",
+   "columbusId": "c24",
+   "msProfileId": "dm37",
+   "score": 0,
+   "note": "Owner named in the deck, no score given — recorded as 0.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr22",
+   "columbusId": "c17",
+   "msProfileId": "dm38",
+   "score": 0,
+   "note": "From Thomas’ deck, 27 May 2026.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr23",
+   "columbusId": "c26",
+   "msProfileId": "dm42",
+   "score": 0,
+   "note": "Owner named in the deck, no score given — recorded as 0.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr24",
+   "columbusId": "c18",
+   "msProfileId": "dm44",
+   "score": 2,
+   "note": "From Thomas’ deck, 27 May 2026.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr25",
+   "columbusId": "c24",
+   "msProfileId": "dm47",
+   "score": 0,
+   "note": "Owner named in the deck, no score given — recorded as 0.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr26",
+   "columbusId": "c18",
+   "msProfileId": "dm51",
+   "score": 0,
+   "note": "Owner named in the deck, no score given — recorded as 0.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr27",
+   "columbusId": "c23",
+   "msProfileId": "dm55",
+   "score": 0,
+   "note": "From Thomas’ deck, 27 May 2026.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr28",
+   "columbusId": "c19",
+   "msProfileId": "dm59",
+   "score": 2,
+   "note": "From Thomas’ deck, 27 May 2026.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr29",
+   "columbusId": "c25",
+   "msProfileId": "dm62",
+   "score": 0,
+   "note": "Owner named in the deck, no score given — recorded as 0.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr30",
+   "columbusId": "c15",
+   "msProfileId": "m1",
+   "score": 2,
+   "note": "From Thomas’ deck, 27 May 2026.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr31",
+   "columbusId": "c15",
+   "msProfileId": "dm66",
+   "score": 0,
+   "note": "Owner named in the deck, no score given — recorded as 0.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr32",
+   "columbusId": "c15",
+   "msProfileId": "m15",
+   "score": 3,
+   "note": "From Thomas’ deck, 27 May 2026.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr33",
+   "columbusId": "c15",
+   "msProfileId": "dm70",
+   "score": 1,
+   "note": "From Thomas’ deck, 27 May 2026.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr34",
+   "columbusId": "c20",
+   "msProfileId": "dm72",
+   "score": 1,
+   "note": "From Thomas’ deck, 27 May 2026.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr35",
+   "columbusId": "c15",
+   "msProfileId": "dm72",
+   "score": 1,
+   "note": "From Thomas’ deck, 27 May 2026.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr36",
+   "columbusId": "c15",
+   "msProfileId": "dm74",
+   "score": 0,
+   "note": "Owner named in the deck, no score given — recorded as 0.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr37",
+   "columbusId": "c16",
+   "msProfileId": "dm76",
+   "score": 0,
+   "note": "Owner named in the deck, no score given — recorded as 0.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr38",
+   "columbusId": "c22",
+   "msProfileId": "dm77",
+   "score": 0,
+   "note": "Owner named in the deck, no score given — recorded as 0.",
+   "updatedAt": "2026-05-27"
+  },
+  {
+   "id": "dr39",
+   "columbusId": "c16",
+   "msProfileId": "dm78",
+   "score": 0,
+   "note": "Owner named in the deck, no score given — recorded as 0.",
+   "updatedAt": "2026-05-27"
+  }
+ ]
+}

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using MsRelationship.Api.Auth;
 using MsRelationship.Api.Data;
+using MsRelationship.Api.Data.Seed;
 using MsRelationship.Api.Features.Contacts;
 using MsRelationship.Api.Features.Dashboards;
 using MsRelationship.Api.Features.MsProfiles;
@@ -31,6 +32,12 @@ if (devAuth)
     app.UseMiddleware<DevUserMiddleware>();
     app.MapGet("/api/dev/whoami", (ICurrentUser me) =>
         me.IsSignedIn ? Results.Ok(new { me.Id, me.Email }) : Results.Unauthorized());
+}
+
+if (builder.Configuration.GetValue("SEED_MOCKUP", false))
+{
+    using var scope = app.Services.CreateScope();
+    await new MockupSeeder(scope.ServiceProvider.GetRequiredService<AppDbContext>()).SeedAsync();
 }
 
 app.Run();
