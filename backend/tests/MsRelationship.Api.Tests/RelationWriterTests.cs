@@ -19,7 +19,11 @@ public class RelationWriterTests
 
         await writer.SetAsync(u.Id, p.Id, 2, "Met at the partner day.");
 
-        var history = await db.RelationHistory
+        // A fresh context, not db: reading through the same context that wrote the
+        // row would hand back the tracked instance from EF's identity map rather
+        // than what Postgres actually stored.
+        await using var check = _pg.NewContext();
+        var history = await check.RelationHistory
             .Where(h => h.MsProfileId == p.Id).SingleAsync();
         Assert.Equal(RelationChangeType.Created, history.ChangeType);
         Assert.Null(history.OldScore);
@@ -37,7 +41,10 @@ public class RelationWriterTests
         await writer.SetAsync(u.Id, p.Id, 1, null);
         await writer.SetAsync(u.Id, p.Id, 3, "Now a first call.");
 
-        var latest = await db.RelationHistory
+        // Fresh context, same reason as above: assert against what was stored, not
+        // against the tracked entity the writer already holds in memory.
+        await using var check = _pg.NewContext();
+        var latest = await check.RelationHistory
             .Where(h => h.MsProfileId == p.Id)
             .OrderByDescending(h => h.ChangedAt).FirstAsync();
         Assert.Equal((short)1, latest.OldScore);

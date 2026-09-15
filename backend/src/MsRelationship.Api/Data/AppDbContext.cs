@@ -51,6 +51,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasIndex(x => new { x.ColumbusUserId, x.MsProfileId }).IsUnique();
             e.ToTable(t => t.HasCheckConstraint("ck_relations_score_range", "score BETWEEN -3 AND 3"));
         });
+
+        /* Stored as text like every other enum here, and doubly so for this table:
+           relation_history exists to answer "what changed" by reading the database
+           directly, and a bare 0/1/2 defeats that. It also means a later reordering
+           of the enum members can't silently reinterpret rows nothing can correct. */
+        b.Entity<RelationHistory>().Property(x => x.ChangeType).HasConversion<string>();
     }
 
     /* DbContext exposes four public virtual save entry points, not two: SaveChanges()
@@ -80,7 +86,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     }
 
     /// The history table is the record of what happened. Editing it would make it a
-    /// record of what someone wanted to have happened, so the context refuses.
+    /// record of what someone wanted to have happened, so this refuses any tracked
+    /// RelationHistory entry that reaches SaveChanges/SaveChangesAsync as Modified or
+    /// Deleted. It cannot see ExecuteUpdate, ExecuteDelete, or raw SQL — those bypass
+    /// the change tracker entirely, so no SaveChanges override can catch them.
     private void GuardHistory()
     {
         foreach (var entry in ChangeTracker.Entries<RelationHistory>())

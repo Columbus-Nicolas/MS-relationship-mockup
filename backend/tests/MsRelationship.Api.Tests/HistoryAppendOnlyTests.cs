@@ -28,6 +28,26 @@ public class HistoryAppendOnlyTests
     }
 
     [Fact]
+    public async Task History_rows_cannot_be_modified_through_the_context()
+    {
+        await using var db = _pg.NewContext();
+        // The three tests above all delete; none edits. Prove the Modified branch
+        // of the guard directly, not just as a side effect of ChangeTracker.Entries
+        // calling DetectChanges.
+        var row = new RelationHistory
+        {
+            ColumbusUserId = Guid.NewGuid(), MsProfileId = Guid.NewGuid(),
+            NewScore = 1, ChangeType = RelationChangeType.Created,
+            ChangedByUserId = Guid.NewGuid()
+        };
+        db.RelationHistory.Add(row);
+        await db.SaveChangesAsync();
+
+        row.NewScore = 2;
+        await Assert.ThrowsAsync<InvalidOperationException>(() => db.SaveChangesAsync());
+    }
+
+    [Fact]
     public void History_rows_cannot_be_edited_or_deleted_through_SaveChanges_bool()
     {
         // DbContext.SaveChanges() forwards to SaveChanges(bool) internally, so a guard

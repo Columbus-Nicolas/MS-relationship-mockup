@@ -5,9 +5,11 @@ using MsRelationship.Api.Data.Entities;
 
 namespace MsRelationship.Api.Features.Relations;
 
-/// The only way in and out of the relations table. Everything else calls this,
-/// so a change without a history row is not something anyone has to remember
-/// not to write — there is no other code path that could (FR-32).
+/// The intended way in and out of the relations table (FR-32): every caller
+/// that changes a Relation should go through SetAsync/RemoveAsync so the
+/// change carries a history row. Nothing structural enforces that — db.Relations
+/// is a public DbSet like any other, so this is a convention this codebase
+/// holds to, not a guarantee the database or AppDbContext makes.
 public class RelationWriter(AppDbContext db, ICurrentUser me)
 {
     public async Task<Relation?> SetAsync(Guid columbusUserId, Guid msProfileId, short score, string? note)
