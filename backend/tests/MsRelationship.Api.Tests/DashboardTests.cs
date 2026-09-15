@@ -62,4 +62,16 @@ public class DashboardTests
         Assert.False(result.Deleted);
         Assert.True(result.IsSystem);
     }
+
+    [Fact]
+    public async Task A_nonexistent_dashboard_cannot_be_deleted()
+    {
+        await using var db = _pg.NewContext();
+
+        var result = await new DashboardService(db).DeleteAsync(Guid.NewGuid());
+
+        Assert.False(result.Deleted);
+        Assert.False(result.HasDomains);
+        Assert.False(result.IsSystem);
+    }
 }
