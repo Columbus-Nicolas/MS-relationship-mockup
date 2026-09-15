@@ -12,6 +12,9 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Domain> Domains => Set<Domain>();
     public DbSet<ColumbusUser> ColumbusUsers => Set<ColumbusUser>();
     public DbSet<MsProfile> MsProfiles => Set<MsProfile>();
+    public DbSet<MsProfileDomain> MsProfileDomains => Set<MsProfileDomain>();
+    public DbSet<Customer> Customers => Set<Customer>();
+    public DbSet<MsProfileCustomer> MsProfileCustomers => Set<MsProfileCustomer>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -35,5 +38,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
         b.Entity<MsProfile>().HasIndex(x => x.IdentityKey).IsUnique();
         b.Entity<MsProfile>().Property(x => x.Cadence).HasConversion<string>();
+
+        b.Entity<MsProfileDomain>().HasKey(x => new { x.MsProfileId, x.DomainId });
+        b.Entity<MsProfileCustomer>().HasKey(x => new { x.MsProfileId, x.CustomerId });
+        b.Entity<Customer>().HasIndex(x => x.Name).IsUnique();
+        b.Entity<Customer>().Property(x => x.Type).HasConversion<string>();
     }
 }
