@@ -239,6 +239,22 @@ td.actions{text-align:right;white-space:nowrap}
 .chip--muted{background:#eef1f5;color:var(--text-muted)}
 .chip--role{background:#ece7fb;color:#5333b0}
 .chip--src{background:#e9f3ea;color:#2c6b3d}
+
+/* Relationship upkeep. The status carries meaning, so it gets colour of its own
+   rather than borrowing the score ramp - an overdue +3 is not a negative score. */
+.up-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:20px;
+  font-size:11.5px;font-weight:600}
+.up-chip::before{content:'';width:7px;height:7px;border-radius:50%;background:currentColor}
+.up-chip--ok{background:#e7f5ec;color:#1b6b3a}
+.up-chip--due{background:#fdf3e2;color:#9a6208}
+.up-chip--over{background:#fdeaea;color:#a51f1f}
+.up-chip--idle{background:#eef1f5;color:#6b7a8c}
+.up-next{margin-bottom:18px}
+.up-next b{font-size:13.5px;color:var(--e-navy)}
+.up-mail{display:grid;gap:14px}
+.up-mail__box{border:1px solid var(--border);border-radius:10px;padding:14px 16px;background:#fbfcfe}
+.up-mail__box h4{margin:0 0 4px;font-size:13px}
+.up-mail__box ul{margin:8px 0 0;padding-left:18px;font-size:12.5px;line-height:1.7;color:var(--text-muted)}
 .chips{display:flex;flex-wrap:wrap;gap:4px}
 
 .score{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:24px;padding:0 8px;
@@ -502,6 +518,8 @@ td.actions{text-align:right;white-space:nowrap}
 .cols__col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;
   height:100%;gap:5px;border-radius:6px 6px 0 0;cursor:help;outline:none}
 .cols__col:hover,.cols__col:focus-visible{background:#f7f9fc}
+.cols__col[data-action]{cursor:pointer}
+.cols__col[data-open],.bars__row[data-open]{background:var(--navy-100)}
 .cols__val{font-size:11.5px;color:var(--text-muted);font-variant-numeric:tabular-nums}
 .cols__bar{width:100%;max-width:24px;border-radius:4px 4px 0 0;min-height:2px}
 .cols__ax{display:flex;gap:10px;margin-top:7px;padding-top:7px;border-top:1px solid var(--border)}
@@ -548,7 +566,7 @@ td.actions{text-align:right;white-space:nowrap}
 .sched__main .scale-head{margin-bottom:4px}
 .sched__toggle{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-muted);padding-bottom:9px;white-space:nowrap}
 
-/* Same definitions, rendered straight into the survey rather than on hover. */
+/* Same definitions, rendered in full rather than on hover. */
 .defs--inline{margin-top:13px;padding-top:11px;border-top:1px solid var(--border);
   font-size:11.5px;line-height:1.45;color:var(--text-muted);
   display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:2px 20px}
@@ -730,7 +748,7 @@ td.actions{text-align:right;white-space:nowrap}
    ============================================================ */
 
 // Relation score scale, -3 .. +3. This is the single source of truth for the
-// wording, the description and the colour - tables, pickers, the survey and the
+// wording, the description and the colour - tables, pickers and the
 // dashboard legend all read it, so the scale can never say two different things.
 // bg/fg are the dot colours on the dashboard; fg keeps the number readable.
 var SCORE_LEVELS = [
@@ -753,7 +771,7 @@ var ROLES = [
 function roleName(id){ for (var i=0;i<ROLES.length;i++){ if (ROLES[i].id===id) return ROLES[i].name; } return id; }
 
 // Menu sections, in the order they appear in the sidebar.
-var NAV_SECTIONS = ['Dashboards', 'Administration', 'Submissions & Relations'];
+var NAV_SECTIONS = ['Dashboards', 'Administration', 'Relations'];
 
 // Which pages each role may open. Drives the left menu AND route guarding.
 /* The fixed pages. The two pages every dashboard has - its board and its
@@ -762,12 +780,12 @@ var NAV_SECTIONS = ['Dashboards', 'Administration', 'Submissions & Relations'];
 var PAGES = [
   /* `wide` drops the reading-width cap: the boards and the administration tables
      are wide by nature and were leaving a strip of empty page on a large screen. */
+  { route:'upkeep',            title:'Relationship Upkeep', sub:'Who reaches out, and when',   icon:'◷', section:'Administration', wide:true, roles:['superadmin','admin','moderator','standard'] },
   { route:'dashboards',        title:'Dashboards',          sub:'Boards & their panels',       icon:'▩', section:'Administration', wide:true, roles:['superadmin','admin'] },
   { route:'ms-domains',        title:'Microsoft Domains',   sub:'Categories & mapping',        icon:'◆', section:'Administration', wide:true, roles:['superadmin','admin'] },
   { route:'ms-profiles',       title:'Microsoft Profiles',  sub:'Approved Microsoft contacts', icon:'●', section:'Administration', wide:true, roles:['superadmin','admin','moderator'] },
   { route:'columbus-profiles', title:'Columbus Profiles',   sub:'Internal users & relations',  icon:'▲', section:'Administration', wide:true, roles:['superadmin','admin','moderator'] },
-  { route:'submissions',       title:'Pending Submissions', sub:'Surveys awaiting approval',   icon:'■', section:'Submissions & Relations',roles:['superadmin','admin'] },
-  { route:'my-relations',      title:'My Relations',        sub:'Your own Microsoft contacts', icon:'★', section:'Submissions & Relations',roles:['superadmin','admin','moderator','standard'] }
+  { route:'my-relations',      title:'My Relations',        sub:'Your own Microsoft contacts', icon:'★', section:'Relations',              roles:['superadmin','admin','moderator','standard'] }
 ];
 function allPages(){
   var out = [];
@@ -777,6 +795,11 @@ function allPages(){
     out.push({ route:b.graphics, title:'Graphics - ' + b.label, sub:'Numbers & breakdowns', icon:'\u25c8',
                section:'Dashboards', child:true, wide:true, roles:['superadmin','admin','moderator'] });
   });
+  /* The upkeep graphics belong with the other boards, even though the table they
+     summarise is an administration page. */
+  out.push({ route:'upkeep-graphics', title:'Graphics - Upkeep', sub:'Who is keeping in touch',
+             icon:'\u25c8', section:'Dashboards', wide:true,
+             roles:['superadmin','admin','moderator','standard'] });
   return out.concat(PAGES);
 }
 function pageFor(route){
@@ -789,18 +812,22 @@ function canOpen(route, role){ var p = pageFor(route); return !!p && p.roles.ind
 function canEdit(){ return state.session.role === 'admin' || state.session.role === 'superadmin'; }
 
 var MS_GROUPS  = ['Leadership','Account Team','Technical Specialist','Partner Development','Marketing'];
-var MS_SOURCES = ['Ayla\'s list','Microsoft DK leadership page','LinkedIn / MS Pulse','LinkedIn / Thomas\' deck','Survey','Microsoft DK org chart','Manual entry','Unconfirmed'];
+var MS_SOURCES = ['Ayla\'s list','Microsoft DK leadership page','LinkedIn / MS Pulse','LinkedIn / Thomas\' deck','Microsoft DK org chart','Manual entry','Unconfirmed'];
 // The system domain every unplaced Microsoft profile falls back to.
 var UNMARKED_ID = 'd0';
 
-// How often the automatic survey goes out. Quarterly is the default.
+/* How often the owner of a Microsoft relationship is reminded to reach out.
+   `none` is the default: a person is only in the reminder loop when somebody
+   deliberately puts them there, or the monthly mail becomes a list nobody reads.
+   Everybody is still tracked - last contact shows on every profile. */
 var CADENCES = [
+  { id:'none',      label:'No reminder',    months:0  },
   { id:'monthly',   label:'Monthly',        months:1  },
   { id:'quarterly', label:'Quarterly',      months:3  },
   { id:'half',      label:'Every 6 months', months:6  },
   { id:'yearly',    label:'Yearly',         months:12 }
 ];
-function cadence(id){ for (var i=0;i<CADENCES.length;i++){ if (CADENCES[i].id === id) return CADENCES[i]; } return CADENCES[1]; }
+function cadence(id){ for (var i=0;i<CADENCES.length;i++){ if (CADENCES[i].id === id) return CADENCES[i]; } return CADENCES[0]; }
 
 var CB_DEPARTMENTS = ['Executive','Alliances','Data & AI','Business Applications','Cloud & Infrastructure','Modern Work','Sales','Marketing','Delivery'];
 
@@ -813,8 +840,89 @@ var CB_DEPARTMENTS = ['Executive','Alliances','Data & AI','Business Applications
 var state = {
   session: { userId:'c1', role:'admin' },
 
-  // Automatic survey cadence. Quarterly out of the box.
-  surveySchedule: { enabled:true, cadence:'quarterly', lastSent:'2026-07-01' },
+  /* The customers a Microsoft person covers. Their own records rather than a
+     text field, so "who at Microsoft touches Novo?" is a question the app can
+     answer. Read out of Thomas' deck, where ten account columns sit under the
+     enterprise sellers one to one. The deck colours them, but too irregularly to
+     read customer from prospect, so the type is left unknown for someone to set. */
+  customers: [
+    { id:'cu1',  name:'AMBU A/S',                        type:'unknown' },
+    { id:'cu2',  name:'Interactive Sports Games A/S',    type:'unknown' },
+    { id:'cu3',  name:'Topsøe A/S',                      type:'unknown' },
+    { id:'cu4',  name:'VELUX A/S',                       type:'unknown' },
+    { id:'cu5',  name:'Viking Lifesavings',              type:'unknown' },
+    { id:'cu6',  name:'Energinet',                       type:'unknown' },
+    { id:'cu7',  name:'Netcompany',                      type:'unknown' },
+    { id:'cu8',  name:'Air Greenland',                   type:'unknown' },
+    { id:'cu9',  name:'Royal Greenland',                 type:'unknown' },
+    { id:'cu10', name:'Tele Greenland',                  type:'unknown' },
+    { id:'cu11', name:'Grønlands Selvstyre',             type:'unknown' },
+    { id:'cu12', name:'Arla Foods Amba',                 type:'unknown' },
+    { id:'cu13', name:'Bestseller A/S',                  type:'unknown' },
+    { id:'cu14', name:'Danish Agro',                     type:'unknown' },
+    { id:'cu15', name:'Danish Crown Amba',               type:'unknown' },
+    { id:'cu16', name:'ECCO SKO A/S',                    type:'unknown' },
+    { id:'cu17', name:'Danfoss A/S',                     type:'unknown' },
+    { id:'cu18', name:'Jysk A/S',                        type:'unknown' },
+    { id:'cu19', name:'Salling Group A/S',               type:'unknown' },
+    { id:'cu20', name:'GRUNDFOS DK',                     type:'unknown' },
+    { id:'cu21', name:'Hempel A/S',                      type:'unknown' },
+    { id:'cu22', name:'Alm Brand Af 1792',               type:'unknown' },
+    { id:'cu23', name:'Ap Pension A/S',                  type:'unknown' },
+    { id:'cu24', name:'Danske Bank Group',               type:'unknown' },
+    { id:'cu25', name:'JN Data',                         type:'unknown' },
+    { id:'cu26', name:'Nordea A/S',                      type:'unknown' },
+    { id:'cu27', name:'Pensiondanmark',                  type:'unknown' },
+    { id:'cu28', name:'PFA Pension',                     type:'unknown' },
+    { id:'cu29', name:'Saxo Bank A/S',                   type:'unknown' },
+    { id:'cu30', name:'SDC A/S',                         type:'unknown' },
+    { id:'cu31', name:'Tryg',                            type:'unknown' },
+    { id:'cu32', name:'NOVO NORDISK',                    type:'unknown' },
+    { id:'cu33', name:'Vestas Wind Systems',             type:'unknown' },
+    { id:'cu34', name:'Andel a.m.b.a.',                  type:'unknown' },
+    { id:'cu35', name:'Blue Water Shipping A/S',         type:'unknown' },
+    { id:'cu36', name:'DSV A/S',                         type:'unknown' },
+    { id:'cu37', name:'Flsmidth & Co A/S',               type:'unknown' },
+    { id:'cu38', name:'GN Store Nord A/S',               type:'unknown' },
+    { id:'cu39', name:'Københavns Lufthavne A/S',        type:'unknown' },
+    { id:'cu40', name:'LEGO GROUP',                      type:'unknown' },
+    { id:'cu41', name:'Norlys',                          type:'unknown' },
+    { id:'cu42', name:'Orsted A/S',                      type:'unknown' },
+    { id:'cu43', name:'A.P. Møller – Maersk Group',      type:'unknown' },
+    { id:'cu44', name:'COOP DANMARK A/S',                type:'unknown' },
+    { id:'cu45', name:'DFDS A/S',                        type:'unknown' },
+    { id:'cu46', name:'Egmont',                          type:'unknown' },
+    { id:'cu47', name:'ISS A/S',                         type:'unknown' },
+    { id:'cu48', name:'Kamstrup Energi A/S',             type:'unknown' },
+    { id:'cu49', name:'NILFISK-ADVANCE A/S',             type:'unknown' },
+    { id:'cu50', name:'Pandora Holding A/S',             type:'unknown' },
+    { id:'cu51', name:'Ramboll Gruppen A/S',             type:'unknown' },
+    { id:'cu52', name:'Semler Gruppen A/S',              type:'unknown' },
+    { id:'cu53', name:'Stark Group A/S',                 type:'unknown' },
+    { id:'cu54', name:'Coloplast A/S',                   type:'unknown' },
+    { id:'cu55', name:'Genmab A/S',                      type:'unknown' },
+    { id:'cu56', name:'H. Lundbeck A/S',                 type:'unknown' },
+    { id:'cu57', name:'LEO Pharma A/S',                  type:'unknown' },
+    { id:'cu58', name:'Novonesis Group',                 type:'unknown' },
+    { id:'cu59', name:'OTICON A/S',                      type:'unknown' },
+    { id:'cu60', name:'Cowi A/S',                        type:'unknown' },
+    { id:'cu61', name:'Falck A/S',                       type:'unknown' },
+    { id:'cu62', name:'PER AARSLEFF A/S',                type:'unknown' },
+    { id:'cu63', name:'TDC A/S',                         type:'unknown' },
+    { id:'cu64', name:'Aktieselskabet Schouw & Co.',     type:'unknown' },
+    { id:'cu65', name:'Bang & Olufsen A/S',              type:'unknown' },
+    { id:'cu66', name:'NKT Holding A/S',                 type:'unknown' },
+    { id:'cu67', name:'Rockwool International',          type:'unknown' },
+    { id:'cu68', name:'Scandinavian Tobacco Group',      type:'unknown' },
+    { id:'cu69', name:'Carlsberg Group',                 type:'unknown' },
+    { id:'cu70', name:'Ferring Pharmaceuticals A/S',     type:'unknown' }
+  ],
+
+  /* The contact log. One line per time somebody reached out - date and who
+     registered it. Nothing resets: "last contact" is simply the newest line,
+     and an empty log reads as Unknown rather than Never, because no line means
+     nobody wrote one down, not that nobody called. */
+  contacts: [],
 
   // Domains live separately from the profiles so the mapping is easy to restructure.
   /* The dashboards themselves are data, so one can be added from the UI. The two
@@ -966,35 +1074,35 @@ var state = {
   ],
 
   columbusProfiles: [
-    { id:'c1',  name:'Mette Kirkegaard',      title:'Partner Alliance Manager',    department:'Alliances',                skills:['Alliances','Co-sell','Governance'],       role:'admin',      email:'mette.kirkegaard@columbusglobal.example', lastSurvey:'2026-07-15' },
-    { id:'c2',  name:'Jesper Winther',        title:'Managing Director, Denmark',  department:'Executive',                skills:['Strategy','Executive sponsor'],           role:'superadmin', email:'jesper.winther@columbusglobal.example',   lastSurvey:'2026-06-02' },
-    { id:'c3',  name:'Sofie Bang',            title:'Business Applications Director', department:'Business Applications', skills:['D365 F&O','ERP','Presales'],              role:'admin',      email:'sofie.bang@columbusglobal.example',       lastSurvey:'2026-07-15' },
-    { id:'c4',  name:'Jonas Ravn',            title:'Cloud Practice Lead',         department:'Cloud & Infrastructure',   skills:['Azure','Migration','Architecture'],       role:'moderator',  email:'jonas.ravn@columbusglobal.example',       lastSurvey:'2026-07-15' },
-    { id:'c5',  name:'Rikke Dalsgaard',       title:'Security Lead',               department:'Cloud & Infrastructure',   skills:['Security','Entra','Compliance'],          role:'moderator',  email:'rikke.dalsgaard@columbusglobal.example',  lastSurvey:'2026-05-20' },
-    { id:'c6',  name:'Anders Holmgaard',      title:'Modern Work Consultant',      department:'Modern Work',              skills:['M365','Teams','Adoption'],                role:'standard',   email:'anders.holmgaard@columbusglobal.example', lastSurvey:'2026-07-15' },
-    { id:'c7',  name:'Line Aagaard',          title:'Data & AI Consultant',        department:'Data & AI',                skills:['Fabric','Power BI','Data platform'],      role:'standard',   email:'line.aagaard@columbusglobal.example',     lastSurvey:'2026-07-15' },
-    { id:'c8',  name:'Peter Sandholm',        title:'Enterprise Account Manager',  department:'Sales',                    skills:['Sales','Public sector'],                  role:'standard',   email:'peter.sandholm@columbusglobal.example',   lastSurvey:'2026-07-15' },
-    { id:'c9',  name:'Amalie Friis',          title:'Marketing Manager',           department:'Marketing',                skills:['Campaigns','Events'],                     role:'standard',   email:'amalie.friis@columbusglobal.example',     lastSurvey:'2026-04-08' },
-    { id:'c10', name:'Christian Bloch',       title:'Solution Architect',          department:'Cloud & Infrastructure',   skills:['Azure','Landing zones'],                  role:'standard',   email:'christian.bloch@columbusglobal.example',  lastSurvey:'2026-07-15' },
-    { id:'c11', name:'Louise Damgaard',       title:'D365 CE Consultant',          department:'Business Applications',    skills:['D365 CE','Power Platform'],               role:'standard',   email:'louise.damgaard@columbusglobal.example',  lastSurvey:'2026-07-15' },
-    { id:'c12', name:'Martin Østergaard',title:'Delivery Manager',            department:'Delivery',                 skills:['Delivery','PMO'],                         role:'standard',   email:'martin.oestergaard@columbusglobal.example',lastSurvey:'2026-03-11' },
-    { id:'c13', name:'Sara Lykke',            title:'Presales Lead, Data & AI',    department:'Data & AI',                skills:['Presales','AI','Copilot'],                role:'standard',   email:'sara.lykke@columbusglobal.example',       lastSurvey:'2026-07-15' },
-    { id:'c14', name:'Daniel Hvid',           title:'Bid Manager',                 department:'Sales',                    skills:['Bids','Public tenders'],                  role:'standard',   email:'daniel.hvid@columbusglobal.example',      lastSurvey:'2026-06-02' },
+    { id:'c1',  name:'Mette Kirkegaard',      title:'Partner Alliance Manager',    department:'Alliances',                skills:['Alliances','Co-sell','Governance'],       role:'admin',      email:'mette.kirkegaard@columbusglobal.example' },
+    { id:'c2',  name:'Jesper Winther',        title:'Managing Director, Denmark',  department:'Executive',                skills:['Strategy','Executive sponsor'],           role:'superadmin', email:'jesper.winther@columbusglobal.example' },
+    { id:'c3',  name:'Sofie Bang',            title:'Business Applications Director', department:'Business Applications', skills:['D365 F&O','ERP','Presales'],              role:'admin',      email:'sofie.bang@columbusglobal.example' },
+    { id:'c4',  name:'Jonas Ravn',            title:'Cloud Practice Lead',         department:'Cloud & Infrastructure',   skills:['Azure','Migration','Architecture'],       role:'moderator',  email:'jonas.ravn@columbusglobal.example' },
+    { id:'c5',  name:'Rikke Dalsgaard',       title:'Security Lead',               department:'Cloud & Infrastructure',   skills:['Security','Entra','Compliance'],          role:'moderator',  email:'rikke.dalsgaard@columbusglobal.example' },
+    { id:'c6',  name:'Anders Holmgaard',      title:'Modern Work Consultant',      department:'Modern Work',              skills:['M365','Teams','Adoption'],                role:'standard',   email:'anders.holmgaard@columbusglobal.example' },
+    { id:'c7',  name:'Line Aagaard',          title:'Data & AI Consultant',        department:'Data & AI',                skills:['Fabric','Power BI','Data platform'],      role:'standard',   email:'line.aagaard@columbusglobal.example' },
+    { id:'c8',  name:'Peter Sandholm',        title:'Enterprise Account Manager',  department:'Sales',                    skills:['Sales','Public sector'],                  role:'standard',   email:'peter.sandholm@columbusglobal.example' },
+    { id:'c9',  name:'Amalie Friis',          title:'Marketing Manager',           department:'Marketing',                skills:['Campaigns','Events'],                     role:'standard',   email:'amalie.friis@columbusglobal.example' },
+    { id:'c10', name:'Christian Bloch',       title:'Solution Architect',          department:'Cloud & Infrastructure',   skills:['Azure','Landing zones'],                  role:'standard',   email:'christian.bloch@columbusglobal.example' },
+    { id:'c11', name:'Louise Damgaard',       title:'D365 CE Consultant',          department:'Business Applications',    skills:['D365 CE','Power Platform'],               role:'standard',   email:'louise.damgaard@columbusglobal.example' },
+    { id:'c12', name:'Martin Østergaard',title:'Delivery Manager',            department:'Delivery',                 skills:['Delivery','PMO'],                         role:'standard',   email:'martin.oestergaard@columbusglobal.example' },
+    { id:'c13', name:'Sara Lykke',            title:'Presales Lead, Data & AI',    department:'Data & AI',                skills:['Presales','AI','Copilot'],                role:'standard',   email:'sara.lykke@columbusglobal.example' },
+    { id:'c14', name:'Daniel Hvid',           title:'Bid Manager',                 department:'Sales',                    skills:['Bids','Public tenders'],                  role:'standard',   email:'daniel.hvid@columbusglobal.example' },
 
     /* Relationship owners named in Thomas’ deck. Titles are not in the source,
        so they carry a neutral one; e-mail is left empty rather than guessed. */
-    { id:'c15', name:'Thomas Johansson',      title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', lastSurvey:null, fromDeck:true },
-    { id:'c16', name:'Anders Barslund',       title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', lastSurvey:null, fromDeck:true },
-    { id:'c17', name:'Anders Skibild',        title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', lastSurvey:null, fromDeck:true },
-    { id:'c18', name:'Brian B. Jørgensen',    title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', lastSurvey:null, fromDeck:true },
-    { id:'c19', name:'Carsten Møberg',        title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', lastSurvey:null, fromDeck:true },
-    { id:'c20', name:'Christian Poppe',       title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', lastSurvey:null, fromDeck:true },
-    { id:'c21', name:'John Sinnbeck',         title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', lastSurvey:null, fromDeck:true },
-    { id:'c22', name:'Stig B. Madsen',        title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', lastSurvey:null, fromDeck:true },
-    { id:'c23', name:'Søren Krogh',           title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', lastSurvey:null, fromDeck:true },
-    { id:'c24', name:'Lars Verning',          title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', lastSurvey:null, fromDeck:true },
-    { id:'c25', name:'Niels Viskum',          title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', lastSurvey:null, fromDeck:true },
-    { id:'c26', name:'Frederik Jørgensen',    title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', lastSurvey:null, fromDeck:true }
+    { id:'c15', name:'Thomas Johansson',      title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', fromDeck:true },
+    { id:'c16', name:'Anders Barslund',       title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', fromDeck:true },
+    { id:'c17', name:'Anders Skibild',        title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', fromDeck:true },
+    { id:'c18', name:'Brian B. Jørgensen',    title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', fromDeck:true },
+    { id:'c19', name:'Carsten Møberg',        title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', fromDeck:true },
+    { id:'c20', name:'Christian Poppe',       title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', fromDeck:true },
+    { id:'c21', name:'John Sinnbeck',         title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', fromDeck:true },
+    { id:'c22', name:'Stig B. Madsen',        title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', fromDeck:true },
+    { id:'c23', name:'Søren Krogh',           title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', fromDeck:true },
+    { id:'c24', name:'Lars Verning',          title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', fromDeck:true },
+    { id:'c25', name:'Niels Viskum',          title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', fromDeck:true },
+    { id:'c26', name:'Frederik Jørgensen',    title:'Microsoft relationship owner', department:'Business Applications', skills:[], role:'standard', email:'', phone:'', fromDeck:true }
   ],
 
   // The many-to-many join: one Columbus person can know many Microsoft people and vice versa.
@@ -1075,36 +1183,15 @@ var state = {
     { id:'dr39',   columbusId:'c16',  msProfileId:'dm78',  score: 0, note:'Owner named in the deck, no score given — recorded as 0.', updatedAt:'2026-05-27' }
   ],
 
-  // Survey responses / edits waiting for an Admin to approve them.
-  submissions: [
-    { id:'s1', columbusId:'c7',  type:'survey', submittedAt:'2026-08-14', items:[
-        { msProfileId:'m7',  oldScore: 2,   newScore: 3, note:'Now co-delivering an AI workshop series.' },
-        { msProfileId:'m5',  oldScore: 1,   newScore: 2, note:'Weekly contact on the current pursuit.' },
-        { msProfileId:'m10', oldScore:null, newScore: 1, note:'Met at an Azure community event in August.' }
-      ] },
-    { id:'s2', columbusId:'c10', type:'survey', submittedAt:'2026-08-13', items:[
-        { msProfileId:'m8',  oldScore: 2, newScore: 3, note:'Now runs joint design sessions with us.' },
-        { msProfileId:'m6',  oldScore: 1, newScore: 2, note:'Cadence established on the shared account.' }
-      ] },
-    { id:'s3', columbusId:'c11', type:'edit',   submittedAt:'2026-08-12', items:[
-        { msProfileId:'m12', oldScore: 1, newScore: 0, note:'Changed area - far less contact now.' }
-      ] },
-    { id:'s4', columbusId:'c8',  type:'survey', submittedAt:'2026-08-11', items:[
-        { msProfileId:'m17', oldScore:-2, newScore:-1, note:'Cleared the air at the last debrief.' },
-        { msProfileId:'m16', oldScore: 0, newScore: 1, note:'First real working session held.' }
-      ] },
-    { id:'s5', columbusId:'c14', type:'edit',   submittedAt:'2026-08-08', items:[
-        { msProfileId:'m19', oldScore:null, newScore: 1, note:'Helped on the last funding application.' }
-      ] }
-  ],
 
   // Transient UI state - survives re-renders, not reloads.
   ui: {
     route:'login',
     msSearch:'', msBoard:'', msDomain:'', msGroup:'', msSource:'', msBand:'', msSort:'name', msDir:1, msDetail:null,
     cbSearch:'', cbDept:'', cbRole:'', cbSort:'name', cbDir:1, cbOpen:null,
-    subOpen:null,
     myDraft:null, myPicker:'',
+    upSearch:'', upOwner:'', upStatus:'', upSort:'rank', upDir:1,
+    ugBoard:'', ugView:'chart', ugDrill:null,
     ecoFilter:'', ecoPick:null,
     gvDim:'domain', gvMeasure:'mean', gvView:'chart', gvDrill:null
   }
@@ -1129,10 +1216,6 @@ function addMonths(iso, n){
   if (d > last) d = last;
   return y + '-' + (m+1 < 10 ? '0' : '') + (m+1) + '-' + (d < 10 ? '0' : '') + d;
 }
-function nextSurveyDate(){
-  var sc = state.surveySchedule;
-  return addMonths(sc.lastSent, cadence(sc.cadence).months);
-}
 function realDomains(){ return state.domains.filter(function(d){ return !d.system; }); }
 function initials(name){
   var parts = String(name).trim().split(/\s+/);
@@ -1143,11 +1226,12 @@ function ms(id){ return byId(state.msProfiles, id); }
 function cb(id){ return byId(state.columbusProfiles, id); }
 function dom(id){ return byId(state.domains, id); }
 function me(){ return cb(state.session.userId) || state.columbusProfiles[0]; }
+var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 function fmtDate(d){
-  if (!d) return '<span class="hint">Never</span>';
+  /* Unknown, not Never: a missing date means nobody recorded one. */
+  if (!d) return '<span class="hint">Unknown</span>';
   var p = String(d).split('-');
-  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  return esc(p[2] + ' ' + months[parseInt(p[1],10)-1] + ' ' + p[0]);
+  return esc(p[2] + ' ' + MONTHS[parseInt(p[1],10)-1] + ' ' + p[0]);
 }
 function signed(n){ return (n > 0 ? '+' : '') + n; }
 function clampScore(n){ return Math.max(-3, Math.min(3, n)); }
@@ -1211,7 +1295,6 @@ function domainStats(dId){
     coverage: profiles.length ? Math.round(covered / profiles.length * 100) : 0
   };
 }
-function pendingCount(){ return state.submissions.length; }
 
 /* --- reusable markup --- */
 function scoreChip(v, big){
@@ -1241,7 +1324,7 @@ function scoreStat(st){
 }
 
 /* The written definition of the -3..+3 scale. One source, used by the
-   dashboard legend, the survey and every "relationship scale" card. */
+   dashboard legend and every "relationship scale" card. */
 function scoreDefsHtml(variant){
   return '<div class="defs' + (variant === 'inline' ? ' defs--inline' : '') + '"><b>What the scores mean</b>' + SCORE_LEVELS.map(function(l){
     var c = l.bg;
@@ -1293,6 +1376,171 @@ function toast(msg, kind){
   document.getElementById('toasts').appendChild(el);
   setTimeout(function(){ el.remove(); }, 3600);
 }
+
+/* ============================================================
+   UPKEEP - owner, contact log, and whether a relationship is
+   being maintained.
+
+   A score says how good a relationship is. It says nothing about whether anyone
+   has spoken to the person this year, and that is the part that decays quietly.
+   So every Microsoft person carries an owner, an optional reminder cadence, and
+   a log of the times somebody reached out.
+   ============================================================ */
+
+function contactsFor(msId){
+  return state.contacts.filter(function(c){ return c.msProfileId === msId; })
+    .sort(function(a, b){ return a.date < b.date ? 1 : -1; });      // newest first
+}
+function lastContactOf(msId){
+  var list = contactsFor(msId);
+  return list.length ? list[0] : null;
+}
+function ownerOf(p){ return p && p.ownerId ? cb(p.ownerId) : null; }
+
+/* Who may be made owner: only somebody who actually has a relation to them.
+   Owning a person you have never spoken to would be a title, not a job. */
+function eligibleOwners(msId){
+  return relationsForMs(msId).map(function(r){ return cb(r.columbusId); })
+    .filter(function(c){ return !!c; })
+    .sort(function(a, b){ return a.name < b.name ? -1 : 1; });
+}
+
+function daysBetween(a, b){
+  return Math.round((Date.parse(b) - Date.parse(a)) / 86400000);
+}
+
+/* The state of one person's upkeep. `days` is null when nothing is logged -
+   Unknown, not Never: an empty log means nobody wrote it down. */
+function upkeepOf(p){
+  var last = lastContactOf(p.id);
+  var cad = cadence(p.cadence);
+  var days = last ? daysBetween(last.date, today()) : null;
+  var state_ = 'untracked';
+  if (!cad.months)        state_ = last ? 'logged' : 'unknown';
+  else if (days === null) state_ = 'overdue';
+  else if (days > cad.months * 30)      state_ = 'overdue';
+  else if (days > cad.months * 30 - 10) state_ = 'due';
+  else                                  state_ = 'ok';
+  return { last:last, days:days, cadence:cad, status:state_ };
+}
+var UPKEEP_LABELS = {
+  ok:      { label:'On track',  cls:'ok' },
+  due:     { label:'Due soon',  cls:'due' },
+  overdue: { label:'Overdue',   cls:'over' },
+  logged:  { label:'No reminder', cls:'idle' },
+  unknown: { label:'Unknown',   cls:'idle' }
+};
+
+/* The reminder goes out on the first Monday of the month. */
+function firstMondayAfter(iso){
+  var d = new Date(Date.parse(iso));
+  var y = d.getUTCFullYear(), m = d.getUTCMonth();
+  function firstMonday(yy, mm){
+    var first = new Date(Date.UTC(yy, mm, 1));
+    var shift = (8 - first.getUTCDay()) % 7;        // 0 = Sunday, 1 = Monday
+    return new Date(Date.UTC(yy, mm, 1 + shift));
+  }
+  var cand = firstMonday(y, m);
+  if (cand <= d) cand = firstMonday(m === 11 ? y + 1 : y, (m + 1) % 12);
+  return cand.toISOString().slice(0, 10);
+}
+
+/* Everyone who would be named in the next mail, grouped by the owner who gets it. */
+function reminderQueue(){
+  var out = [];
+  state.msProfiles.forEach(function(p){
+    if (!p.ownerId || !cadence(p.cadence).months) return;
+    var u = upkeepOf(p);
+    if (u.status !== 'overdue' && u.status !== 'due') return;
+    var row = null;
+    out.forEach(function(x){ if (x.ownerId === p.ownerId) row = x; });
+    if (!row) { row = { ownerId:p.ownerId, people:[] }; out.push(row); }
+    row.people.push(p);
+  });
+  return out.sort(function(a, b){ return b.people.length - a.people.length; });
+}
+
+function customersOf(p){
+  return (p.customerIds || []).map(function(id){ return byId(state.customers, id); })
+    .filter(function(c){ return !!c; });
+}
+function registerContact(msId, byId_){
+  state.contacts.push({ id:uid('ct'), msProfileId:msId, byId:byId_ || state.session.userId, date:today() });
+  var p = ms(msId);
+  toast('Contact registered for ' + (p ? p.name : 'this person'), 'ok');
+}
+
+/* ------------------------------------------------------------
+   Seeding the upkeep data.
+
+   Owner, cadence and the contact log are derived once at start-up rather than
+   written per profile: a hundred hand-maintained lines would drift the moment
+   the relations change, and the rule is the interesting part anyway.
+
+   The owner is whoever holds the strongest relation to that Microsoft person,
+   which satisfies the rule that an owner must have a relation at all. Somebody
+   nobody knows gets no owner and no reminder, and shows up as a gap on
+   Relationship Upkeep - that is what the page is for.
+   ------------------------------------------------------------ */
+
+/* The customer columns under the enterprise sellers on slide 3 of Thomas' deck.
+   The columns line up with the seller boxes one to one, so the mapping is read,
+   not guessed - but it only covers the nine BizApp sellers the deck drew. */
+var DECK_CUSTOMERS = {
+  'Ana-Maria Cibotari':    ['cu1','cu2','cu3','cu4','cu5','cu64','cu65','cu66','cu67','cu68','cu69','cu70'],
+  'Bo Brandt':             ['cu6','cu7','cu8','cu9','cu10','cu11'],
+  'Bo Larsen':             ['cu12','cu13','cu14','cu15','cu16','cu17','cu18','cu19','cu20','cu21'],
+  'Jesper N. Pedersen':    ['cu12','cu13','cu14','cu15','cu16','cu17','cu18','cu19','cu20','cu21','cu32','cu33'],
+  'Henrik Ditlevsen':      ['cu22','cu23','cu24','cu25','cu26','cu27','cu28','cu29','cu30','cu31'],
+  'Kasper Vedel Mørch':    ['cu34','cu35','cu36','cu37','cu38','cu39','cu40','cu41','cu42'],
+  'Liang Ye':              ['cu43'],
+  'Mikkel Schausen':       ['cu44','cu45','cu46','cu47','cu48','cu49','cu50','cu51','cu52','cu53'],
+  'Abed Danial':           ['cu54','cu55','cu56','cu57','cu58','cu59','cu60','cu61','cu62','cu63']
+};
+
+function seedUpkeep(){
+  var contactId = 0;
+
+  state.msProfiles.forEach(function(p, i){
+    if (p.customerIds === undefined) p.customerIds = DECK_CUSTOMERS[p.name] || [];
+    if (p.ownerId === undefined)     p.ownerId = '';
+    if (p.cadence === undefined)     p.cadence = 'none';
+
+    var rels = relationsForMs(p.id);
+    if (!rels.length) return;                       // no relation, so no owner
+
+    var best = rels[0];
+    rels.forEach(function(r){ if (r.score > best.score) best = r; });
+    p.ownerId = best.columbusId;
+
+    /* Only the people worth a standing reminder carry one. Everyone else is
+       still tracked - last contact shows on every profile - they simply do not
+       generate mail. */
+    p.cadence = msStats(p.id).best >= 2 ? 'monthly' : 'quarterly';
+
+    /* A spread of history, so the page shows the real mix: recently touched,
+       slipping, and never written down at all. Every third owned profile has
+       no log entry. */
+    if (i % 4 === 3) return;
+    var monthsAgo = (i * 7) % 6;
+    var times = monthsAgo < 2 ? 2 : 1;
+    for (var n = 0; n < times; n++) {
+      contactId++;
+      var day = ((i * 5) % 27) + 1;
+      var when = addMonths(today(), -(monthsAgo + n * 2)).slice(0, 8) + (day < 10 ? '0' : '') + day;
+      /* The day-of-month is spread for variety, which can otherwise land a
+         contact later this month than today. Nothing is logged in the future. */
+      if (when > today()) when = addMonths(when, -1);
+      state.contacts.push({
+        id: 'ct' + contactId,
+        msProfileId: p.id,
+        byId: n === 0 ? p.ownerId : rels[rels.length - 1].columbusId,
+        date: when
+      });
+    }
+  });
+}
+
 /* ============================================================
    4. ROUTER + SHELL
    ============================================================ */
@@ -1303,7 +1551,7 @@ function go(route){
 }
 function readHash(){
   var r = (location.hash || '').replace(/^#\/?/, '') || 'login';
-  if (r !== state.ui.route) state.ui.gvDrill = null;   // it belongs to one page
+  if (r !== state.ui.route) { state.ui.gvDrill = null; state.ui.ugDrill = null; }   // they belong to one page
   state.ui.route = r;
 }
 window.addEventListener('hashchange', function(){ readHash(); render(); });
@@ -1328,10 +1576,11 @@ function render(){
   if (routeBoard && routeBoard.dashboard === route)     body = viewDashboard();
   else if (routeBoard && routeBoard.graphics === route) body = viewGraphicView();
   else if (route === 'dashboards')         body = viewDashboards();
+  else if (route === 'upkeep')            body = viewUpkeep();
+  else if (route === 'upkeep-graphics')   body = viewUpkeepGraphics();
   else if (route === 'ms-profiles')       body = viewMsProfiles();
   else if (route === 'ms-domains')        body = viewMsDomains();
   else if (route === 'columbus-profiles') body = viewColumbusProfiles();
-  else if (route === 'submissions')       body = viewSubmissions();
   else if (route === 'my-relations')      body = viewMyRelations();
 
   /* Prose reads better with a measured line length, so the page is capped by
@@ -1355,8 +1604,7 @@ function sidebar(route){
     var items = allPages().filter(function(p){
       return p.section === section && p.roles.indexOf(role) !== -1;
     }).map(function(p){
-      var pill = (p.route === 'submissions' && pendingCount())
-        ? '<span class="pill">' + pendingCount() + '</span>' : '';
+      var pill = '';
       var cls = (p.route === route ? 'active' : '') + (p.child ? ' nav__child' : '');
       return '<a href="#/' + p.route + '" class="' + cls.trim() + '">' +
              '<i class="ico">' + p.icon + '</i>' + esc(p.title) + pill + '</a>';
@@ -2164,6 +2412,25 @@ function ecoPrint(){
    PAGE 2b - GRAPHIC VIEW  (deliberately empty for now)
    ------------------------------------------------------------ */
 
+/* The two shapes every graphics page is built from. Shared, so the upkeep page
+   and the board pages cannot drift apart visually. */
+function gvKpi(accent, icon, value, label, note){
+  var a = ECO_ACCENTS[accent] || ECO_ACCENTS.slate;
+  return '<div class="gv-kpi" style="--a:' + a.c + ';--a-dark:' + a.d + '">' +
+    '<span class="gv-ico">' + ecoIcon(icon) + '</span>' +
+    '<div><b>' + value + '</b><span>' + esc(label) + '</span><em>' + esc(note) + '</em></div>' +
+  '</div>';
+}
+/* The accent tints the panel head; the chart itself sits on white. */
+function gvPanel(accent, icon, title, note, body){
+  var a = ECO_ACCENTS[accent] || ECO_ACCENTS.slate;
+  return '<div class="gv-panel" style="--a:' + a.c + ';--a-dark:' + a.d + '">' +
+    '<div class="gv-panel__head"><span class="gv-ico">' + ecoIcon(icon) + '</span>' +
+      '<div><h3>' + esc(title) + '</h3><p>' + esc(note) + '</p></div></div>' +
+    '<div class="gv-panel__body">' + body + '</div>' +
+  '</div>';
+}
+
 /* ------------------------------------------------------------
    Breakdowns. Pick a dimension and a measure; every panel below
    re-renders against the same choice. Bars are plain HTML.
@@ -2444,23 +2711,10 @@ function viewGraphicView(){
   var covered = bp.filter(function(p){ var st = msStats(p.id); return st.count && st.best >= 1; }).length;
   var single = bp.filter(function(p){ return msStats(p.id).count === 1; }).length;
 
-  function kpi(accent, icon, value, label, note){
-    var a = ECO_ACCENTS[accent];
-    return '<div class="gv-kpi" style="--a:' + a.c + ';--a-dark:' + a.d + '">' +
-      '<span class="gv-ico">' + ecoIcon(icon) + '</span>' +
-      '<div><b>' + value + '</b><span>' + esc(label) + '</span><em>' + esc(note) + '</em></div>' +
-    '</div>';
-  }
-
-  /* The accent tints the panel head; the chart itself sits on white. */
   function panel(accent, icon, title, note, chart, table){
-    var a = ECO_ACCENTS[accent];
-    return '<div class="gv-panel" style="--a:' + a.c + ';--a-dark:' + a.d + '">' +
-      '<div class="gv-panel__head"><span class="gv-ico">' + ecoIcon(icon) + '</span>' +
-        '<div><h3>' + esc(title) + '</h3><p>' + esc(note) + '</p></div></div>' +
-      '<div class="gv-panel__body">' + (asTable ? table() : chart()) + '</div>' +
-    '</div>';
+    return gvPanel(accent, icon, title, note, asTable ? table() : chart());
   }
+  var kpi = gvKpi;
 
   var head =
     '<div class="gv-head"><h2>The alliance in numbers &middot; ' + esc(eco().org.domain) + '</h2>' +
@@ -2496,7 +2750,7 @@ function viewGraphicView(){
             'All ' + br.length + ' approved relationships on this board, by level. Position on the scale carries the sign - the colour repeats it.',
             gvDistribution, gvDistributionTable) +
       panel('violet', 'users', 'Who holds the relationships',
-            'Relationships per Columbus employee on this board. People the survey has not reached yet are left out.',
+            'Relationships per Columbus employee on this board. People holding none are left out.',
             gvHolders, gvHoldersTable) +
     '</div>' +
   '</div>';
@@ -2529,12 +2783,16 @@ function msRows(){
     return {
       id:p.id, name:p.name, title:p.title, group:p.group, source:p.source,
       domainIds:p.domainIds, updatedAt:p.updatedAt, email:p.email, phone:p.phone,
-      boards:boardsOfProfile(p),
+      boards:boardsOfProfile(p), profile:p,
+      owner: (ownerOf(p) || {}).name || '',
+      lastContact: (lastContactOf(p.id) || {}).date || '',
       count:s.count, sum:s.sum, best:s.best, mean:s.mean, median:s.median, band:bandOf(s)
     };
   });
   rows = rows.filter(function(r){
-    if (q && (r.name + ' ' + r.title + ' ' + r.email).toLowerCase().indexOf(q) === -1) return false;
+    var hay = r.name + ' ' + r.title + ' ' + r.email + ' ' + r.owner + ' ' +
+              customersOf(r.profile).map(function(c){ return c.name; }).join(' ');
+    if (q && hay.toLowerCase().indexOf(q) === -1) return false;
     /* Someone who sits on both boards matches either filter - the point of
        letting a person belong to two dashboards. */
     if (u.msBoard && !profileInBoard(r, u.msBoard)) return false;
@@ -2583,7 +2841,7 @@ function viewMsProfiles(){
   var toolbar =
     '<div class="toolbar">' +
       '<div class="field search"><label>Search</label>' +
-        '<input type="search" id="ms-search" data-action="ms-search" placeholder="Name, title or e-mail" value="' + esc(u.msSearch) + '"></div>' +
+        '<input type="search" id="ms-search" data-action="ms-search" placeholder="Name, title, owner or customer" value="' + esc(u.msSearch) + '"></div>' +
       selectField('Dashboard', 'ms-board', u.msBoard,
         boards().map(function(b){ return { id:b.id, label:b.label }; }), 'All dashboards') +
       /* Domain names alone are ambiguous once two boards own domains, so each
@@ -2615,18 +2873,21 @@ function viewMsProfiles(){
       '<td><span class="chip chip--src">' + esc(r.source) + '</span></td>' +
       '<td class="num">' + r.count + '</td>' +
       '<td>' + (r.count ? scoreStat(msStats(r.id)) : '<span class="chip chip--muted">no connection</span>') + '</td>' +
+      '<td>' + (r.owner ? esc(r.owner) : '<span class="hint">None</span>') + '</td>' +
+      '<td>' + (r.lastContact ? fmtDate(r.lastContact) : '<span class="hint">Unknown</span>') + '</td>' +
       '<td>' + fmtDate(r.updatedAt) + '</td>' +
       '<td class="actions">' +
         '<button class="btn btn--sm" data-action="ms-edit" data-id="' + r.id + '"' + (editable ? '' : ' disabled') + '>Edit</button> ' +
         '<button class="btn btn--sm btn--danger" data-action="ms-delete" data-id="' + r.id + '"' + (editable ? '' : ' disabled') + '>Delete</button>' +
       '</td></tr>';
-  }).join('') : '<tr><td colspan="10"><div class="empty"><b>No profiles match your filters</b>Try clearing the search or filters.</div></td></tr>';
+  }).join('') : '<tr><td colspan="12"><div class="empty"><b>No profiles match your filters</b>Try clearing the search or filters.</div></td></tr>';
 
   var table =
     '<div class="card">' + toolbar + '<div class="tablewrap"><table><thead><tr>' +
       th('Name','name',u.msSort,u.msDir) + th('Title','title',u.msSort,u.msDir) +
       '<th>Dashboard</th><th>Domains</th>' + th('Group','group',u.msSort,u.msDir) + th('Source','source',u.msSort,u.msDir) +
       th('Conn.','count',u.msSort,u.msDir) + th('Mean score','mean',u.msSort,u.msDir) +
+      th('Owner','owner',u.msSort,u.msDir) + th('Last contact','lastContact',u.msSort,u.msDir) +
       th('Updated','updatedAt',u.msSort,u.msDir) + '<th></th>' +
     '</tr></thead><tbody>' + body + '</tbody></table></div></div>';
 
@@ -2757,7 +3018,7 @@ function cbRows(){
     var s = cbStats(p.id);
     return {
       id:p.id, name:p.name, title:p.title, department:p.department, skills:p.skills,
-      role:p.role, email:p.email, lastSurvey:p.lastSurvey, count:s.count, avg:s.avg, mean:s.mean, median:s.median, sum:s.sum
+      role:p.role, email:p.email, count:s.count, avg:s.avg, mean:s.mean, median:s.median, sum:s.sum
     };
   });
   rows = rows.filter(function(r){
@@ -2773,7 +3034,7 @@ function cbDetail(cbId){
   var rs = relationsForCb(cbId);
   if (!rs.length) {
     return '<div class="inner"><h4>Approved relations</h4>' +
-      '<p class="hint">No approved relations yet. Send a survey to get this person mapped.</p></div>';
+      '<p class="hint">No relations registered yet.</p></div>';
   }
   rs = rs.slice().sort(function(a,b){ return b.score - a.score; });
   var body = rs.map(function(r){
@@ -2797,10 +3058,9 @@ function viewColumbusProfiles(){
     '<div class="page__head"><div><h2>Columbus Profiles</h2>' +
       '<p>Internal users, their skills and the Microsoft relationships they own. Expand a row to see the approved relations behind the score.</p></div>' +
       '<div class="page__actions">' +
-        '<button class="btn" data-action="cb-survey-all"' + (editable ? '' : ' disabled') + '>Send survey to all</button>' +
         '<button class="btn btn--primary" data-action="cb-new"' + (editable ? '' : ' disabled') + '>+ Add user</button>' +
       '</div></div>' +
-    (editable ? '' : '<div class="readonly-note"><b>Moderator view:</b> read-only. Role changes, surveys and user management are Admin actions.</div>');
+    (editable ? '' : '<div class="readonly-note"><b>Moderator view:</b> read-only. Role changes and user management are Admin actions.</div>');
 
   var toolbar =
     '<div class="toolbar">' +
@@ -2830,9 +3090,7 @@ function viewColumbusProfiles(){
       '<td>' + roleCell + '</td>' +
       '<td class="num">' + r.count + '</td>' +
       '<td>' + scoreStat(cbStats(r.id)) + '</td>' +
-      '<td>' + fmtDate(r.lastSurvey) + '</td>' +
       '<td class="actions">' +
-        '<button class="btn btn--sm" data-action="cb-survey" data-id="' + r.id + '"' + (editable ? '' : ' disabled') + '>Send survey</button> ' +
         '<button class="btn btn--sm btn--danger" data-action="cb-delete" data-id="' + r.id + '"' +
           (editable && !locked ? '' : ' disabled') + ' title="' + (locked ? 'The Super Admin profile cannot be deleted' : 'Delete user') + '">Delete</button>' +
       '</td></tr>';
@@ -2848,89 +3106,447 @@ function viewColumbusProfiles(){
   return head +
     '<div class="card">' + toolbar + '<div class="tablewrap"><table><thead><tr>' +
       thc('Name','name') + thc('Title','title') + thc('Department','department') + '<th>Skills</th>' +
-      thc('Role','role') + thc('Relations','count') + thc('Mean score','avg') + thc('Last survey','lastSurvey') + '<th></th>' +
+      thc('Role','role') + thc('Relations','count') + thc('Mean score','avg') + '<th></th>' +
     '</tr></thead><tbody>' + body + '</tbody></table></div></div>' +
     '<div class="card" style="margin-top:18px"><div class="card__body">' + scaleHeading() + scoreLegend() + '</div></div>';
 }
 
 /* ============================================================
-   10. PAGE 5 - PENDING SUBMISSIONS & SURVEYS  (Admin only)
+   10. PAGE - RELATIONSHIP UPKEEP
+
+   The scores say how good the relationships are. This page says whether anyone
+   is still having them. It shows everybody's, not just your own, so a colleague
+   can pick up a contact that is slipping while their owner is on holiday.
    ============================================================ */
 
-/* The survey schedule. Sits above the queue, because this is the page an Admin
-   opens to see what has come in and to decide what goes out next. */
-function scheduleCard(){
-  var sc = state.surveySchedule, editable = canEdit(), off = !sc.enabled;
-  var timing = off
-    ? '<span class="hint">Automatic sending is paused. Surveys only go out when you send them manually.</span>'
-    : '<span class="hint">Last sent ' + fmtDate(sc.lastSent) + ' &middot; next automatic send <b>' +
-      fmtDate(nextSurveyDate()) + '</b> (' + esc(cadence(sc.cadence).label.toLowerCase()) + ')</span>';
+var UPKEEP_STATUSES = [
+  { id:'',        label:'All statuses' },
+  { id:'overdue', label:'Overdue' },
+  { id:'due',     label:'Due soon' },
+  { id:'ok',      label:'On track' },
+  { id:'unknown', label:'Never logged' },
+  { id:'logged',  label:'No reminder set' }
+];
 
-  return '<div class="card" style="margin-bottom:18px"><div class="card__body">' +
-    '<div class="sched">' +
-      '<div class="sched__main">' +
-        '<h3 class="scale-head">Survey schedule</h3>' + timing +
-      '</div>' +
-      '<label class="sched__toggle"><input type="checkbox" data-action="sched-toggle"' +
-        (sc.enabled ? ' checked' : '') + (editable ? '' : ' disabled') + '> Send automatically</label>' +
-      selectField('Every', 'sched-cadence', sc.cadence, CADENCES, '') +
-      '<button class="btn" data-action="cb-survey-all"' + (editable ? '' : ' disabled') + '>Send survey to all now</button>' +
-    '</div>' +
-    '<div class="mockflag" style="margin:14px 0 0">Mockup - no mail is actually sent. Sending stamps every Columbus profile with today\'s date and rolls the next automatic send forward from there.</div>' +
-  '</div></div>';
+function upkeepRows(){
+  var u = state.ui, q = u.upSearch.trim().toLowerCase();
+  var rows = state.msProfiles.map(function(p){
+    var k = upkeepOf(p), owner = ownerOf(p);
+    return {
+      id:p.id, name:p.name, title:p.title, profile:p,
+      owner: owner ? owner.name : '', ownerId: p.ownerId || '',
+      cadence: cadence(p.cadence).label,
+      cadenceMonths: cadence(p.cadence).months,
+      last: k.last ? k.last.date : '',
+      days: k.days === null ? 99999 : k.days,          // never logged sorts last
+      status: k.status, statusLabel: UPKEEP_LABELS[k.status].label,
+      /* The default order is what needs attention, not the alphabet: the people
+         on a reminder who have slipped come first, then the ones nobody has
+         written anything down about. */
+      rank: { overdue:0, due:1, unknown:2, ok:3, logged:4 }[k.status]
+    };
+  });
+  rows = rows.filter(function(r){
+    if (q && (r.name + ' ' + r.title + ' ' + r.owner).toLowerCase().indexOf(q) === -1) return false;
+    if (u.upOwner === '__none' && r.ownerId) return false;
+    if (u.upOwner && u.upOwner !== '__none' && r.ownerId !== u.upOwner) return false;
+    if (u.upStatus && r.status !== u.upStatus) return false;
+    return true;
+  });
+  return sortBy(rows, u.upSort, u.upDir);
 }
 
-function viewSubmissions(){
-  if (!state.submissions.length) {
-    return '<div class="page__head"><div><h2>Pending Submissions &amp; Surveys</h2>' +
-      '<p>Survey responses and manual edits from Columbus employees, waiting for approval.</p></div></div>' +
-      scheduleCard() +
-      '<div class="card"><div class="empty"><b>Nothing is waiting for approval</b>' +
-      'New survey responses and edits will land here. Switch to the <b>Standard</b> role and submit a change from <b>My Relations</b> to see it in action.</div></div>';
+function upkeepChip(status){
+  var l = UPKEEP_LABELS[status];
+  return '<span class="up-chip up-chip--' + l.cls + '">' + esc(l.label) + '</span>';
+}
+
+/* "Sidst kontaktet" in words, because a date alone does not tell you it has
+   been seven months. */
+function sinceText(row){
+  if (!row.last) return '<span class="hint">Unknown</span>';
+  var d = row.days;
+  var ago = d <= 0 ? 'today' : d === 1 ? 'yesterday'
+          : d < 31 ? d + ' days ago'
+          : Math.round(d / 30) + ' month' + (Math.round(d / 30) === 1 ? '' : 's') + ' ago';
+  return fmtDate(row.last) + ' <span class="hint">&middot; ' + ago + '</span>';
+}
+
+function thu(label, key, cls){
+  return '<th class="sortable ' + (cls || '') + '" data-action="sort-up" data-key="' + key + '">' +
+         esc(label) + sortArrow(state.ui.upSort === key, state.ui.upDir) + '</th>';
+}
+
+function viewUpkeep(){
+  var u = state.ui, rows = upkeepRows(), all = state.msProfiles;
+  var tracked = all.filter(function(p){ return p.ownerId && cadence(p.cadence).months; });
+  var counts = { overdue:0, due:0, unknown:0 };
+  all.forEach(function(p){
+    var k = upkeepOf(p);
+    if (k.status === 'overdue') counts.overdue++;
+    else if (k.status === 'due') counts.due++;
+    if (!k.last) counts.unknown++;
+  });
+
+  var queue = reminderQueue();
+  var nextDate = firstMondayAfter(today());
+  var queuePeople = queue.reduce(function(n, r){ return n + r.people.length; }, 0);
+
+  var head =
+    '<div class="page__head"><div><h2>Relationship Upkeep</h2>' +
+      '<p>Who is responsible for each Microsoft relationship, and when anyone last reached out. ' +
+      'Everyone\'s is shown, not just your own - if a contact is slipping, anybody can pick it up. ' +
+      'Ticking <b>Register contact</b> writes today into the log; nothing resets, so the history stays.</p></div>' +
+      '<div class="page__actions">' +
+        '<button class="btn" data-action="upkeep-preview">Preview the reminder mail</button>' +
+      '</div></div>';
+
+  var stats =
+    '<div class="stats">' +
+      '<div class="stat"><b>' + tracked.length + '</b><span>On a reminder</span><em>of ' + all.length + ' Microsoft contacts</em></div>' +
+      '<div class="stat"><b>' + counts.overdue + '</b><span>Overdue</span><em>past their cadence</em></div>' +
+      '<div class="stat"><b>' + counts.due + '</b><span>Due soon</span><em>within ten days</em></div>' +
+      '<div class="stat"><b>' + counts.unknown + '</b><span>Never logged</span><em>no contact written down</em></div>' +
+    '</div>';
+
+  var owners = state.columbusProfiles.filter(function(c){
+    return state.msProfiles.some(function(p){ return p.ownerId === c.id; });
+  }).map(function(c){ return { id:c.id, label:c.name }; });
+  owners.push({ id:'__none', label:'— No owner yet' });
+
+  var mail =
+    '<div class="card up-next"><div class="card__body">' +
+      '<div><b>Next reminder: ' + fmtDate(nextDate) + '</b>' +
+        '<span class="hint"> &middot; first Monday of the month &middot; ' +
+        (queuePeople
+          ? queue.length + ' owner' + (queue.length === 1 ? '' : 's') + ', ' + queuePeople + ' ' +
+            (queuePeople === 1 ? 'person' : 'people') + ' - one mail each'
+          : 'nothing is due, so no mail goes out') + '</span></div>' +
+    '</div></div>';
+
+  var toolbar =
+    '<div class="toolbar">' +
+      '<div class="field search"><label>Search</label>' +
+        '<input type="search" id="up-search" data-action="up-search" placeholder="Microsoft person or owner" value="' + esc(u.upSearch) + '"></div>' +
+      selectField('Owner', 'up-owner', u.upOwner, owners, 'All owners') +
+      selectField('Status', 'up-status', u.upStatus, UPKEEP_STATUSES.slice(1), 'All statuses') +
+      '<div class="spacer"></div>' +
+      '<button class="btn btn--sm" data-action="up-reset">Clear filters</button>' +
+      '<div class="hint">' + rows.length + ' of ' + all.length + '</div>' +
+    '</div>';
+
+  var body = rows.length ? rows.map(function(r){
+    var owner = r.ownerId ? cb(r.ownerId) : null;
+    return '<tr>' +
+      '<td class="clickable" data-action="ms-open" data-id="' + r.id + '">' + personCell(r.name, r.title) + '</td>' +
+      '<td>' + (owner ? personCell(owner.name, owner.department)
+                      : '<span class="chip chip--muted">No owner &middot; nobody has a relation</span>') + '</td>' +
+      '<td>' + (r.cadenceMonths ? esc(r.cadence) : '<span class="hint">' + esc(r.cadence) + '</span>') + '</td>' +
+      '<td>' + sinceText(r) + '</td>' +
+      '<td>' + upkeepChip(r.status) + '</td>' +
+      '<td class="actions">' +
+        '<button class="btn btn--sm" data-action="contact-log" data-id="' + r.id + '">Register contact</button>' +
+      '</td></tr>';
+  }).join('') : '<tr><td colspan="6"><div class="empty"><b>Nothing matches your filters</b>Try clearing the search or the status.</div></td></tr>';
+
+  var table =
+    '<div class="card">' + toolbar + '<div class="tablewrap"><table><thead><tr>' +
+      thu('Microsoft person','name') + thu('Owner','owner') + thu('Reminder','cadence') +
+      thu('Last contact','days') + thu('Status','rank') + '<th></th>' +
+    '</tr></thead><tbody>' + body + '</tbody></table></div></div>';
+
+  return head + stats + mail + table;
+}
+
+/* ------------------------------------------------------------
+   Graphics for Relationship Upkeep.
+
+   The upkeep table answers "who do I call today". This answers the questions
+   above it: is the loop actually being used, is it evenly spread, and which
+   department is letting its relationships go quiet.
+   ------------------------------------------------------------ */
+
+function ugProfiles(){
+  var b = state.ui.ugBoard;
+  return b ? boardProfiles(b) : state.msProfiles;
+}
+
+/* Contacts logged per month, oldest first - the shape that says whether anyone
+   is keeping the loop alive, rather than how it looked on one day. */
+function ugByMonth(months){
+  var ids = ugProfiles().map(function(p){ return p.id; });
+  var out = [];
+  for (var i = months - 1; i >= 0; i--) {
+    var m = addMonths(today(), -i).slice(0, 7);
+    out.push({ key:m, label:MONTHS[parseInt(m.slice(5, 7), 10) - 1] + ' ' + m.slice(2, 4), n:0 });
+  }
+  state.contacts.forEach(function(c){
+    if (ids.indexOf(c.msProfileId) === -1) return;
+    var m = c.date.slice(0, 7);
+    out.forEach(function(x){ if (x.key === m) x.n++; });
+  });
+  return out;
+}
+
+function ugStatusCounts(){
+  var counts = {};
+  ['overdue','due','ok','logged','unknown'].forEach(function(k){ counts[k] = 0; });
+  ugProfiles().forEach(function(p){ counts[upkeepOf(p).status]++; });
+  return counts;
+}
+
+/* Per owner: how many of their people have slipped. The one panel that names
+   somebody, which is the point - upkeep is a person's job, not a department's. */
+function ugOwnerRows(){
+  var rows = [];
+  ugProfiles().forEach(function(p){
+    if (!p.ownerId) return;
+    var row = null;
+    rows.forEach(function(x){ if (x.id === p.ownerId) row = x; });
+    if (!row) { row = { id:p.ownerId, label:(cb(p.ownerId) || {}).name || '?', total:0, late:0 }; rows.push(row); }
+    row.total++;
+    var st = upkeepOf(p).status;
+    if (st === 'overdue' || st === 'due') row.late++;
+  });
+  return rows.sort(function(a, b){ return b.late - a.late || b.total - a.total; });
+}
+
+function ugBoardRows(){
+  return state.boards.map(function(b){
+    var ps = boardProfiles(b.id), late = 0, tracked = 0;
+    ps.forEach(function(p){
+      if (!cadence(p.cadence).months) return;
+      tracked++;
+      var st = upkeepOf(p).status;
+      if (st === 'overdue' || st === 'due') late++;
+    });
+    return { id:b.id, label:b.label, total:ps.length, tracked:tracked, late:late,
+             pct: tracked ? Math.round((tracked - late) / tracked * 100) : 0 };
+  });
+}
+
+
+/* The people behind one bar, in the same spirit as the drill-down on the board
+   graphics: a count tells you where the problem is, the list tells you whose it
+   is. Each panel drills on its own key, so only one list is ever open, under the
+   chart it belongs to - and every row carries the same Register contact button
+   as the table, so you can act on what the chart just showed you. */
+function ugDrillMatch(kind){
+  var d = state.ui.ugDrill;
+  return d && d.kind === kind ? d.key : null;
+}
+function ugDrillAttrs(kind, key, label){
+  var openKey = ugDrillMatch(kind);
+  return ' data-action="ug-drill" data-kind="' + esc(kind) + '" data-k="' + esc(key) + '"' +
+         ' role="button" aria-expanded="' + (openKey === key) + '"' +
+         (openKey === key ? ' data-open="true"' : '') +
+         ' aria-label="' + esc('Show the people behind ' + label) + '"';
+}
+
+/* One row per person, with what the upkeep table shows and the same action. */
+function ugPeopleTable(people, emptyNote){
+  if (!people.length) {
+    return '<div class="empty" style="margin:0"><b>Nobody here</b>' + esc(emptyNote) + '</div>';
+  }
+  var rows = people.map(function(p){
+    var k = upkeepOf(p), owner = ownerOf(p);
+    return '<tr>' +
+      '<td class="clickable" data-action="ms-open" data-id="' + p.id + '">' + personCell(p.name, p.title) + '</td>' +
+      '<td>' + (owner ? esc(owner.name) : '<span class="hint">No owner</span>') + '</td>' +
+      '<td>' + (k.last ? fmtDate(k.last.date) : '<span class="hint">Unknown</span>') + '</td>' +
+      '<td>' + upkeepChip(k.status) + '</td>' +
+      '<td class="actions"><button class="btn btn--sm" data-action="contact-log" data-id="' + p.id + '">Register contact</button></td>' +
+    '</tr>';
+  }).join('');
+  return '<div class="tablewrap"><table><thead><tr>' +
+    '<th>Microsoft person</th><th>Owner</th><th>Last contact</th><th>Status</th><th></th>' +
+    '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+}
+
+function ugDrillPanel(kind, title, people, emptyNote, body){
+  if (ugDrillMatch(kind) === null) return '';
+  return '<div class="gv-drill">' +
+    '<div class="gv-drill__head">' +
+      '<div><b>' + esc(title) + '</b>' +
+        '<span>' + (people ? people.length + ' ' + (people.length === 1 ? 'person' : 'people') : '') + '</span></div>' +
+      '<button type="button" class="btn btn--sm btn--ghost" data-action="ug-drill" data-kind="' + esc(kind) + '" data-k="">Close</button>' +
+    '</div>' + (body || ugPeopleTable(people, emptyNote)) + '</div>';
+}
+
+function viewUpkeepGraphics(){
+  var u = state.ui, asTable = u.ugView === 'table';
+  var ps = ugProfiles();
+  var counts = ugStatusCounts();
+  var logged = ps.filter(function(p){ return !!lastContactOf(p.id); });
+  var days = logged.map(function(p){ return upkeepOf(p).days; });
+  var months = ugByMonth(12);
+  var thisMonth = months[months.length - 1].n;
+  var scope = u.ugBoard ? boardById(u.ugBoard).label : 'every dashboard';
+
+  var head =
+    '<div class="gv-head"><h2>Upkeep in numbers</h2>' +
+      '<p>Whether the relationships are actually being kept warm, across ' + esc(scope) + '. ' +
+      'The table on <a href="#/upkeep">Relationship Upkeep</a> says who to call today; this says ' +
+      'whether anyone is calling at all, and who is carrying it.</p></div>';
+
+  var kpis =
+    '<div class="gv-kpis">' +
+      gvKpi('blue',   'users',       ps.length, 'Microsoft contacts', 'in this scope') +
+      gvKpi('violet', 'link',        counts.overdue + counts.due, 'Need a call',
+            counts.overdue + ' overdue, ' + counts.due + ' due soon') +
+      gvKpi('green',  'trending-up', thisMonth, 'Contacts logged this month',
+            state.contacts.length + ' in the log all told') +
+      gvKpi('teal',   'target',      logged.length ? Math.round(medianOf(days)) + ' days' : '&ndash;',
+            'Median since contact', 'across the ' + logged.length + ' with a log') +
+      gvKpi('amber',  'flag',        counts.unknown, 'Never logged', 'nobody has written anything down') +
+      gvKpi('rose',   'crown',       ps.filter(function(p){ return !cadence(p.cadence).months; }).length,
+            'No reminder set', 'tracked, but no mail goes out') +
+    '</div>';
+
+  /* ---- status distribution ---- */
+  var order = [
+    { k:'overdue', label:'Overdue',       bg:'#c0392b' },
+    { k:'due',     label:'Due soon',      bg:'#d98a0b' },
+    { k:'ok',      label:'On track',      bg:'#1b8a4b' },
+    { k:'logged',  label:'No reminder',   bg:'#8494a6' },
+    { k:'unknown', label:'Never logged',  bg:'#b6c0cc' }
+  ];
+  function statusChart(){
+    var max = order.reduce(function(n, o){ return Math.max(n, counts[o.k]); }, 0) || 1;
+    return '<div class="cols">' + order.map(function(o){
+      return '<div class="cols__col" tabindex="0" data-tip="' + esc(o.label + ' · ' + counts[o.k] + ' of ' + ps.length) + '"' +
+        ugDrillAttrs('status', o.k, o.label) + '>' +
+        '<span class="cols__val">' + counts[o.k] + '</span>' +
+        '<span class="cols__bar" style="height:' + (counts[o.k] / max * 100).toFixed(1) + '%;background:' + o.bg + '"></span>' +
+      '</div>';
+    }).join('') + '</div><div class="cols__ax">' +
+      order.map(function(o){ return '<span>' + esc(o.label) + '</span>'; }).join('') + '</div>';
+  }
+  function statusDrill(){
+    var k = ugDrillMatch('status');
+    if (k === null) return '';
+    var o = null; order.forEach(function(x){ if (x.k === k) o = x; });
+    return ugDrillPanel('status', o ? o.label : k,
+      ps.filter(function(p){ return upkeepOf(p).status === k; }),
+      'No contact in this scope has that status.');
+  }
+  function statusTable(){
+    return gvTable(['Status', 'Contacts', 'Share'], order.map(function(o){
+      return [esc(o.label), counts[o.k], ps.length ? Math.round(counts[o.k] / ps.length * 100) + '%' : '0%'];
+    }));
   }
 
-  var list = state.submissions.map(function(s){
-    var person = cb(s.columbusId);
-    var open = state.ui.subOpen === s.id;
-    var items = s.items.map(function(it, idx){
-      var p = ms(it.msProfileId);
-      var removal = it.newScore === null;
-      return '<tr>' +
-        '<td style="width:30%">' + (p ? personCell(p.name, p.title) : '<i>Unknown profile</i>') + '</td>' +
-        '<td style="width:18%">' + (p ? domainChips(p.domainIds) : '') + '</td>' +
-        '<td style="width:22%"><div class="diff">' + scoreChip(it.oldScore) + '<span>&rarr;</span>' +
-          (removal ? '<span class="chip" style="background:var(--danger-bg);color:var(--danger)">remove</span>' : scoreChip(it.newScore)) +
-        '</div></td>' +
-        '<td>' + (removal ? '' :
-          scorePicker(it.newScore, 'sub-score', 'data-sub="' + s.id + '" data-idx="' + idx + '"')) + '</td>' +
-        '<td style="color:var(--text-muted)">' + esc(it.note) + '</td></tr>';
-    }).join('');
+  /* ---- per owner ---- */
+  function ownerChart(){
+    var rows = ugOwnerRows();
+    if (!rows.length) return '<div class="empty"><b>No owners yet</b>Nobody has been made responsible for a relationship in this scope.</div>';
+    var max = rows.reduce(function(n, r){ return Math.max(n, r.total); }, 0);
+    return '<div class="bars">' + rows.map(function(r){
+      return barRow(r.label, r.late, r.late + ' of ' + r.total,
+        r.label + '  ·  owns ' + r.total + '  ·  ' + r.late + ' need a call', max,
+        ugDrillAttrs('owner', r.id, r.label));
+    }).join('') + '</div>';
+  }
+  function ownerDrill(){
+    var k = ugDrillMatch('owner');
+    if (k === null) return '';
+    var who = cb(k);
+    return ugDrillPanel('owner', who ? who.name + ' \u2014 everything they own' : 'Owner',
+      ps.filter(function(p){ return p.ownerId === k; }),
+      'They do not own anything in this scope.');
+  }
+  function ownerTable(){
+    return gvTable(['Owner', 'Owns', 'Need a call'], ugOwnerRows().map(function(r){
+      return [esc(r.label), r.total, r.late];
+    }));
+  }
 
-    return '<div class="sub" style="margin-bottom:12px">' +
-      '<div class="sub__head" data-action="sub-toggle" data-id="' + s.id + '">' +
-        personCell(person ? person.name : 'Unknown', person ? person.title : '') +
-        '<span class="chip ' + (s.type === 'survey' ? 'chip--src' : 'chip--muted') + '">' +
-          (s.type === 'survey' ? 'Survey response' : 'Manual edit') + '</span>' +
-        '<span class="chip chip--muted">' + s.items.length + ' change' + (s.items.length === 1 ? '' : 's') + '</span>' +
-        '<span class="hint">Submitted ' + fmtDate(s.submittedAt) + '</span>' +
-        '<div class="spacer"></div>' +
-        '<button class="btn btn--sm btn--danger" data-action="sub-reject" data-id="' + s.id + '">Reject</button> ' +
-        '<button class="btn btn--sm btn--accent" data-action="sub-approve" data-id="' + s.id + '">Approve</button> ' +
-        '<span class="hint">' + (open ? '&#9650;' : '&#9660;') + '</span>' +
-      '</div>' +
-      (open ? '<div class="sub__body">' +
-        '<table class="minitable"><thead><tr><th>Microsoft contact</th><th>Domain</th><th>Change</th>' +
-        '<th>Adjust before approving</th><th>Comment from submitter</th></tr></thead><tbody>' + items + '</tbody></table>' +
-        '<p class="hint" style="margin:10px 0 0">Approving writes these scores to the approved relations. Rejecting discards the submission.</p>' +
-      '</div>' : '') +
+  /* ---- activity over time ---- */
+  function monthChart(){
+    var max = months.reduce(function(n, m){ return Math.max(n, m.n); }, 0) || 1;
+    return '<div class="cols">' + months.map(function(m){
+      return '<div class="cols__col" tabindex="0" data-tip="' + esc(m.label + ' · ' + m.n + ' contact' + (m.n === 1 ? '' : 's') + ' logged') + '"' +
+        ugDrillAttrs('month', m.key, m.label) + '>' +
+        '<span class="cols__val">' + (m.n || '') + '</span>' +
+        '<span class="cols__bar" style="height:' + (m.n / max * 100).toFixed(1) + '%;background:var(--navy-600)"></span>' +
+      '</div>';
+    }).join('') + '</div><div class="cols__ax">' +
+      months.map(function(m){ return '<span>' + esc(m.label.slice(0, 3)) + '</span>'; }).join('') + '</div>';
+  }
+  function monthTable(){
+    return gvTable(['Month', 'Contacts logged'], months.map(function(m){ return [esc(m.label), m.n]; }));
+  }
+
+  /* A month holds contacts, not people - so this one lists the log entries
+     themselves, with who wrote each of them down. */
+  function monthDrill(){
+    var k = ugDrillMatch('month');
+    if (k === null) return '';
+    var ids = ps.map(function(p){ return p.id; });
+    var log = state.contacts.filter(function(c){
+      return c.date.slice(0, 7) === k && ids.indexOf(c.msProfileId) !== -1;
+    }).sort(function(a, b){ return a.date < b.date ? 1 : -1; });
+    var m = null; months.forEach(function(x){ if (x.key === k) m = x; });
+    var body = log.length
+      ? '<div class="tablewrap"><table><thead><tr><th>Date</th><th>Microsoft person</th><th>Registered by</th></tr></thead><tbody>' +
+        log.map(function(c){
+          var pp = ms(c.msProfileId);
+          return '<tr><td style="width:130px">' + fmtDate(c.date) + '</td>' +
+            '<td class="clickable" data-action="ms-open" data-id="' + c.msProfileId + '">' +
+              personCell(pp ? pp.name : '?', pp ? pp.title : '') + '</td>' +
+            '<td>' + esc((cb(c.byId) || {}).name || 'unknown') + '</td></tr>';
+        }).join('') + '</tbody></table></div>'
+      : '<div class="empty" style="margin:0"><b>Nothing logged</b>No contact was written down that month.</div>';
+    return ugDrillPanel('month', (m ? m.label : k) + ' \u2014 contacts logged', null, '', body);
+  }
+
+  /* ---- per dashboard ---- */
+  function boardChart(){
+    var rows = ugBoardRows();
+    return '<div class="bars">' + rows.map(function(r){
+      return barRow(r.label, r.pct, r.pct + '%',
+        r.label + '  ·  ' + r.tracked + ' on a reminder  ·  ' + r.late + ' need a call', 100,
+        ugDrillAttrs('board', r.id, r.label));
+    }).join('') + '</div><div class="axnote"><span class="axnote__scale"><span>0</span><span>100%</span></span></div>';
+  }
+  function boardDrill(){
+    var k = ugDrillMatch('board');
+    if (k === null) return '';
+    var b = boardById(k);
+    return ugDrillPanel('board', (b ? b.label : k) + ' \u2014 on a reminder',
+      boardProfiles(k).filter(function(p){ return cadence(p.cadence).months; }),
+      'Nobody on this dashboard carries a reminder yet.');
+  }
+  function boardTable(){
+    return gvTable(['Dashboard', 'Contacts', 'On a reminder', 'Need a call', 'On track'],
+      ugBoardRows().map(function(r){ return [esc(r.label), r.total, r.tracked, r.late, r.pct + '%']; }));
+  }
+
+  var boardOpts = [{ id:'', label:'All dashboards' }].concat(state.boards.map(function(b){
+    return { id:b.id, label:b.label }; }));
+  var tools =
+    '<div class="gv-tools">' +
+      '<b>Scope</b>' + seg('ug-board', boardOpts, u.ugBoard) +
+      '<div class="spacer"></div>' +
+      seg('ug-view', [{ id:'chart', label:'Chart' }, { id:'table', label:'Table' }], asTable ? 'table' : 'chart') +
     '</div>';
-  }).join('');
 
-  return '<div class="page__head"><div><h2>Pending Submissions &amp; Surveys</h2>' +
-      '<p>Survey responses and manual edits from Columbus employees. Expand a submission to review the before/after, adjust a score if needed, then approve or reject.</p></div>' +
-      '<div class="page__actions"><span class="chip">' + state.submissions.length + ' waiting</span></div></div>' +
-    scheduleCard() +
-    list;
+  return '<div class="gv">' + head + kpis + tools +
+    gvPanel('blue', 'layers', 'Where the upkeep stands',
+      'Every Microsoft contact in this scope, by status. Click a column for the people behind it.',
+      (asTable ? statusTable() : statusChart()) + statusDrill()) +
+    '<div class="chart-grid">' +
+      gvPanel('violet', 'users', 'What each owner is carrying',
+        'How many relationships each owner holds, and how many of them need a call. A long bar is a person to help, not to blame.',
+        (asTable ? ownerTable() : ownerChart()) + ownerDrill()) +
+      gvPanel('teal', 'trending-up', 'Contacts logged per month',
+        'The last twelve months. A falling line means the loop is being ignored, whatever the scores say.',
+        (asTable ? monthTable() : monthChart()) + monthDrill()) +
+    '</div>' +
+    gvPanel('green', 'target', 'Upkeep per dashboard',
+      'Share of the people on a reminder who are still on track, per department.',
+      (asTable ? boardTable() : boardChart()) + boardDrill()) +
+  '</div>';
 }
 
 /* ============================================================
@@ -2940,11 +3556,10 @@ function viewSubmissions(){
 function buildDraft(){
   state.ui.myDraft = relationsForCb(state.session.userId).map(function(r){
     return { msProfileId:r.msProfileId, score:r.score, note:r.note,
-             origScore:r.score, origNote:r.note, removed:false, pending:false };
+             origScore:r.score, origNote:r.note, removed:false };
   });
 }
 function draftDirty(d){
-  if (d.pending) return false;
   if (d.removed) return true;
   if (d.origScore === null) return true;
   return d.score !== d.origScore || d.note !== d.origNote;
@@ -2971,7 +3586,6 @@ function viewMyRelations(){
       '<div class="rel__top">' + personCell(p.name, p.title) +
         '<div>' + domainChips(p.domainIds) + '</div>' +
         '<div class="spacer"></div>' +
-        (d.pending ? '<span class="tag-new">Waiting for approval</span>' : '') +
         (dirty && d.origScore === null ? '<span class="tag-new">New</span>' : '') +
         (dirty && d.origScore !== null ? '<span class="tag-new">Unsaved</span>' : '') +
         scorePicker(d.score, 'my-score', 'data-id="' + p.id + '"') +
@@ -3007,13 +3621,13 @@ function viewMyRelations(){
 
   return '' +
     '<div class="page__head"><div><h2>My Relations</h2>' +
-      '<p>Your own Microsoft contacts, ' + esc(user.name) + '. Adjust the scores, add or remove people, then submit the whole thing for approval.</p></div>' +
+      '<p>Your own Microsoft contacts, ' + esc(user.name) + '. Adjust the scores, add or remove people, then save.</p></div>' +
       '<div class="page__actions">' +
         '<span class="hint">' + (dirtyCount ? dirtyCount + ' unsaved change' + (dirtyCount === 1 ? '' : 's') : 'No unsaved changes') + '</span>' +
         '<button class="btn" data-action="my-reset"' + (dirtyCount ? '' : ' disabled') + '>Discard changes</button>' +
-        '<button class="btn btn--accent" data-action="my-submit"' + (dirtyCount ? '' : ' disabled') + '>Submit for approval</button>' +
+        '<button class="btn btn--accent" data-action="my-save"' + (dirtyCount ? '' : ' disabled') + '>Save changes</button>' +
       '</div></div>' +
-    '<div class="mockflag">Your submission does not change the approved data directly - it lands on <b>Pending Submissions</b> where an Admin reviews it. Switch role in the top bar to see it arrive.</div>' +
+    '<div class="mockflag">Saving writes straight to the data - there is no approval step. Anyone at Columbus can correct anyone else, and every change is attributable.</div>' +
     '<div class="card" style="margin-bottom:18px"><div class="card__body">' + scaleHeading() + scoreLegend() +
       scoreDefsHtml('inline') + '</div></div>' +
     picker +
@@ -3040,6 +3654,8 @@ function drawerMs(id){
   var p = ms(id);
   if (!p) return '';
   var s = msStats(id);
+  var custs = customersOf(p), keep = upkeepOf(p), owner = ownerOf(p);
+  var log = contactsFor(p.id);
   var rs = relationsForMs(id).slice().sort(function(a,b){ return b.score - a.score; });
   var conns = rs.length ? rs.map(function(r){
     var person = cb(r.columbusId);
@@ -3067,11 +3683,34 @@ function drawerMs(id){
         '<dt>Domains</dt><dd>' + domainChips(p.domainIds) + '</dd>' +
         '<dt>Phone</dt><dd>' + (p.phone ? esc(p.phone) : '<span class="hint">Not on file</span>') + '</dd>' +
         '<dt>E-mail</dt><dd>' + (p.email ? esc(p.email) : '<span class="hint">Not on file</span>') + '</dd>' +
+        '<dt>Customers</dt><dd>' + (custs.length
+          ? '<div class="chips">' + custs.map(function(c){ return '<span class="chip">' + esc(c.name) + '</span>'; }).join('') + '</div>'
+          : '<span class="hint">None recorded</span>') + '</dd>' +
         '<dt>Group</dt><dd>' + esc(p.group) + '</dd>' +
         '<dt>Source</dt><dd><span class="chip chip--src">' + esc(p.source) + '</span></dd>' +
         '<dt>Last updated</dt><dd>' + fmtDate(p.updatedAt) + '</dd>' +
         '<dt>Notes</dt><dd style="color:var(--text-muted)">' + esc(p.notes) + '</dd>' +
       '</dl>' +
+      '<div><h4 style="font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);margin-bottom:10px">Keeping in touch</h4>' +
+        '<dl class="kv">' +
+          '<dt>Owner</dt><dd>' + (owner
+            ? esc(owner.name) + ' <span class="hint">&middot; ' + esc(owner.department) + '</span>'
+            : '<span class="hint">None yet &mdash; an owner has to have a relation first</span>') + '</dd>' +
+          '<dt>Reminder</dt><dd>' + esc(keep.cadence.label) +
+            (keep.cadence.months ? '' : ' <span class="hint">&middot; no mail goes out</span>') + '</dd>' +
+          '<dt>Last contact</dt><dd>' + (keep.last
+            ? fmtDate(keep.last.date) + ' <span class="hint">&middot; ' +
+              esc((cb(keep.last.byId) || {}).name || 'unknown') + '</span>'
+            : '<span class="hint">Unknown</span>') + ' &nbsp; ' + upkeepChip(keep.status) + '</dd>' +
+        '</dl>' +
+        '<button class="btn btn--sm" data-action="contact-log" data-id="' + p.id + '">Register contact today</button>' +
+        (log.length > 1
+          ? '<table class="minitable" style="margin-top:12px"><tbody>' + log.slice(1).map(function(c){
+              return '<tr><td style="width:120px">' + fmtDate(c.date) + '</td>' +
+                     '<td style="color:var(--text-muted)">' + esc((cb(c.byId) || {}).name || 'unknown') + '</td></tr>';
+            }).join('') + '</tbody></table>'
+          : '') +
+      '</div>' +
       '<div><h4 style="font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);margin-bottom:10px">Who knows them at Columbus</h4>' +
         '<table class="minitable"><tbody>' + conns + '</tbody></table></div>' +
       '<div><button class="btn btn--primary" data-action="ms-edit" data-id="' + p.id + '"' + (canEdit() ? '' : ' disabled') + '>Edit profile</button></div>' +
@@ -3086,7 +3725,10 @@ function modalMarkup(m){
       '<button class="btn ' + (m.danger ? 'btn--danger' : 'btn--primary') + '" data-action="confirm-yes">' + esc(m.okLabel || 'Confirm') + '</button>');
   }
   if (m.type === 'ms') {
-    var p = m.id ? ms(m.id) : { name:'', title:'', email:'', phone:'', group:MS_GROUPS[2], source:MS_SOURCES[3], domainIds:[], notes:'' };
+    var p = m.id ? ms(m.id) : { name:'', title:'', email:'', phone:'', group:MS_GROUPS[2],
+                                source:MS_SOURCES[3], domainIds:[], notes:'', ownerId:'',
+                                cadence:'none', customerIds:[] };
+    var owners = m.id ? eligibleOwners(m.id) : [];
     return shellModal(m.id ? 'Edit Microsoft profile' : 'Add Microsoft profile',
       'Microsoft Denmark contact. Domains can be changed later without touching the relationships.',
       '<div class="form-grid">' +
@@ -3096,6 +3738,27 @@ function modalMarkup(m){
         inputField('f-phone', 'Phone', p.phone || '') +
         selField('f-group', 'Group', MS_GROUPS, p.group) +
         selField('f-source', 'Source', MS_SOURCES, p.source) +
+        /* Only people who already hold a relation can be made owner - owning
+           somebody nobody has spoken to would be a title, not a job. */
+        (owners.length
+          ? selField('f-owner', 'Relationship owner',
+              [{ id:'', label:'\u2014 No owner' }].concat(owners.map(function(c){
+                return { id:c.id, label:c.name }; })), p.ownerId || '')
+          : '<div class="field"><label>Relationship owner</label>' +
+            '<p class="hint" style="margin:6px 0 0">Nobody has a relation to this person yet, so there is ' +
+            'no one to own it. Add a relation first.</p></div>') +
+        selField('f-cadence', 'Reminder', CADENCES.map(function(c){
+          return { id:c.id, label:c.label }; }), p.cadence || 'none') +
+        '<div class="field full"><label>Customers they cover</label>' +
+          '<select id="f-customers" multiple size="6" style="min-height:120px">' +
+            state.customers.map(function(c){
+              return '<option value="' + c.id + '"' +
+                     ((p.customerIds || []).indexOf(c.id) !== -1 ? ' selected' : '') + '>' +
+                     esc(c.name) + '</option>';
+            }).join('') +
+          '</select>' +
+          '<p class="hint" style="margin:6px 0 0">Hold &#8984; or Ctrl to pick several. ' +
+          'The list comes from Thomas\' deck; the type of each customer is still unset.</p></div>' +
         /* Grouped per dashboard, and ticking domains from two boards is how a
            person ends up on both - the many-to-many is the feature. */
         '<div class="field full"><label>Domains</label><div class="checks">' +
@@ -3116,6 +3779,28 @@ function modalMarkup(m){
       '</div>',
       '<button class="btn" data-action="close-layer">Cancel</button>' +
       '<button class="btn btn--primary" data-action="ms-save" data-id="' + (m.id || '') + '">Save profile</button>');
+  }
+  if (m.type === 'mail') {
+    var queue = reminderQueue(), when = fmtDate(firstMondayAfter(today()));
+    var boxes = queue.length ? queue.map(function(row){
+      var owner = cb(row.ownerId);
+      return '<div class="up-mail__box">' +
+        '<h4>To: ' + esc(owner ? (owner.email || owner.name) : 'owner') + '</h4>' +
+        '<span class="hint">Subject: Your Microsoft relationships this month (' + row.people.length + ')</span>' +
+        '<ul>' + row.people.map(function(p){
+          var k = upkeepOf(p);
+          return '<li>' + esc(p.name) + ' &mdash; ' +
+            (k.last ? 'last contact ' + fmtDate(k.last.date) : 'no contact logged') + '</li>';
+        }).join('') + '</ul></div>';
+    }).join('') : '<div class="empty" style="padding:26px"><b>Nothing is due</b>' +
+      'No owner would get a mail on ' + esc(when) + '.</div>';
+
+    return shellModal('The reminder mail',
+      'One mail per owner, first Monday of the month - next on ' + when + '.',
+      '<div class="up-mail">' + boxes + '</div>' +
+      '<div class="mockflag" style="margin:14px 0 0">Mockup - no mail is actually sent. This is what would go out, ' +
+      'built from the people who are overdue or due within ten days.</div>',
+      '<button class="btn btn--primary" data-action="close-layer">Close</button>');
   }
   if (m.type === 'board') {
     var b = m.id ? boardById(m.id) : { label:'', subtitle:'', owner:'', version:'v0.1 draft', updated:'' };
@@ -3154,7 +3839,7 @@ function modalMarkup(m){
   if (m.type === 'cb') {
     var c = m.id ? cb(m.id) : { name:'', title:'', email:'', department:CB_DEPARTMENTS[2], role:'standard', skills:[] };
     return shellModal(m.id ? 'Edit Columbus user' : 'Add Columbus user',
-      'Internal user. Creating the profile sends them the relationship survey straight away.',
+      'Internal user. They can register their own relations as soon as they sign in.',
       '<div class="form-grid">' +
         inputField('f-cname', 'Full name', c.name, 'full') +
         inputField('f-ctitle', 'Title', c.title) +
@@ -3165,7 +3850,7 @@ function modalMarkup(m){
       '</div>',
       '<button class="btn" data-action="close-layer">Cancel</button>' +
       '<button class="btn btn--primary" data-action="cb-save" data-id="' + (m.id || '') + '">' +
-        (m.id ? 'Save user' : 'Create profile + Send survey') + '</button>');
+        (m.id ? 'Save user' : 'Create profile') + '</button>');
   }
   return '';
 }
@@ -3219,8 +3904,7 @@ function deleteMsProfile(id){
   var p = ms(id);
   state.msProfiles = state.msProfiles.filter(function(x){ return x.id !== id; });
   state.relations  = state.relations.filter(function(r){ return r.msProfileId !== id; });
-  state.submissions.forEach(function(s){ s.items = s.items.filter(function(i){ return i.msProfileId !== id; }); });
-  state.submissions = state.submissions.filter(function(s){ return s.items.length; });
+  state.contacts   = state.contacts.filter(function(c){ return c.msProfileId !== id; });
   state.ui.myDraft = null;
   toast('Deleted ' + (p ? p.name : 'profile') + ' and their relations', 'ok');
 }
@@ -3228,48 +3912,36 @@ function deleteColumbusUser(id){
   var c = cb(id);
   state.columbusProfiles = state.columbusProfiles.filter(function(x){ return x.id !== id; });
   state.relations   = state.relations.filter(function(r){ return r.columbusId !== id; });
-  state.submissions = state.submissions.filter(function(s){ return s.columbusId !== id; });
+  /* Their contact log stays - it is a record of what happened, not their property -
+     but anything they owned loses its owner and falls back into the gap list. */
+  state.msProfiles.forEach(function(x){ if (x.ownerId === id) x.ownerId = ''; });
   toast('Deleted ' + (c ? c.name : 'user') + '. Their relations were removed with them.', 'ok');
 }
-function approveSubmission(id){
-  var s = byId(state.submissions, id);
-  if (!s) return;
-  s.items.forEach(function(it){
-    var existing = null;
-    state.relations.forEach(function(r){
-      if (r.columbusId === s.columbusId && r.msProfileId === it.msProfileId) existing = r;
-    });
-    if (it.newScore === null) {
-      if (existing) state.relations = state.relations.filter(function(r){ return r !== existing; });
-    } else if (existing) {
-      existing.score = it.newScore;
-      if (it.note) existing.note = it.note;
-      existing.updatedAt = today();
-    } else {
-      state.relations.push({ id:uid('r'), columbusId:s.columbusId, msProfileId:it.msProfileId,
-                             score:it.newScore, note:it.note || '', updatedAt:today() });
-    }
-    var p = ms(it.msProfileId);
-    if (p) p.updatedAt = today();
-  });
-  state.submissions = state.submissions.filter(function(x){ return x.id !== id; });
-  if (s.columbusId === state.session.userId) state.ui.myDraft = null;
-  var person = cb(s.columbusId);
-  toast('Approved ' + s.items.length + ' change' + (s.items.length === 1 ? '' : 's') +
-        ' from ' + (person ? person.name : 'user'), 'ok');
-}
-function submitMyRelations(){
+/* Open editing: the draft exists so several adjustments can be made and saved in
+   one go, not so somebody can approve them. Save writes straight through. */
+function saveMyRelations(){
   var dirty = (state.ui.myDraft || []).filter(draftDirty);
   if (!dirty.length) return;
-  state.submissions.unshift({
-    id: uid('s'), columbusId: state.session.userId, type: 'edit', submittedAt: today(),
-    items: dirty.map(function(d){
-      return { msProfileId:d.msProfileId, oldScore:d.origScore,
-               newScore: d.removed ? null : d.score, note:d.note };
-    })
+  var mine = state.session.userId;
+  dirty.forEach(function(d){
+    var existing = null;
+    state.relations.forEach(function(r){
+      if (r.columbusId === mine && r.msProfileId === d.msProfileId) existing = r;
+    });
+    if (d.removed) {
+      if (existing) state.relations = state.relations.filter(function(r){ return r !== existing; });
+    } else if (existing) {
+      existing.score = d.score; existing.note = d.note; existing.updatedAt = today();
+    } else {
+      state.relations.push({ id:uid('r'), columbusId:mine, msProfileId:d.msProfileId,
+                             score:d.score, note:d.note, updatedAt:today() });
+    }
+    var p = ms(d.msProfileId);
+    if (p) p.updatedAt = today();
   });
-  dirty.forEach(function(d){ d.pending = true; d.origScore = d.score; d.origNote = d.note; });
-  toast('Submitted ' + dirty.length + ' change' + (dirty.length === 1 ? '' : 's') + ' for approval', 'ok');
+  state.ui.myDraft = null;
+  syncEcoPeople();
+  toast('Saved ' + dirty.length + ' change' + (dirty.length === 1 ? '' : 's'), 'ok');
 }
 
 /* Set (or clear) one person's relationship strength on the ecosystem map. */
@@ -3323,6 +3995,12 @@ document.addEventListener('submit', function(e){
 
 document.addEventListener('input', function(e){
   var a = e.target.getAttribute('data-action');
+  if (a === 'up-search') {
+    state.ui.upSearch = e.target.value;
+    state.ui.focus = { id:'up-search', pos:e.target.value.length };
+    render();
+    return;
+  }
   if (a === 'ms-search') {
     state.ui.msSearch = e.target.value;
     state.ui.focus = { id:'ms-search', pos:e.target.value.length };
@@ -3333,7 +4011,7 @@ document.addEventListener('input', function(e){
     render();
   } else if (a === 'my-note') {
     var d = draftItem(e.target.getAttribute('data-id'));
-    if (d) { d.note = e.target.value; d.pending = false; }
+    if (d) { d.note = e.target.value; }
   }
 });
 
@@ -3345,6 +4023,8 @@ document.addEventListener('change', function(e){
     toast('Now viewing the app as ' + roleName(el.value));
     render();
   }
+  else if (a === 'up-owner')  { state.ui.upOwner  = el.value; render(); }
+  else if (a === 'up-status') { state.ui.upStatus = el.value; render(); }
   else if (a === 'ms-board')  { state.ui.msBoard = el.value; state.ui.msDomain = ''; render(); }
   else if (a === 'ms-domain') { state.ui.msDomain = el.value; render(); }
   else if (a === 'ms-group')  { state.ui.msGroup  = el.value; render(); }
@@ -3355,18 +4035,6 @@ document.addEventListener('change', function(e){
   else if (a === 'cb-set-role') {
     var person = cb(el.getAttribute('data-id'));
     if (person) { person.role = el.value; toast(person.name + ' is now ' + roleName(el.value), 'ok'); }
-    render();
-  }
-  else if (a === 'sched-cadence') {
-    if (!canEdit()) return;
-    state.surveySchedule.cadence = el.value;
-    toast('Surveys now go out ' + cadence(el.value).label.toLowerCase(), 'ok');
-    render();
-  }
-  else if (a === 'sched-toggle') {
-    if (!canEdit()) return;
-    state.surveySchedule.enabled = el.checked;
-    toast(el.checked ? 'Automatic surveys are on' : 'Automatic surveys are paused', 'ok');
     render();
   }
   else if (a === 'my-pick') { state.ui.myPicker = el.value; render(); }
@@ -3410,6 +4078,17 @@ document.addEventListener('click', function(e){
     case 'gv-dim':     state.ui.gvDim = el.getAttribute('data-id'); state.ui.gvDrill = null; render(); break;
     case 'gv-measure': state.ui.gvMeasure = el.getAttribute('data-id'); render(); break;
     case 'gv-view':    state.ui.gvView    = el.getAttribute('data-id'); render(); break;
+    /* A new scope means the open list may no longer be in it, so it closes. */
+    case 'ug-board':   state.ui.ugBoard = el.getAttribute('data-id'); state.ui.ugDrill = null; render(); break;
+    case 'ug-drill': {
+      var ukind = el.getAttribute('data-kind'), ukey = el.getAttribute('data-k');
+      var open = state.ui.ugDrill;
+      state.ui.ugDrill = (!ukey || (open && open.kind === ukind && open.key === ukey))
+        ? null : { kind:ukind, key:ukey };
+      render();
+      break;
+    }
+    case 'ug-view':    state.ui.ugView    = el.getAttribute('data-id'); render(); break;
     /* Clicking the open bar again closes it. */
     case 'gv-drill': {
       var key = el.getAttribute('data-k') || '';
@@ -3455,9 +4134,16 @@ document.addEventListener('click', function(e){
       // Unmarked is a fallback, never a co-domain: it applies only when nothing else does.
       var real = doms.filter(function(x){ return x !== UNMARKED_ID; });
       doms = real.length ? real : [UNMARKED_ID];
+      var picked = [];
+      var csel = document.getElementById('f-customers');
+      if (csel) for (var ci = 0; ci < csel.options.length; ci++) {
+        if (csel.options[ci].selected) picked.push(csel.options[ci].value);
+      }
       var payload = { name:name, title:val('f-title'), email:val('f-email'), phone:val('f-phone'),
                       group:val('f-group'), source:val('f-source'), domainIds:doms,
-                      notes:val('f-notes'), updatedAt:today() };
+                      notes:val('f-notes'), updatedAt:today(),
+                      ownerId:val('f-owner'), cadence:val('f-cadence') || 'none',
+                      customerIds:picked };
       if (id) { var t = ms(id); for (var key in payload) t[key] = payload[key]; toast('Updated ' + name, 'ok'); }
       else { payload.id = uid('m'); state.msProfiles.push(payload); toast('Added ' + name, 'ok'); }
       closeLayer(); render();
@@ -3557,10 +4243,9 @@ document.addEventListener('click', function(e){
       var roleId = 'standard';
       ROLES.forEach(function(r){ if (r.name === val('f-crole')) roleId = r.id; });
       var skills = val('f-cskills').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
-      // Creating a profile also sends the first survey - that is what the button says.
       state.columbusProfiles.push({ id:uid('c'), name:cn, title:val('f-ctitle'), department:val('f-cdept'),
-        skills:skills, role:roleId, email:val('f-cmail'), lastSurvey:today() });
-      toast('Created ' + cn + ' and sent them a survey', 'ok');
+        skills:skills, role:roleId, email:val('f-cmail') });
+      toast('Created ' + cn, 'ok');
       closeLayer(); render();
       break;
     case 'cb-delete':
@@ -3570,46 +4255,11 @@ document.addEventListener('click', function(e){
         body:'Delete <b>' + esc(cp ? cp.name : '') + '</b>? ' + cbStats(id).count +
              ' relation(s) will be removed with them.', okLabel:'Delete', danger:true });
       break;
-    case 'cb-survey':
-      var sp = cb(id);
-      if (sp) { sp.lastSurvey = today(); toast('Survey sent to ' + sp.name, 'ok'); }
-      render(); break;
-    case 'cb-survey-all':
-      pendingConfirm = function(){
-        state.columbusProfiles.forEach(function(p){ p.lastSurvey = today(); });
-        // The cadence counts from the last send, so the next one rolls forward too.
-        state.surveySchedule.lastSent = today();
-        toast('Survey sent to all ' + state.columbusProfiles.length + ' users', 'ok');
-      };
-      openModal({ type:'confirm', title:'Send survey to everyone', sub:'Mockup - no mail is actually sent.',
-        body:'Send a new relationship survey to all <b>' + state.columbusProfiles.length + '</b> Columbus users?' +
-             (state.surveySchedule.enabled
-               ? '<br><span class="hint">The next automatic send moves to ' + fmtDate(addMonths(today(), cadence(state.surveySchedule.cadence).months)) + '.</span>'
-               : ''),
-        okLabel:'Send survey' });
-      break;
-
-    /* --- submissions --- */
-    case 'sub-toggle': state.ui.subOpen = state.ui.subOpen === id ? null : id; render(); break;
-    case 'sub-score':
-      var sub = byId(state.submissions, el.getAttribute('data-sub'));
-      if (sub) sub.items[parseInt(el.getAttribute('data-idx'), 10)].newScore = parseInt(el.getAttribute('data-score'), 10);
-      render(); break;
-    case 'sub-approve': approveSubmission(id); render(); break;
-    case 'sub-reject':
-      var rs = byId(state.submissions, id), rp = rs ? cb(rs.columbusId) : null;
-      pendingConfirm = function(){
-        state.submissions = state.submissions.filter(function(x){ return x.id !== id; });
-        toast('Rejected the submission from ' + (rp ? rp.name : 'user'));
-      };
-      openModal({ type:'confirm', title:'Reject submission', sub:'The submitter keeps their current approved scores.',
-        body:'Reject the submission from <b>' + esc(rp ? rp.name : '') + '</b>?', okLabel:'Reject', danger:true });
-      break;
 
     /* --- my relations --- */
     case 'my-score':
       var di = draftItem(id);
-      if (di) { di.score = parseInt(el.getAttribute('data-score'), 10); di.pending = false; }
+      if (di) { di.score = parseInt(el.getAttribute('data-score'), 10); }
       render(); break;
     case 'my-remove':
       var dr = draftItem(id);
@@ -3622,13 +4272,25 @@ document.addEventListener('click', function(e){
     case 'my-add':
       var pick = state.ui.myPicker;
       if (pick && !draftItem(pick)) {
-        state.ui.myDraft.push({ msProfileId:pick, score:0, note:'', origScore:null, origNote:'', removed:false, pending:false });
+        state.ui.myDraft.push({ msProfileId:pick, score:0, note:'', origScore:null, origNote:'', removed:false });
         state.ui.myPicker = '';
         toast('Added ' + (ms(pick) || {}).name + ' - set a score and submit');
       }
       render(); break;
     case 'my-reset': state.ui.myDraft = null; toast('Discarded your unsaved changes'); render(); break;
-    case 'my-submit': submitMyRelations(); render(); break;
+    case 'my-save': saveMyRelations(); render(); break;
+
+    /* --- relationship upkeep --- */
+    case 'sort-up':
+      var uk = el.getAttribute('data-key');
+      state.ui.upDir = state.ui.upSort === uk ? -state.ui.upDir : 1;
+      state.ui.upSort = uk; render(); break;
+    case 'up-reset':
+      state.ui.upSearch = ''; state.ui.upOwner = ''; state.ui.upStatus = ''; render(); break;
+    case 'contact-log':
+      registerContact(id);
+      render(); renderLayer(); break;
+    case 'upkeep-preview': openModal({ type:'mail' }); break;
   }
 });
 
@@ -3713,6 +4375,7 @@ document.addEventListener('click', function(e){
    15. INIT
    ============================================================ */
 
+seedUpkeep();
 readHash();
 if (state.ui.route !== 'login' && !location.hash) location.hash = '#/login';
 render();

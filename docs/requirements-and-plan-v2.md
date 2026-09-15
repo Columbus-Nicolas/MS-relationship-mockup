@@ -23,11 +23,17 @@ Six things, in order of how much they change the build:
    board they appear on.
 4. **The graphics page is per dashboard, and it is clickable.** Clicking a category lists the
    specific people in it with phone number and e-mail address.
-5. **Multi-country is a stated direction.** Each country sees only its own dashboards and mappings.
+5. **Multi-country is the plan.** Denmark is built, tested and perfected first; the finished
+   product is then rolled out to the next countries as its own containerised instance per
+   country, each with its own database and its own URL.
 6. **The importance 0–10 scale is dropped.** The relationship scale is −3…+3 and nothing else.
+7. **Relationships are kept alive deliberately.** Every Microsoft person gets an owner, an optional
+   monthly reminder, a log of when anyone last reached out, and the customers they cover — and
+   **surveys are removed in full**, because the reminder loop does that job closer to the moment the
+   information changes.
 
-Already reflected in the mockup on `UI-mockup-v2`: items 2, 3, 4 and 6, plus a Dashboards
-admin page and empty phone/e-mail fields. Items 1 and 5 are backend work and are not mocked.
+Already reflected in the mockup on `UI-mockup-v2`: items 2, 3, 4, 6 and 7, plus a Dashboards admin
+page and empty phone/e-mail fields. Items 1 and 5 are backend work and are not mocked.
 
 ---
 
@@ -48,10 +54,10 @@ So, concretely:
 
 Two consequences worth keeping in view:
 
-- **The approval workflow is out** (FR-07 drops to *could*). It was the centre of the first plan and
+- **The approval workflow is out** (FR-07, removed in §3.5). It was the centre of the first plan and
   is now replaced by the ability to undo. That is a deliberate trade: friction before the change,
   swapped for reversibility after it.
-- **The role model collapses** from four roles to two plus an owner (§3.9). If everyone can edit,
+- **The role model collapses** from four roles to two plus an owner (§3.11). If everyone can edit,
   Moderator and Standard no longer describe different permissions.
 
 Because sign-in is kept, the personal data in the system — named Microsoft employees, judgements
@@ -65,7 +71,7 @@ achievable rather than theoretical.
 
 | ID | Status | What changes |
 |---|---|---|
-| **FR-07** | **M → C** | Pending submissions and approval are out of v1. Open editing replaces them. Keep the concept parked: if approval ever returns, it returns as an option per dashboard, not as the only write path. |
+| **FR-07** | **removed** | Pending submissions and approval are gone, not deferred — see §3.5. Open editing plus undo replaces them. |
 | **NFR-02** | revised | Entra ID authentication, restricted to Columbus accounts, stands. It no longer gates *editing* — it gates access and gives every change an author. |
 | **R-01…R-04** | revised | See §4. Four roles collapse to two plus an owner. |
 | **FR-01** | clarified | Score is a small integer with `CHECK (score BETWEEN -3 AND 3)`. The seven written descriptions live in one place and are editable without deployment. No second scale — the 0–10 importance column from the stakeholder deck is not imported. |
@@ -101,7 +107,66 @@ achievable rather than theoretical.
 - **FR-30 (S)** Export of a dashboard, its graphics and the underlying list, to Excel/CSV and to
   SVG/PDF, per dashboard. *(replaces FR-11 with a per-dashboard scope)*
 
-### 3.4 New — open editing, and what makes it safe
+### 3.4 New — keeping the relationships alive
+
+A score says how good a relationship is. It says nothing about whether anyone has spoken to the
+person this year, and that is the half that decays quietly.
+
+- **FR-43 (M)** Each Microsoft person shall have one **relationship owner**: a named Columbus
+  person, responsible for reaching out. The owner shall be somebody who already holds a relation to
+  that person. A Microsoft person nobody has a relation to therefore has no owner and no reminder,
+  and shall be visible as such rather than hidden.
+- **FR-44 (M)** The system shall keep a **contact log**: one entry per time somebody reached out,
+  recording the date and who registered it. Any signed-in user may add an entry, not only the
+  owner — it is a fact about the relationship, not the owner's property. Entries are not deleted by
+  the passing of a month; nothing resets.
+- **FR-45 (M)** The date of the most recent contact shall be shown on **every** Microsoft person,
+  whether or not they carry a reminder. Where the log is empty it shall read **Unknown** — an empty
+  log means nobody wrote it down, not that nobody called.
+- **FR-46 (M)** Each Microsoft person shall carry a **reminder cadence**: none, monthly, quarterly,
+  half-yearly or yearly, set per person. **None is the default.** Only a person with both an owner
+  and a cadence enters the reminder loop; everybody else is still tracked under FR-45.
+- **FR-47 (M)** On the **first Monday of each month** the system shall send **one mail per owner**,
+  listing that owner's people who are overdue or fall due within the coming ten days, with a link
+  straight to them. An owner with nothing due gets no mail.
+- **FR-48 (M)** A **Relationship Upkeep** page shall show the upkeep of **everyone's**
+  relationships, not only the signed-in user's, so that a colleague can pick up a contact that is
+  slipping. It shall show owner, cadence, last contact and derived status, be sortable by any
+  column in an order the user chooses, and allow a contact to be registered from the row.
+- **FR-49 (M)** A Microsoft person shall carry the **customers they cover**, held as records of
+  their own and linked many-to-many, not as free text — so that "who at Microsoft touches this
+  customer?" is answerable and the names stay searchable. Changing the customers on a person shall
+  be a routine edit.
+- **FR-50 (S)** A customer shall carry a type — Columbus customer, prospect, or unknown.
+- **FR-51 (S)** The upkeep shall also have a **graphics page**, showing the spread of statuses, how
+  much each owner is carrying, contacts logged per month, and the share still on track per
+  dashboard, scopeable to one dashboard. The table answers who to call today; the graphics answer
+  whether anyone is calling at all.
+- **FR-52 (S)** Every chart on that page shall drill the way the board graphics do (FR-28): clicking
+  a column or bar lists the people behind it directly underneath, and a contact shall be
+  registrable from that list — so a chart is somewhere work starts, not only somewhere it is
+  counted.
+
+**Superseded by the above:** FR-37 (a passive "last confirmed" date) is absorbed into FR-45, which
+is the same need made active and therefore better.
+
+### 3.5 Removed — surveys and approval
+
+Surveys are **removed in full**, not deferred. Open editing plus the monthly reminder loop does the
+job a quarterly survey was there to do, and does it closer to the moment the information changes.
+
+| ID | What goes |
+|---|---|
+| **FR-06** | Sending out surveys that map relationships |
+| **FR-07** | Pending submissions and the approval step (already dropped to *could* by open editing; now gone) |
+| **FR-15** | Scheduling of surveys |
+| **FR-42** | Surveys as a reminder to edit — replaced by FR-47 |
+
+This also removes the Pending Submissions screen, the survey buttons and cadence card on Columbus
+Profiles, the "last survey" column, and the submit-for-approval step on My Relations, which now
+saves straight through.
+
+### 3.6 New — open editing, and what makes it safe
 
 - **FR-31 (M)** Any signed-in user shall be able to add, edit and remove Microsoft profiles,
   domains, people and relationships, without an approval step.
@@ -115,32 +180,35 @@ achievable rather than theoretical.
   recoverable for a defined period through a recycle bin, and only then purged.
 - **FR-36 (S)** A change feed shall show what changed recently, and by whom, across the data set.
   Open editing is only safe if it is observable.
-- **FR-37 (S)** Each relationship shall carry the date it was last confirmed, and the interface
-  shall show how fresh a score is. A score nobody has touched for eighteen months is not current,
-  and today nothing says so.
+- ~~**FR-37 (S)**~~ *Superseded.* The passive "last confirmed" date is replaced by the contact log
+  and last-contact date in FR-44 and FR-45 — the same need, made active.
 
-### 3.5 New — countries
+### 3.7 New — countries
 
-- **FR-38 (M)** Every dashboard, domain, Microsoft profile and relationship shall belong to exactly
-  one country.
-- **FR-39 (M)** A user shall see and edit only their own country's data. Country shall come from
-  the user's record, not from a control they can change.
-- **FR-40 (C)** A cross-country roll-up view, for management, aggregating the same numbers across
-  countries. This is an additional view, not a widening of any country's own dashboard.
+The country boundary is the **deployment**: one instance of the application per country, each with
+its own database, its own URL and its own release. A country's instance holds only that country's
+data, so there is nothing to scope inside the application.
 
-### 3.6 New — getting data in
+- **FR-38 (M)** Each deployed instance shall serve exactly one country, and shall be configured
+  with that country's name for display in the interface and in exports.
+- **FR-39 (M)** An instance shall have no route to another country's data: separate database,
+  separate credentials, separate Entra app registration and sign-in URL. Isolation is a property of
+  the deployment, not a filter in the code.
+- **FR-40 (C)** A cross-country roll-up for management, built from exports out of each country's
+  instance rather than from a shared database.
+
+### 3.8 New — getting data in
 
 - **FR-41 (S)** It shall be possible to import a list of Microsoft people from a file or a paste,
   with a preview that shows which rows match existing people (FR-19) before anything is written.
   Both departments mapped so far arrived as a slide deck; the next one will too.
-- **FR-42 (S)** Surveys (FR-06, FR-15) remain, but as a *reminder to edit* rather than a separate
-  submission channel: a mail with a deep link to the person's own relations, which they edit
-  directly. *(Q-11: still wanted, now that editing needs no approval?)*
+- ~~**FR-42 (S)**~~ *Removed with the rest of surveys — see §3.5.* The monthly reminder in FR-47 is
+  what now brings people back to their relations.
 
-### 3.7 Non-functional
+### 3.9 Non-functional
 
-- **NFR-05 (M)** Country isolation shall be enforced server-side on every read and write, not by
-  hiding controls in the interface.
+- **NFR-05 (M)** Each country's instance shall be independently deployable, upgradeable and
+  restorable, without a release to one country requiring a release to another.
 - **NFR-06 (M)** Backups: at least daily, retained 30 days, restorable to any point within the last
   7 days. A restore shall be exercised at least once before go-live — an untested backup is not a
   backup.
@@ -150,23 +218,23 @@ achievable rather than theoretical.
   purged after a defined period; the lawful basis and the handling of a data subject request shall
   be documented before real data enters the system. There shall be no free-text field about a person
   beyond the structured note already specified.
-- **NFR-09 (S)** The interface shall stay usable at roughly 2,000 Microsoft profiles per country.
+- **NFR-09 (S)** The interface shall stay usable at roughly 2,000 Microsoft profiles in an instance.
   Statistics are computed client-side; past that, they move to the server.
 
-### 3.8 Technical decisions
+### 3.10 Technical decisions
 
 | ID | Decision |
 |---|---|
 | TEC-01 | Postgres. Unchanged. |
 | TEC-02 | Azure hosted. Unchanged. |
 | **TEC-03** | Framework: **open — decide in Stage 0.** Pick by who maintains it: ASP.NET Core if the maintainers are C# developers, Next.js/TypeScript if the mockup's own stack is the team's, FastAPI if the team is Python-first. All three are adequate; the wrong answer is the one nobody on the team can read. |
-| **TEC-04 (M)** | **One application, country as a column** — not a container per country. Country scoping belongs in the data model (FR-38, NFR-05), and a single deployment keeps one code path, one backup schedule, one upgrade and makes FR-40 a query instead of a data integration. Put `country_id` on every aggregate root from day one so that a per-country deployment stays *possible*. |
-| **TEC-04a** | *What TEC-04 means in practice:* a `country_id` on every table that holds data; the country filter applied server-side in one shared place every query passes through; a user's country taken from their account, not a control they can change; no uniqueness rule that assumes a single country — "Business Applications" must be able to exist in both Denmark and Norway, and an *Anne Berg* at Microsoft Norway must not be merged with the Danish one; and a test that asks for another country's rows by id and is refused. Onboarding Norway is then creating a row, not running a project. |
-| **TEC-05 (M)** | Containerise the application, one image, deployed per environment (dev/test/prod). That is what containers buy here: reproducible deploys. Deploy a separate instance per country only if a data-residency or contractual requirement demands it — that is a legal trigger, not an architectural preference. |
-| **TEC-06 (M)** | CI/CD from the first stage: build, test and deploy on every merge, infrastructure as code, no secrets in the repository. The first iteration reached a working API with no deployment path; that gap is closed early this time. |
+| **TEC-04 (M)** | **One containerised instance per country, hosted for that country, on its own URL** (`dk.` / `no.` / `us.`), each with its own database. Denmark is built, tested and perfected first; the finished image is what the next country is rolled out from. |
+| **TEC-04a (M)** | Nothing in the application is country-aware. There is no country column, no country filter and no country switcher: an instance is one country's system, and the country's name is configuration. This keeps the code the same everywhere, so what Denmark has tested is exactly what the next country gets. |
+| **TEC-05 (M)** | Containerise the application as a single image, promoted through dev/test/prod and then reused per country. Standing up a country means: provision its database, deploy the image, register its hostname in Entra, point DNS at it, and add it to the backup and monitoring schedules. That is the per-country setup, and it is what gives each country its own tested copy on its own release. |
+| **TEC-06 (M)** | CI/CD from the first stage: build, test and deploy on every merge, infrastructure as code, no secrets in the repository. The first iteration reached a working API with no deployment path; that gap is closed early this time. The pipeline and the infrastructure definition take the target country as a parameter, so the second country is a run of the same pipeline rather than a hand-built environment. |
 | **TEC-07 (M)** | Dashboards, domains, the score scale and the role of each user are **data, not code**. This is the measurable form of the old "agile backend" (NFR-01): those changes need no migration and no deployment. Adding a *field* to a profile does need both, and that is accepted. |
 
-### 3.9 Roles, revised
+### 3.11 Roles, revised
 
 Open editing makes a four-role model mostly decorative — if everyone can edit, Standard and
 Moderator no longer describe different permissions.
@@ -207,18 +275,23 @@ that something is demonstrable at the end of each.
 
 One hard ordering rule: **nothing that writes data ships before the thing that can undo it.**
 
+**Where this stands today.** The mockup on `UI-mockup-v2` now carries every agreed feature — two
+dashboards plus a self-service third, the graphics and their drill-downs, open editing, the upkeep
+loop, the customers, and no surveys. Nothing in the plan below is waiting on another mockup round.
+What is waiting is Stage 0: four decisions, and a frozen reference (§4.3).
+
 ### 4.2 The stages at a glance
 
 | # | Stage | Backend | Frontend | Infra & ops |
 |---|---|---|---|---|
 | 0 | Decide & set up | Health endpoint, Entra token validation | Sign-in screen, nothing behind it | **Most of the stage:** repo, environments, Postgres, CI/CD, IaC |
-| 1 | Data model & history | **Most of the stage:** schema, migrations, identity/merge, history, CRUD API | — | Migration runner in the pipeline |
+| 1 | Data model & history | **Most of the stage:** schema (incl. owner, contact log, customers), migrations, identity/merge, history, CRUD API | — | Migration runner in the pipeline |
 | 2 | Backup, undo, recycle bin | Undo endpoint, soft delete, restore tooling | Small admin screens: history list, recycle bin | Backup schedule, retention, rehearsed restore |
 | 3 | Shell & dashboard registry | Dashboards CRUD, menu/permissions endpoint | **Most of the stage:** app shell, verbatim CSS lift, routing, MSAL, `scoring.ts` | Static hosting, cache headers |
-| 4 | Administration over live data | Search, filters, contact fields, import + dedup preview | Microsoft Profiles, Domains, Columbus people, Dashboards page | — |
+| 4 | Administration over live data | Search, filters, contact fields, owner + cadence, contact log, customers, import + dedup | Microsoft Profiles, Domains, Columbus people, Dashboards, Relationship Upkeep table | — |
 | 5 | The boards | Read model per dashboard, score write path | Board port: ring, panels, dots, filters, SVG export, print | — |
-| 6 | Graphics & drill-down | Aggregates per dashboard, people-behind-a-category endpoint | Graphics page, drill-down, freshness, change feed, export | — |
-| 7 | Second country | Country scope on every read and write | Country switcher, roll-up view | Second country onboarded |
+| 6 | Graphics, drill-downs & the reminder | Aggregates, people-behind-a-bar endpoints, the monthly digest job | Board graphics, upkeep graphics, all drill-downs, change feed, export | Scheduled job + outbound mail |
+| 7 | Roll out to the next country | Country name as configuration | — | **Most of the stage:** provision the country's database and instance from the tested image, hostname, DNS, backups, monitoring |
 
 **Where the two tracks run in parallel.** Stage 1 is backend-only and Stage 3's frontend work has no
 backend dependency — the mockup already defines the markup, the stylesheet and the arithmetic. So a
@@ -230,20 +303,40 @@ are frontend-heavy with thin backend work; Stage 7 is the reverse.
 
 #### Stage 0 — Decide and set up *(days, not weeks)*
 
-Answer the remaining open questions in §5, pick TEC-03, and stand up the plumbing: repository,
-three environments, CI/CD, infrastructure as code, Postgres, and a deployed page behind Entra
-sign-in.
+Three things, in this order:
+
+**1. Freeze the mockup as the reference.** Tag the commit on `UI-mockup-v2` that everyone agrees is
+the target, and treat later mockup changes as changes to the spec rather than as the spec. Without
+that line the build aims at a moving picture, and "does it match the mockup?" stops being a question
+anyone can answer.
+
+**2. Take the four decisions that block a start:**
+
+| | |
+|---|---|
+| **TEC-03** | The framework. Pick by who will maintain it, not by which is best (§3.10). |
+| **Q-06** | Who owns this specification, and who owns the data. |
+| **Q-13** | Who may restore a backup and undo other people's changes. |
+| **Q-08** | Whether a Microsoft work e-mail is reliably available, since it decides the identity key. |
+
+Q-10 (where contact data comes from) can wait for Stage 4, Q-14 (a read-only role) for Stage 3, and
+Q-12 (the second country) for Stage 7 — none of them holds up a start.
+
+**3. Stand up the plumbing:** repository, three environments, CI/CD, infrastructure as code,
+Postgres, and a deployed page behind Entra sign-in.
 
 **Exit:** a signed-in blank page on a real Azure URL, put there by a pipeline. Every later stage
 deploys the same way, so deployment is never a separate project.
 
 #### Stage 1 — The data model, with history from the first write
 
-*The backend foundation.* Countries, dashboards, domains, Microsoft profiles, Columbus people,
-relationships — and the append-only history table (FR-32) written by the same code path as every
-mutation, so no write can bypass it. Identity key, match-before-create and merge (FR-18–20) belong
-here: cheap now, expensive once duplicates exist. `country_id` on every aggregate root (TEC-04),
-even though countries are not used until Stage 7.
+*The backend foundation.* Dashboards, domains, Microsoft profiles, Columbus people, relationships —
+plus the three the upkeep round added: the **owner** on a profile with the rule that they must hold
+a relation (FR-43), the **contact log** (FR-44), and **customers** as records of their own linked
+many-to-many (FR-49). And the append-only history table (FR-32) written by the same code path as
+every mutation, so no write can bypass it. Identity key, match-before-create and merge (FR-18–20) belong
+here: cheap now, expensive once duplicates exist. The schema holds one country's data, because the
+instance is one country's system (TEC-04) - so there is no country column to carry.
 
 **Exit:** an API that holds the mockup's full data set, with every change attributable to a person
 and a time. Verified by tests over a real Postgres, not a mock.
@@ -277,7 +370,8 @@ stylesheet ships global and unhashed, and class names are a contract.*
 #### Stage 4 — Administration over live data
 
 Microsoft Profiles with search, filters and the dashboard filter (FR-25); Microsoft Domains;
-Columbus people; contact details (FR-29); import with dedup preview (FR-41). The first stage that
+Columbus people; contact details (FR-29); owner, cadence and the contact log (FR-43–46); the
+customers each person covers (FR-49–50); import with dedup preview (FR-41). The first stage that
 needs both tracks, and the stage where the app becomes more useful than the spreadsheet it replaces.
 
 **Exit:** the Dynamics data set is entered, imported or merged *through the interface* — not seeded
@@ -290,27 +384,63 @@ eight-panel ceiling, scoring straight from a dot, the filters, SVG export and pr
 
 **Exit:** the board a stakeholder sees in a meeting is rendering live data.
 
-#### Stage 6 — The graphics and the drill-down
+#### Stage 6 — The graphics, the drill-down and the upkeep loop
 
 KPIs, breakdowns and distribution per dashboard (FR-27), the click-through to the people behind a
-bar with phone and e-mail (FR-28), the freshness indicator (FR-37), the change feed (FR-36), and
-per-dashboard export (FR-30).
+bar with phone and e-mail (FR-28), the change feed (FR-36), per-dashboard export (FR-30) — and the
+upkeep half: the Relationship Upkeep page (FR-48), its graphics (FR-51) and the monthly digest mail (FR-47), which is the
+only scheduled job in the product now that surveys are gone.
 
-**Exit:** "who do we not know in this domain, and how do I reach the ones we do" is answered in two
-clicks.
+**Exit:** "who do we not know in this domain, how do I reach the ones we do, and who has nobody
+spoken to since the spring" are all answered in two clicks — and the first Monday mail goes out.
 
-#### Stage 7 — Second country
+#### Stage 7 — Roll out to the next country
 
-Country scoping enforced end to end (FR-38–39, NFR-05), a second country onboarded with its own
-departments, and the cross-country roll-up if it is wanted (FR-40).
+Denmark is finished, in use and corrected by real use before this stage begins - that is the point
+of the order. Then the tested image is deployed again for the next country: its own database, its
+own hostname registered in Entra, its own DNS record, its own backup and monitoring schedule
+(TEC-04, TEC-05). The country's own people create their own dashboards and domains from the
+interface, the way Denmark did.
 
-**Exit:** two countries in one deployment, each seeing only its own data — verified by asking for
-the other country's rows directly by id and being refused.
+Nothing in the application changes for this stage. If something does have to change, that is the
+signal that it belonged in Stages 1-6 and should be fixed in Denmark first, so every country keeps
+running the same tested product.
 
-**Surveys (FR-42)** sit outside this order deliberately. Build them once the data is real and worth
-maintaining — after Stage 4, whenever the appetite exists. They are not what makes the product work;
-keeping the data fresh is, and open editing plus the freshness indicator does more for that than a
-quarterly mail.
+**Exit:** a second country live on its own URL, from the same image as Denmark, with its own data
+and its own release it can be upgraded on independently.
+
+**There is no survey stage.** Surveys were removed in full (§3.5). What keeps the data fresh is open
+editing plus the monthly reminder loop, which asks a named person about a named relationship at the
+moment it is slipping, rather than asking everybody about everything once a quarter.
+
+---
+
+### 4.4 Which screen specifies which stage
+
+The mockup is the specification for everything visible, so each stage has a page to build against
+and to be judged by. This is the list to check a stage off with: *does it look and behave like this
+screen, with real data behind it?*
+
+| Stage | Build against | The part that is easy to get wrong |
+|---|---|---|
+| 1 | The seed data in `index.html` — its shape *is* the schema | Identity, match-before-create and merge, and a history row for every write |
+| 2 | — nothing visible; it is the net under the rest | A restore that has actually been rehearsed, not just configured |
+| 3 | The shell: left menu, role switcher, login | The stylesheet ships global and unhashed, or Export SVG breaks silently |
+| 4 | Microsoft Profiles, Microsoft Domains, Columbus Profiles, Dashboards, Relationship Upkeep | The owner picker offering only people who hold a relation; the customer list staying a list, not a text field |
+| 5 | Dashboard - Data & AI and Dashboard - Dynamics | Panels grow, so the layout settles after render; the eight-panel ceiling; the board fits the screen |
+| 6 | Graphics - Data & AI, Graphics - Dynamics, Graphics - Upkeep | Every chart drills to the people behind it, and the drill-down can register a contact |
+| 7 | The same product, second instance | Nothing in the application changes; if it does, it belonged in 1-6 |
+
+Three behaviours in the mockup are decisions rather than decoration, and are easy to lose in
+translation:
+
+- **"Unknown", never "Never".** An empty contact log means nobody wrote it down, not that nobody
+  called. The same reasoning applies to an empty phone number and an unscored relationship.
+- **Somebody with no relation has no owner and gets no mail**, but still appears everywhere else.
+  The gap is the finding; hiding it would defeat the page.
+- **Panels and charts are places work starts.** A strength dot is scored from the board, a contact
+  is registered from inside a chart's drill-down. If the build turns those into read-only displays
+  with editing somewhere else, it will be correct and nobody will use it.
 
 ---
 
@@ -319,14 +449,16 @@ quarterly mail.
 | ID | Question | Blocks |
 |---|---|---|
 | **Q-10** | Where do phone numbers and e-mail addresses come from, and who is allowed to see them? (FR-29) | Stage 4 |
-| **Q-11** | Do we still want surveys, now that editing needs no approval? (FR-42) | Stage 6 |
-| **Q-12** | Which countries, in which order — and is there any data-residency requirement? (TEC-04) | Stage 0 |
+| **Q-12** | Which country is second, and when — and where is each country's instance hosted? (TEC-04) | Stage 7 |
 | Q-13 | Who may restore a backup and undo other people's changes — Admin only, or a named few? (FR-33–34) | Stage 2 |
 | Q-14 | Is a read-only `Viewer` role needed for anyone outside the editing group? (R-04) | Stage 3 |
 | Q-08 | Is a work e-mail reliably available for Microsoft contacts, or is name + organisation the real identity key? | Stage 1 |
 | Q-06 | Who owns this specification, and who owns the data? | now |
 
-**Settled, for the record:** Q-09 — open editing means open internally, behind Entra sign-in (§2).
+**Settled, for the record:** Q-11 — surveys are removed in full, replaced by the owner and the
+monthly reminder loop (§3.4, §3.5). The country model — one containerised instance per country, each with
+its own database and URL, Denmark built and perfected first and the finished image rolled out from
+there (TEC-04). Q-09 — open editing means open internally, behind Entra sign-in (§2).
 Q-01 — the score is a small integer per relationship, summed and averaged on read, not vector data.
 Q-07 — GDPR handling is now NFR-08 and inside the scope of v1. Q-02 — "agile backend" is now
 TEC-07: dashboards, domains, the score scale and roles change without a migration; adding a field

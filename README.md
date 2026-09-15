@@ -25,13 +25,15 @@ signs you in as *Mette Kirkegaard* with the **Admin** role.
    the gaps. Click a row for the drawer: who at Columbus knows this person, and how well.
 4. **Microsoft Domains** — the categories live separately from the people, so Microsoft can be
    re-organised without touching the relationship data. Coverage bar per domain.
-5. **Columbus Profiles** — expand a row to see that person's approved relations. Change a role, send a
-   survey. The Super Admin row is locked.
-6. **Viewing as → Standard** (top right) — the menu collapses to *My Relations*. Adjust a score, add a
-   contact, remove one, then **Submit for approval**.
-7. **Viewing as → Admin** — the submission is now on **Pending Submissions**, with a before → after diff.
-   Adjust a score if you disagree, then approve — and see the change land on Microsoft Profiles.
-8. **Viewing as → Moderator** — same overview, edit controls disabled, Domains and Submissions hidden.
+5. **Columbus Profiles** — expand a row to see that person's relations. Change a role. The Super
+   Admin row is locked.
+6. **Relationship Upkeep** — who owns each Microsoft relationship and when anyone last reached out.
+   Everyone's, not just your own. Tick **Register contact** on an overdue row and watch it go green;
+   open **Preview the reminder mail** to see what would go out on the first Monday of the month.
+7. **Viewing as → Standard** (top right) — the menu collapses to *Relationship Upkeep* and
+   *My Relations*. Adjust a score, add a contact, remove one, then **Save changes** — it writes
+   straight through, because editing is open to everyone at Columbus.
+8. **Viewing as → Moderator** — same overview, edit controls disabled, Domains and Dashboards hidden.
 
 The **role switcher** in the top bar is a demo control. In the real app your role comes from your
 account; it is here so all four roles can be shown in one sitting.
@@ -39,7 +41,7 @@ account; it is here so all four roles can be shown in one sitting.
 ## What the mockup covers
 
 The left menu is grouped into three sections. A section disappears entirely when the current role has
-no pages in it — a Standard user only sees *Submissions & Relations*.
+no pages in it — a Standard user only sees *Relationship Upkeep* and *My Relations*.
 
 | Menu section | Spec page | Route | Roles | State |
 |---|---|---|---|---|
@@ -51,9 +53,10 @@ no pages in it — a Standard user only sees *Submissions & Relations*.
 | Administration | Dashboards | `#/dashboards` | Admin | Add, rename and delete dashboards; panels come from the domains |
 | Administration | Page 3 — Microsoft Profiles | `#/ms-profiles` | Admin, Moderator | Table, search, filters, sort, detail drawer, add/edit/delete |
 | Administration | Page 3.5 — Microsoft Domains | `#/ms-domains` | Admin | Table with aggregates, add/edit/delete |
-| Administration | Page 4 — Columbus Profiles | `#/columbus-profiles` | Admin, Moderator | Table, expandable relations, roles, surveys, add/delete |
-| Submissions & Relations | Page 5 — Pending Submissions | `#/submissions` | Admin | Before/after diff, adjust, approve, reject |
-| Submissions & Relations | Page 6 — My Relations | `#/my-relations` | all | Own relations, score picker, add/remove, submit |
+| Administration | Page 4 — Columbus Profiles | `#/columbus-profiles` | Admin, Moderator | Table, expandable relations, roles, add/delete |
+| Dashboards | Graphics - Upkeep | `#/upkeep-graphics` | all | Status spread, what each owner carries, contacts logged per month, upkeep per dashboard |
+| Administration | Relationship Upkeep | `#/upkeep` | all | Owner, reminder cadence, last contact, status; register a contact; preview the reminder mail |
+| Relations | Page 6 — My Relations | `#/my-relations` | all | Own relations, score picker, add/remove, save |
 
 ### The ecosystem map (Dashboard)
 
@@ -145,6 +148,54 @@ Two limits worth knowing:
 Renaming changes the heading, the hub, the menu entries and every label that mentions the board.
 The two routes are built from the id and stay put, so links already shared keep working.
 
+### Keeping the relationships alive
+
+A score says how good a relationship is. It says nothing about whether anyone has spoken to the
+person this year, and that is the part that decays quietly. So every Microsoft person carries three
+more things:
+
+- **An owner** — one Columbus person, responsible for reaching out. The owner must be somebody who
+  already holds a relation to them: owning a person nobody has spoken to would be a title, not a
+  job. Somebody nobody knows therefore has no owner, which is exactly the gap the page is there to
+  show.
+- **A reminder cadence** — none, monthly, quarterly, half-yearly or yearly. **None is the default.**
+  Only a person with both an owner and a cadence generates mail; put everybody on monthly and the
+  mail becomes a list nobody reads. Everyone is still tracked either way.
+- **A contact log** — one line per time somebody reached out: the date and who registered it.
+  Anyone may add a line, not only the owner, because it is a fact about the relationship rather
+  than the owner's property.
+
+Nothing resets on the first of the month. *Last contact* is simply the newest line in the log, and
+whether someone has slipped is worked out from that date against their cadence. An empty log reads
+**Unknown**, not *Never* — no line means nobody wrote it down, not that nobody called.
+
+**Relationship Upkeep** (under Administration) shows all of it, for everybody, sorted by what needs
+attention first. Any column sorts, **Last contact** included — once for the most recently contacted,
+again for the ones nobody has written anything down about. There are filters for owner and status.
+The **reminder mail** is a preview: one digest per owner, on the first Monday of the month, listing
+the people who are overdue or due within ten days.
+
+**Graphics - Upkeep** (under Dashboards, with the other boards) is the layer above it: the spread of
+statuses, what each owner is carrying, contacts logged per month over the last year, and the share
+still on track per dashboard. Scope it to one dashboard or leave it across all of them. The table
+answers *who do I call today*; the graphics answer *is anyone calling at all*.
+
+Every one of its four charts drills like the board graphics: click a column or a bar and the people
+behind it appear underneath, with the same **Register contact** button as the table — so the red
+column is not just a number, it is a list you can work through. One list is open at a time, under
+the chart it came from. The month chart is the exception in shape: a month holds contact entries
+rather than people, so it lists the entries with who wrote each one down.
+
+### Which customers a Microsoft person covers
+
+Customers are their own records rather than a text field, so *who at Microsoft touches Novo?* is a
+question the app can answer — the search on Microsoft Profiles matches customer names.
+
+The 70 companies come out of slide 3 of Thomas' deck, where ten account columns sit under the
+enterprise BizApp sellers and line up with them one to one, so the mapping is read rather than
+guessed. The deck also colours some names, but too irregularly to tell a customer from a prospect,
+so every company's type is left **unknown** for someone to set.
+
 ### Clicking into a chart
 
 On either graphics page, a bar is a control: clicking it lists the people it counts directly under
@@ -189,9 +240,9 @@ with a sum" from the requirements); Columbus Profiles shows the average per empl
 | | In this mockup | In the real app |
 |---|---|---|
 | Login | Accepts anything | Microsoft Entra ID, Columbus mail only |
-| Data | 102 Microsoft contacts, 26 Columbus users, 70 relations — the Data & AI board is fictional, the Dynamics board is a draft read out of Thomas' deck | Real data from the backend |
+| Data | 102 Microsoft contacts, 26 Columbus users, 70 relations, 70 customers — the Data & AI board is fictional, the Dynamics board is a draft read out of Thomas' deck | Real data from the backend |
 | Persistence | In memory — **a page refresh resets everything to the seed data** | Database, with versioning |
-| Surveys | "Send survey" only stamps a date and shows a toast | Real survey sent and collected |
+| Reminder mail | **Preview the reminder mail** shows what would be sent; nothing leaves the browser | One digest per owner, first Monday of the month |
 | Role | Chosen in the top bar | Comes from the signed-in account |
 | Dashboard | Ecosystem map over its own fictional config, edits held in memory | Same board, fed from the relationship data |
 
