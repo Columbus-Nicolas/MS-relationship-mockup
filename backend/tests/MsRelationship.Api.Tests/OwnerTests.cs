@@ -53,4 +53,22 @@ public class OwnerTests
         await using var verify = _pg.NewContext();
         Assert.Null((await verify.MsProfiles.FindAsync(p.Id))!.OwnerId);
     }
+
+    [Fact]
+    public async Task Removing_the_owners_relation_clears_the_owner()
+    {
+        await using var db = _pg.NewContext();
+        var (actor, u, p) = await Fixtures.Trio(db);
+        var writer = new RelationWriter(db, new FakeCurrentUser(actor.Id));
+        await writer.SetAsync(u.Id, p.Id, 2, null);
+        await new OwnerService(db).SetOwnerAsync(p.Id, u.Id);
+
+        await writer.RemoveAsync(u.Id, p.Id);
+
+        // Fresh context, same reason as above: the owner-clearing happens inside
+        // RemoveAsync's own transaction, so this proves it was committed to
+        // Postgres rather than merely set on a tracked MsProfile in memory.
+        await using var verify = _pg.NewContext();
+        Assert.Null((await verify.MsProfiles.FindAsync(p.Id))!.OwnerId);
+    }
 }

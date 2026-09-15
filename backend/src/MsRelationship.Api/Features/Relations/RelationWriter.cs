@@ -51,6 +51,11 @@ public class RelationWriter(AppDbContext db, ICurrentUser me)
         return existing;
     }
 
+    /// Removing a relation also clears the owner when the relation being removed
+    /// is the profile's current owner: FR-43 holds at every moment, not only when
+    /// the owner was assigned, so an owner cannot outlive the relation that
+    /// qualified them. That is a consequence of the removal, not a relation
+    /// change itself, so it earns no RelationHistory row.
     public async Task<Relation?> RemoveAsync(Guid columbusUserId, Guid msProfileId)
     {
         var actor = me.Id ?? throw new InvalidOperationException("A change needs somebody to attribute it to.");
@@ -69,6 +74,11 @@ public class RelationWriter(AppDbContext db, ICurrentUser me)
             ChangedByUserId = actor
         });
         db.Relations.Remove(existing);
+
+        var profile = await db.MsProfiles.FindAsync(msProfileId);
+        if (profile is not null && profile.OwnerId == columbusUserId)
+            profile.OwnerId = null;
+
         await db.SaveChangesAsync();
         await tx.CommitAsync();
         return existing;
