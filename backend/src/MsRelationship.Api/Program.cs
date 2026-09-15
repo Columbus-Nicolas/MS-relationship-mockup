@@ -13,6 +13,7 @@ builder.Services.AddDbContext<AppDbContext>(o => o
     .UseSnakeCaseNamingConvention());
 builder.Services.AddScoped<DashboardService>();
 builder.Services.AddScoped<MsProfileMatcher>();
+builder.Services.AddScoped<MsProfileMerger>();
 builder.Services.AddScoped<RelationWriter>();
 builder.Services.AddScoped<OwnerService>();
 builder.Services.AddScoped<ContactService>();
