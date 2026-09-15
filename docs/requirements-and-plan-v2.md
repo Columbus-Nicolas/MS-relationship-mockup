@@ -227,7 +227,7 @@ data, so there is nothing to scope inside the application.
 |---|---|
 | TEC-01 | Postgres. Unchanged. |
 | TEC-02 | Azure hosted. Unchanged. |
-| **TEC-03** | Framework: **open — decide in Stage 0.** Pick by who maintains it: ASP.NET Core if the maintainers are C# developers, Next.js/TypeScript if the mockup's own stack is the team's, FastAPI if the team is Python-first. All three are adequate; the wrong answer is the one nobody on the team can read. |
+| **TEC-03** | Framework: **open — decide in Stage 0.** Pick by who maintains it: ASP.NET Core if the maintainers are C# developers, Next.js/TypeScript if the mockup's own stack is the team's, FastAPI if the team is Python-first. All three are adequate; the wrong answer is the one nobody on the team can read. *The first iteration chose ASP.NET Core 9 / EF Core 9 / Postgres 16 and got a working API out of it — see §6. That is a reason to consider it again, not a decision already taken; the code itself does not carry over.* |
 | **TEC-04 (M)** | **One containerised instance per country, hosted for that country, on its own URL** (`dk.` / `no.` / `us.`), each with its own database. Denmark is built, tested and perfected first; the finished image is what the next country is rolled out from. |
 | **TEC-04a (M)** | Nothing in the application is country-aware. There is no country column, no country filter and no country switcher: an instance is one country's system, and the country's name is configuration. This keeps the code the same everywhere, so what Denmark has tested is exactly what the next country gets. |
 | **TEC-05 (M)** | Containerise the application as a single image, promoted through dev/test/prod and then reused per country. Standing up a country means: provision its database, deploy the image, register its hostname in Entra, point DNS at it, and add it to the backup and monitoring schedules. That is the per-country setup, and it is what gives each country its own tested copy on its own release. |
@@ -314,7 +314,7 @@ anyone can answer.
 
 | | |
 |---|---|
-| **TEC-03** | The framework. Pick by who will maintain it, not by which is best (§3.10). |
+| **TEC-03** | The framework. Pick by who will maintain it, not by which is best (§3.10). The first iteration ran on .NET 9 / EF Core 9 / Postgres 16; that stack is available to choose again, but none of its code is (§6). |
 | **Q-06** | Who owns this specification, and who owns the data. |
 | **Q-13** | Who may restore a backup and undo other people's changes. |
 | **Q-08** | Whether a Microsoft work e-mail is reliably available, since it decides the identity key. |
@@ -466,18 +466,28 @@ does not.
 
 ---
 
-## 6. What to keep from the first iteration
+## 6. What carries over from the first iteration
 
-The code on `first_iteration` is not thrown away — it is read. Four things in it are worth more than
-the time it would take to rediscover them:
+**The technology choice, and nothing else.** The code on `first_iteration` is not a starting point
+and is not to be lifted from: it was written against a different specification — approval workflows,
+a closed membership list, one dashboard, surveys — and every one of those is now decided the other
+way. Reading it for shortcuts would import the old assumptions along with the code.
 
-1. **The schema shape** — taxonomies as rows, snake_case naming, the relation/history split.
-2. **Identity, match and merge** — the hard part of FR-18–20, with tests over a real Postgres.
-3. **The append-only history**, enforced structurally rather than by convention.
-4. **The Entra integration**, including the domain gate.
+What the branch is good for is the record of what was chosen, and the fact that it ran:
 
-What does *not* carry over: the approval workflow (superseded by §3.4), the closed membership list
-(superseded by open editing), and the assumption of a single dashboard.
+| | |
+|---|---|
+| Runtime | ASP.NET Core on **.NET 9**, SDK pinned to 9.0.306 in `global.json`, `dotnet-ef` as a local tool |
+| Data | **EF Core 9** with `Npgsql.EntityFrameworkCore.PostgreSQL` 9.0.4, snake_case via `EFCore.NamingConventions` |
+| Auth | **Microsoft.Identity.Web** 3.15.1 against Entra |
+| Database | **Postgres 16**, in docker compose locally |
+| Tests | **xUnit** with `Testcontainers.PostgreSQL` — integration tests over a real database, not mocks |
+| Local infra | docker compose: Postgres, Mailpit for mail, pgAdmin behind a `tools` profile |
+| Frontend *(planned, never built)* | React 19 + TypeScript on Vite, MSAL in the browser, JWT to the API |
+
+That stack is one of the three options in TEC-03, and it is the only one with evidence behind it for
+this domain: it reached a working API with 143 passing integration tests. Everything above the
+plumbing gets written again, against this specification.
 
 Two loose ends from that branch that still need action regardless of the restart:
 
