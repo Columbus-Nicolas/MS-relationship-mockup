@@ -7,10 +7,13 @@ public record MergeResult(bool Merged, string? Refused);
 
 public class MsProfileMerger(AppDbContext db)
 {
-    /// Everything the duplicate carried moves to the survivor. Where both held a
+    /// Relations, contact entries, relation history, customer links and domain
+    /// links all move from the duplicate to the survivor. Where both held a
     /// relation from the same Columbus person, the more recently updated one
     /// wins and the other stays in history — a merge must not quietly discard
-    /// somebody's assessment (FR-20).
+    /// somebody's assessment (FR-20). The duplicate's owner, if any, is dropped
+    /// rather than carried over: an owner must hold a relation on the profile
+    /// they own (FR-43), and by the time this returns the duplicate holds none.
     public async Task<MergeResult> MergeAsync(Guid survivorId, Guid duplicateId)
     {
         if (survivorId == duplicateId) return new MergeResult(false, "A profile cannot be merged into itself.");
@@ -18,6 +21,7 @@ public class MsProfileMerger(AppDbContext db)
         var survivor = await db.MsProfiles.FindAsync(survivorId);
         var duplicate = await db.MsProfiles.FindAsync(duplicateId);
         if (survivor is null || duplicate is null) return new MergeResult(false, "Profile not found.");
+        if (survivor.MergedIntoId is not null) return new MergeResult(false, "The survivor has itself been merged away.");
         if (duplicate.MergedIntoId is not null) return new MergeResult(false, "Already merged.");
 
         await using var tx = await db.Database.BeginTransactionAsync();

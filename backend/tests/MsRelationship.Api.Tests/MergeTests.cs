@@ -61,8 +61,12 @@ public class MergeTests
 
         var kept = await db.Relations.SingleAsync(r => r.MsProfileId == survivor.Id && r.ColumbusUserId == u.Id);
         Assert.Equal((short)3, kept.Score);
-        // the losing side is not lost, only superseded
-        Assert.True(await db.RelationHistory.AnyAsync(h => h.MsProfileId == survivor.Id));
+        // the losing side is not lost, only superseded: both history rows (the
+        // "older" one written directly against the survivor, and the "newer" one
+        // moved off the duplicate) now belong to the survivor, and none remain
+        // on the duplicate.
+        Assert.Equal(2, await db.RelationHistory.CountAsync(h => h.MsProfileId == survivor.Id && h.ColumbusUserId == u.Id));
+        Assert.False(await db.RelationHistory.AnyAsync(h => h.MsProfileId == duplicate.Id));
     }
 
     [Fact]
@@ -73,6 +77,31 @@ public class MergeTests
         var result = await new MsProfileMerger(db).MergeAsync(p.Id, p.Id);
         Assert.False(result.Merged);
         Assert.NotNull(result.Refused);
+    }
+
+    // A survivor that has itself already been merged away is a tombstone
+    // MsProfileMatcher will never return (Task 7 excludes MergedIntoId != null
+    // from both its queries). Merging onto one would move live data onto a row
+    // nothing reading profiles can find — stranded, not lost, but invisible.
+    [Fact]
+    public async Task A_profile_already_merged_away_cannot_be_a_survivor()
+    {
+        await using var db = _pg.NewContext();
+        var (_, _, a) = await Fixtures.Trio(db);
+        var b = MsProfile.Create("Grandparent Tombstone", null, "Microsoft Denmark " + Guid.NewGuid());
+        var c = MsProfile.Create("Third Profile", null, "Microsoft Denmark " + Guid.NewGuid());
+        db.AddRange(b, c);
+        await db.SaveChangesAsync();
+
+        var merger = new MsProfileMerger(db);
+        Assert.True((await merger.MergeAsync(a.Id, b.Id)).Merged); // b is now a tombstone pointing at a
+
+        var result = await merger.MergeAsync(b.Id, c.Id); // b, itself merged away, cannot be a survivor
+
+        Assert.False(result.Merged);
+        Assert.NotNull(result.Refused);
+        // c must not have been silently moved onto the tombstoned b
+        Assert.Null((await db.MsProfiles.FindAsync(c.Id))!.MergedIntoId);
     }
 
     // The brief's first test names relations, contacts and customers; domain
@@ -121,7 +150,9 @@ public class MergeTests
         var result = await new MsProfileMerger(db).MergeAsync(survivor.Id, duplicate.Id);
 
         Assert.True(result.Merged);
-        Assert.Equal(1, await db.MsProfileCustomers.CountAsync(x => x.CustomerId == customer.Id));
-        Assert.Equal(1, await db.MsProfileDomains.CountAsync(x => x.DomainId == domain.Id));
+        // Not just "one row survives" — it must be the survivor's row, not the
+        // duplicate's; the duplicate's link is what should have been dropped.
+        Assert.Equal(1, await db.MsProfileCustomers.CountAsync(x => x.CustomerId == customer.Id && x.MsProfileId == survivor.Id));
+        Assert.Equal(1, await db.MsProfileDomains.CountAsync(x => x.DomainId == domain.Id && x.MsProfileId == survivor.Id));
     }
 }
