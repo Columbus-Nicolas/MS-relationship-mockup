@@ -11,6 +11,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Dashboard> Dashboards => Set<Dashboard>();
     public DbSet<Domain> Domains => Set<Domain>();
     public DbSet<ColumbusUser> ColumbusUsers => Set<ColumbusUser>();
+    public DbSet<MsProfile> MsProfiles => Set<MsProfile>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -31,5 +32,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
            later reordering of the enum members can't silently remap existing rows. */
         b.Entity<ColumbusUser>().Property(x => x.Role).HasConversion<string>();
         b.Entity<ColumbusUser>().Property(x => x.Status).HasConversion<string>();
+
+        b.Entity<MsProfile>().HasIndex(x => x.IdentityKey).IsUnique();
+        b.Entity<MsProfile>().Property(x => x.Cadence).HasConversion<string>();
     }
 }
