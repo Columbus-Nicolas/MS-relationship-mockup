@@ -15,6 +15,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<MsProfileDomain> MsProfileDomains => Set<MsProfileDomain>();
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<MsProfileCustomer> MsProfileCustomers => Set<MsProfileCustomer>();
+    public DbSet<Relation> Relations => Set<Relation>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -43,5 +44,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         b.Entity<MsProfileCustomer>().HasKey(x => new { x.MsProfileId, x.CustomerId });
         b.Entity<Customer>().HasIndex(x => x.Name).IsUnique();
         b.Entity<Customer>().Property(x => x.Type).HasConversion<string>();
+
+        b.Entity<Relation>(e =>
+        {
+            e.HasIndex(x => new { x.ColumbusUserId, x.MsProfileId }).IsUnique();
+            e.ToTable(t => t.HasCheckConstraint("ck_relations_score_range", "score BETWEEN -3 AND 3"));
+        });
     }
 }
