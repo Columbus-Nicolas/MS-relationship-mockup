@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using MsRelationship.Api.Auth;
 using MsRelationship.Api.Data;
+using MsRelationship.Api.Features.Contacts;
 using MsRelationship.Api.Features.Dashboards;
 using MsRelationship.Api.Features.MsProfiles;
 using MsRelationship.Api.Features.Relations;
@@ -13,6 +14,8 @@ builder.Services.AddDbContext<AppDbContext>(o => o
 builder.Services.AddScoped<DashboardService>();
 builder.Services.AddScoped<MsProfileMatcher>();
 builder.Services.AddScoped<RelationWriter>();
+builder.Services.AddScoped<OwnerService>();
+builder.Services.AddScoped<ContactService>();
 builder.Services.AddScoped<CurrentUser>();
 builder.Services.AddScoped<ICurrentUser>(sp => sp.GetRequiredService<CurrentUser>());
 

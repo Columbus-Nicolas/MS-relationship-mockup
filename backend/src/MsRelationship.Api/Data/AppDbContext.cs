@@ -17,6 +17,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<MsProfileCustomer> MsProfileCustomers => Set<MsProfileCustomer>();
     public DbSet<Relation> Relations => Set<Relation>();
     public DbSet<RelationHistory> RelationHistory => Set<RelationHistory>();
+    public DbSet<ContactEntry> ContactEntries => Set<ContactEntry>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
