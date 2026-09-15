@@ -1,5 +1,11 @@
+using Microsoft.EntityFrameworkCore;
+using MsRelationship.Api.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
+builder.Services.AddDbContext<AppDbContext>(o => o
+    .UseNpgsql(builder.Configuration.GetConnectionString("Default"))
+    .UseSnakeCaseNamingConvention());
 
 var app = builder.Build();
 app.MapControllers();
