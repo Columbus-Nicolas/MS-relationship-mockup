@@ -29,7 +29,10 @@ public class MsProfile
 
     public static MsProfile Create(string name, string? email, string? organization) => new()
     {
-        Name = name,
+        // Whitespace-collapsed like the identity key, but case is kept as
+        // typed: a stored name must be exactly as clean as a searched one, or
+        // a same-person match can go missing on the suspected side (Task 7).
+        Name = Features.MsProfiles.IdentityKey.CollapseWhitespace(name),
         Email = email,
         Organization = organization,
         IdentityKey = Features.MsProfiles.IdentityKey.For(email, name, organization)

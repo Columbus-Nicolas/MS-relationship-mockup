@@ -35,4 +35,17 @@ public class MatchTests
         Assert.Null(result.Exact);
         Assert.Contains(result.Suspected, p => p.Name == "Henrik Ditlevsen");
     }
+
+    [Fact]
+    public async Task Doubled_internal_whitespace_does_not_hide_a_suspected_match()
+    {
+        await using var db = _pg.NewContext();
+        db.MsProfiles.Add(MsProfile.Create("Anne  Berg", "anne.berg@microsoft.com", null));
+        await db.SaveChangesAsync();
+
+        var result = await new MsProfileMatcher(db).MatchAsync("Anne Berg", null, null);
+
+        Assert.Null(result.Exact);
+        Assert.Contains(result.Suspected, p => p.Name == "Anne Berg");
+    }
 }

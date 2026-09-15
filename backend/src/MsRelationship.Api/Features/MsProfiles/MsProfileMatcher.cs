@@ -18,7 +18,7 @@ public class MsProfileMatcher(AppDbContext db)
         var exact = await db.MsProfiles
             .FirstOrDefaultAsync(p => p.IdentityKey == key && p.MergedIntoId == null);
 
-        var normalised = name.Trim().ToLowerInvariant();
+        var normalised = IdentityKey.Normalize(name);
         var suspected = await db.MsProfiles
             .Where(p => p.MergedIntoId == null && p.IdentityKey != key && p.Name.ToLower() == normalised)
             .ToListAsync();
