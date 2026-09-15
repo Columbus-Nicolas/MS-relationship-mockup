@@ -10,6 +10,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<CbDepartment> CbDepartments => Set<CbDepartment>();
     public DbSet<Dashboard> Dashboards => Set<Dashboard>();
     public DbSet<Domain> Domains => Set<Domain>();
+    public DbSet<ColumbusUser> ColumbusUsers => Set<ColumbusUser>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -24,5 +25,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         /* A domain name is unique per dashboard, not globally: "Business Applications"
            may exist on two boards. */
         b.Entity<Domain>().HasIndex(x => new { x.DashboardId, x.Name }).IsUnique();
+
+        b.Entity<ColumbusUser>().HasIndex(x => x.Email).IsUnique();
+        /* Stored as text, not the default int, so the database stays readable and a
+           later reordering of the enum members can't silently remap existing rows. */
+        b.Entity<ColumbusUser>().Property(x => x.Role).HasConversion<string>();
+        b.Entity<ColumbusUser>().Property(x => x.Status).HasConversion<string>();
     }
 }
