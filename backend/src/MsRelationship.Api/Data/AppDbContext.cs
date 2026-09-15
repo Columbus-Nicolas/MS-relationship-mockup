@@ -16,6 +16,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<MsProfileCustomer> MsProfileCustomers => Set<MsProfileCustomer>();
     public DbSet<Relation> Relations => Set<Relation>();
+    public DbSet<RelationHistory> RelationHistory => Set<RelationHistory>();
 
     protected override void OnModelCreating(ModelBuilder b)
     {
@@ -50,5 +51,41 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasIndex(x => new { x.ColumbusUserId, x.MsProfileId }).IsUnique();
             e.ToTable(t => t.HasCheckConstraint("ck_relations_score_range", "score BETWEEN -3 AND 3"));
         });
+    }
+
+    /* DbContext exposes four public virtual save entry points, not two: SaveChanges()
+       and SaveChangesAsync(ct) are only forwarders to SaveChanges(bool) and
+       SaveChangesAsync(bool, ct) — that is how the base class itself implements them.
+       Guarding just the parameterless pair would still catch calls that go through
+       them, but SaveChanges(bool)/SaveChangesAsync(bool, ct) would remain a side door
+       straight to the database for any caller that invokes them directly. So the
+       guard lives on the two bool-taking overloads, the ones every save eventually
+       reaches, and the parameterless pair forwards to those instead of to base. */
+    public override int SaveChanges() =>
+        SaveChanges(acceptAllChangesOnSuccess: true);
+
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        GuardHistory();
+        return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    public override Task<int> SaveChangesAsync(CancellationToken ct = default) =>
+        SaveChangesAsync(acceptAllChangesOnSuccess: true, ct);
+
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken ct = default)
+    {
+        GuardHistory();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, ct);
+    }
+
+    /// The history table is the record of what happened. Editing it would make it a
+    /// record of what someone wanted to have happened, so the context refuses.
+    private void GuardHistory()
+    {
+        foreach (var entry in ChangeTracker.Entries<RelationHistory>())
+            if (entry.State is EntityState.Modified or EntityState.Deleted)
+                throw new InvalidOperationException(
+                    "relation_history is append-only: rows may be added, never changed or removed.");
     }
 }
