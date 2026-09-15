@@ -14,7 +14,7 @@ builder.Services.AddScoped<MsProfileMatcher>();
 builder.Services.AddScoped<CurrentUser>();
 builder.Services.AddScoped<ICurrentUser>(sp => sp.GetRequiredService<CurrentUser>());
 
-var devAuth = builder.Configuration.GetValue("DEV_AUTH", builder.Environment.IsDevelopment());
+var devAuth = builder.Configuration.GetValue<bool>("DEV_AUTH");
 
 var app = builder.Build();
 app.MapControllers();
