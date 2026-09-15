@@ -10,7 +10,7 @@ namespace MsRelationship.Api.Tests;
 public sealed class PostgresFixture : IAsyncLifetime
 {
     private readonly PostgreSqlContainer _container =
-        new PostgreSqlBuilder().WithImage("postgres:16").Build();
+        new PostgreSqlBuilder("postgres:16").Build();
 
     public string ConnectionString => _container.GetConnectionString();
 
