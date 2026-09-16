@@ -1,11 +1,13 @@
 using Microsoft.EntityFrameworkCore;
+using MsRelationship.Api.Auth;
 using MsRelationship.Api.Data;
+using MsRelationship.Api.Data.Entities;
 
 namespace MsRelationship.Api.Features.MsProfiles;
 
 public record MergeResult(bool Merged, string? Refused);
 
-public class MsProfileMerger(AppDbContext db)
+public class MsProfileMerger(AppDbContext db, ICurrentUser me)
 {
     /// Relations, contact entries, relation history, customer links and domain
     /// links all move from the duplicate to the survivor. Where both held a
@@ -14,8 +16,17 @@ public class MsProfileMerger(AppDbContext db)
     /// somebody's assessment (FR-20). The duplicate's owner, if any, is dropped
     /// rather than carried over: an owner must hold a relation on the profile
     /// they own (FR-43), and by the time this returns the duplicate holds none.
+    ///
+    /// A merge tombstones a person and rewrites their relationships, so it is a
+    /// change like any other and has to be attributable to somebody (FR-32). It
+    /// refuses to run with nobody signed in, the same way RelationWriter does,
+    /// and by the same route — thrown, not returned as a MergeResult: `Refused`
+    /// carries domain outcomes a caller should show the user ("Already merged."),
+    /// and "nobody is signed in" is not one of those.
     public async Task<MergeResult> MergeAsync(Guid survivorId, Guid duplicateId)
     {
+        var actor = me.Id ?? throw new InvalidOperationException("A merge needs somebody to attribute it to.");
+
         if (survivorId == duplicateId) return new MergeResult(false, "A profile cannot be merged into itself.");
 
         var survivor = await db.MsProfiles.FindAsync(survivorId);
@@ -33,7 +44,30 @@ public class MsProfileMerger(AppDbContext db)
                 r => r.MsProfileId == survivorId && r.ColumbusUserId == rel.ColumbusUserId);
             if (clash is null) { rel.MsProfileId = survivorId; continue; }
 
-            if (rel.UpdatedAt > clash.UpdatedAt) { clash.Score = rel.Score; clash.Note = rel.Note; clash.UpdatedAt = rel.UpdatedAt; }
+            if (rel.UpdatedAt > clash.UpdatedAt)
+            {
+                /* The survivor's own score is about to be overwritten, so it gets
+                   a history row of its own. The duplicate's moved history records
+                   the duplicate's past re-keyed to the survivor; none of it says
+                   that this row changed, when, or on whose authority, and Stage 2's
+                   undo is built by reading this table — without this row it would
+                   see the moved "Created 3" as the newest change and undo a merge
+                   by deleting the relation instead of restoring the old score. */
+                db.RelationHistory.Add(new RelationHistory
+                {
+                    ColumbusUserId = rel.ColumbusUserId, MsProfileId = survivorId,
+                    OldScore = clash.Score, OldNote = clash.Note,
+                    NewScore = rel.Score, NewNote = rel.Note,
+                    ChangeType = RelationChangeType.Merged,
+                    ChangedByUserId = actor
+                });
+
+                clash.Score = rel.Score; clash.Note = rel.Note; clash.UpdatedAt = rel.UpdatedAt;
+            }
+            /* The other branch gets no row: the survivor's relation is untouched,
+               and the duplicate's — older, and now redundant — keeps every one of
+               its own history rows, re-keyed to the survivor below. Nothing about
+               the surviving assessment changed, so there is nothing to attribute. */
             db.Relations.Remove(rel);
         }
 
