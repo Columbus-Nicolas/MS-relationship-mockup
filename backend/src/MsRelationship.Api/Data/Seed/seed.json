@@ -669,7 +669,21 @@
    "source": "LinkedIn / MS Pulse",
    "email": "",
    "notes": "",
-   "updatedAt": "2026-08-19"
+   "updatedAt": "2026-08-19",
+   "customerIds": [
+    "cu12",
+    "cu13",
+    "cu14",
+    "cu15",
+    "cu16",
+    "cu17",
+    "cu18",
+    "cu19",
+    "cu20",
+    "cu21",
+    "cu32",
+    "cu33"
+   ]
   },
   {
    "id": "m14",
@@ -684,7 +698,19 @@
    "email": "",
    "tentative": true,
    "notes": "Role and placement still to be confirmed.",
-   "updatedAt": "2026-08-19"
+   "updatedAt": "2026-08-19",
+   "customerIds": [
+    "cu12",
+    "cu13",
+    "cu14",
+    "cu15",
+    "cu16",
+    "cu17",
+    "cu18",
+    "cu19",
+    "cu20",
+    "cu21"
+   ]
   },
   {
    "id": "m15",
@@ -816,7 +842,19 @@
    "email": "",
    "phone": "",
    "notes": "",
-   "updatedAt": "2026-05-27"
+   "updatedAt": "2026-05-27",
+   "customerIds": [
+    "cu54",
+    "cu55",
+    "cu56",
+    "cu57",
+    "cu58",
+    "cu59",
+    "cu60",
+    "cu61",
+    "cu62",
+    "cu63"
+   ]
   },
   {
    "id": "dm2",
@@ -830,7 +868,21 @@
    "email": "",
    "phone": "",
    "notes": "",
-   "updatedAt": "2026-05-27"
+   "updatedAt": "2026-05-27",
+   "customerIds": [
+    "cu1",
+    "cu2",
+    "cu3",
+    "cu4",
+    "cu5",
+    "cu64",
+    "cu65",
+    "cu66",
+    "cu67",
+    "cu68",
+    "cu69",
+    "cu70"
+   ]
   },
   {
    "id": "dm3",
@@ -901,7 +953,15 @@
    "phone": "",
    "notes": "Possibly the same person as Bo Kaaber Brandt - the deck lists them separately.",
    "updatedAt": "2026-05-27",
-   "tentative": true
+   "tentative": true,
+   "customerIds": [
+    "cu6",
+    "cu7",
+    "cu8",
+    "cu9",
+    "cu10",
+    "cu11"
+   ]
   },
   {
    "id": "dm8",
@@ -1055,7 +1115,19 @@
    "email": "",
    "phone": "",
    "notes": "",
-   "updatedAt": "2026-05-27"
+   "updatedAt": "2026-05-27",
+   "customerIds": [
+    "cu22",
+    "cu23",
+    "cu24",
+    "cu25",
+    "cu26",
+    "cu27",
+    "cu28",
+    "cu29",
+    "cu30",
+    "cu31"
+   ]
   },
   {
    "id": "dm19",
@@ -1337,7 +1409,18 @@
    "email": "",
    "phone": "",
    "notes": "",
-   "updatedAt": "2026-05-27"
+   "updatedAt": "2026-05-27",
+   "customerIds": [
+    "cu34",
+    "cu35",
+    "cu36",
+    "cu37",
+    "cu38",
+    "cu39",
+    "cu40",
+    "cu41",
+    "cu42"
+   ]
   },
   {
    "id": "dm39",
@@ -1421,7 +1504,10 @@
    "email": "",
    "phone": "",
    "notes": "",
-   "updatedAt": "2026-05-27"
+   "updatedAt": "2026-05-27",
+   "customerIds": [
+    "cu43"
+   ]
   },
   {
    "id": "dm45",
@@ -1631,7 +1717,19 @@
    "email": "",
    "phone": "",
    "notes": "",
-   "updatedAt": "2026-05-27"
+   "updatedAt": "2026-05-27",
+   "customerIds": [
+    "cu44",
+    "cu45",
+    "cu46",
+    "cu47",
+    "cu48",
+    "cu49",
+    "cu50",
+    "cu51",
+    "cu52",
+    "cu53"
+   ]
   },
   {
    "id": "dm60",

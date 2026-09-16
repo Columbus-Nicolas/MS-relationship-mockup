@@ -14,6 +14,28 @@ namespace MsRelationship.Api.Data.Seed;
 /// happened would put fiction in a table that exists precisely so nothing in
 /// it can be corrected. For the same reason this never calls RelationWriter —
 /// it also requires a signed-in user, and seeding has none to invent.
+///
+/// What the seed carries, and what it refuses to, comes down to one line: data
+/// the mockup *read* is carried; data the mockup *invented* is not.
+///
+/// Carried: the 80 profile-to-customer links. index.html's DECK_CUSTOMERS is a
+/// transcription of the customer columns under the enterprise sellers on slide
+/// 3 of Thomas' deck — its own comment says the mapping is read, not guessed —
+/// and nine of the 102 profiles carry the customerIds below because of it.
+/// They were missed the first time round because seedUpkeep() attaches them
+/// after the raw `var state = {...}` literal the extraction recipe read, so the
+/// recipe could never have seen them. Without them FR-49's question — who at
+/// Microsoft touches this customer — answered nothing for all 70 customers.
+///
+/// Not carried: ownerId, cadence and the contact log, which the same
+/// seedUpkeep() function fabricates. It picks the owner as whoever holds the
+/// strongest score, derives the cadence from that score, and spreads contact
+/// dates arithmetically across the past six months so "the page shows the real
+/// mix". Those are demo fixtures, not facts about anybody. Seeding them would
+/// put invented dates in the contact log and invented reminders on real people,
+/// which is the same fiction the paragraph above refuses for history. The gap
+/// they leave — no owners, no contacts — is the true shape of the source data,
+/// and closing it means importing something real, not something plausible.
 public class MockupSeeder(AppDbContext db)
 {
     private record SeedFile(

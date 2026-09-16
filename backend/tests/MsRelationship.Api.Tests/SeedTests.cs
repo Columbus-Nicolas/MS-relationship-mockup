@@ -34,13 +34,24 @@ public class SeedTests : IClassFixture<WebApplicationFactory<Program>>
         Assert.Equal(17, await db.Domains.CountAsync());
 
         // Decision 6: seeding writes relations directly and must produce no
-        // history. Decision 7: the mockup has no customer links and logs no
-        // contact. Decision 8: exactly one domain ("Unmarked") is dashboard-less
+        // history. Decision 8: exactly one domain ("Unmarked") is dashboard-less
         // — the (DashboardId, Name) index would not stop a second one.
         Assert.Equal(0, await db.RelationHistory.CountAsync());
-        Assert.Equal(0, await db.MsProfileCustomers.CountAsync());
-        Assert.Equal(0, await db.ContactEntries.CountAsync());
         Assert.Equal(1, await db.Domains.CountAsync(d => d.DashboardId == null));
+
+        // The 80 customer links the mockup reads off slide 3 of the deck, spread
+        // across nine enterprise sellers and covering all 70 customers. They were
+        // missing entirely until now, so FR-49 — who at Microsoft touches this
+        // customer — answered nothing for every one of them.
+        Assert.Equal(80, await db.MsProfileCustomers.CountAsync());
+        Assert.Equal(70, await db.MsProfileCustomers.Select(x => x.CustomerId).Distinct().CountAsync());
+        Assert.Equal(9, await db.MsProfileCustomers.Select(x => x.MsProfileId).Distinct().CountAsync());
+
+        // Still none, and deliberately: the mockup's contact log is fabricated by
+        // seedUpkeep(), not read from anywhere, and seeding invented dates into a
+        // real contact log is the fiction MockupSeeder's header refuses. The
+        // customer links above are the opposite case — read, not guessed.
+        Assert.Equal(0, await db.ContactEntries.CountAsync());
     }
 
     [Fact]
