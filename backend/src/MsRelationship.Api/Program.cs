@@ -1,3 +1,5 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using MsRelationship.Api.Auth;
 using MsRelationship.Api.Data;
@@ -8,7 +10,19 @@ using MsRelationship.Api.Features.MsProfiles;
 using MsRelationship.Api.Features.Relations;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddControllers();
+
+/* Enums go out as the words the mockup speaks, not as integers. Without this,
+   AddControllers() serialised a profile's cadence as `"cadence": 0` — while the
+   database deliberately stores 'None' as text so it stays readable, and the
+   mockup says 'none' | 'monthly' | 'quarterly' | 'half' | 'yearly'. Three
+   vocabularies for one field, and no test looked at it.
+
+   The camelCase policy alone does not reach the mockup's wording everywhere:
+   HalfYearly would go out as "halfYearly" and SuperAdmin as "superAdmin". Both
+   carry a JsonStringEnumMemberName saying what the mockup actually calls them,
+   which takes precedence over the policy. */
+builder.Services.AddControllers().AddJsonOptions(o =>
+    o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)));
 builder.Services.AddDbContext<AppDbContext>(o => o
     .UseNpgsql(builder.Configuration.GetConnectionString("Default"))
     .UseSnakeCaseNamingConvention());

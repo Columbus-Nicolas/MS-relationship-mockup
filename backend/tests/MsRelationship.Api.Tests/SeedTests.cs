@@ -106,6 +106,12 @@ public class SeedTests : IClassFixture<WebApplicationFactory<Program>>
             var person = node!.AsObject();
             Assert.False(string.IsNullOrWhiteSpace(person["name"]!.GetValue<string>()));
 
+            // Cadence goes out as the word the mockup uses, not as the enum's
+            // integer. Nothing asserted on this field before, which is why
+            // `"cadence": 0` could sit in the payload unnoticed while the
+            // database stored 'None' and the mockup said 'none'.
+            Assert.Equal("none", person["cadence"]!.GetValue<string>());
+
             // Decision 7: the mockup sets no owner and logs no contact for anyone,
             // so both fields must come back present and null — never omitted,
             // never fabricated. Checking ContainsKey as well as the value is the
@@ -116,10 +122,20 @@ public class SeedTests : IClassFixture<WebApplicationFactory<Program>>
             Assert.True(person.ContainsKey("lastContact"));
             Assert.Null(person["lastContact"]);
 
+            // NotNull passes on an empty array, so both of these used to hold
+            // even if every join returned nothing for all 102 people — the test
+            // that certifies the stage could not fail on the two values it was
+            // there to certify. Every one of the 102 really is on a dashboard,
+            // so that is what is asserted.
             Assert.True(person.ContainsKey("dashboards"));
-            Assert.NotNull(person["dashboards"]);
+            Assert.NotEmpty(person["dashboards"]!.AsArray());
             Assert.True(person.ContainsKey("scores"));
-            Assert.NotNull(person["scores"]);
         });
+
+        // Scores are the other join, and are genuinely empty for most people:
+        // the mockup's 70 relations cover 47 of the 102. "At least one person
+        // has scores" is the strongest claim the data supports, and it is the
+        // one an all-empty join would fail.
+        Assert.Equal(47, people.Count(n => n!["scores"]!.AsArray().Count > 0));
     }
 }
