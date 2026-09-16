@@ -29,8 +29,12 @@ public class MsProfileMerger(AppDbContext db, ICurrentUser me)
 
         if (survivorId == duplicateId) return new MergeResult(false, "A profile cannot be merged into itself.");
 
-        var survivor = await db.MsProfiles.FindAsync(survivorId);
-        var duplicate = await db.MsProfiles.FindAsync(duplicateId);
+        /* The one place that has to see tombstones: this is what writes them, and
+           what refuses to merge onto one. FindAsync cannot carry
+           IgnoreQueryFilters, and would also hand back an already-tracked row
+           without querying at all, so both lookups are explicit queries. */
+        var survivor = await db.MsProfiles.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == survivorId);
+        var duplicate = await db.MsProfiles.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == duplicateId);
         if (survivor is null || duplicate is null) return new MergeResult(false, "Profile not found.");
         if (survivor.MergedIntoId is not null) return new MergeResult(false, "The survivor has itself been merged away.");
         if (duplicate.MergedIntoId is not null) return new MergeResult(false, "Already merged.");

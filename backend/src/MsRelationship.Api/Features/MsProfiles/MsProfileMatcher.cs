@@ -14,13 +14,17 @@ public class MsProfileMatcher(AppDbContext db)
     /// suspected, for a human to resolve — never merged silently (FR-19).
     public async Task<MatchResult> MatchAsync(string name, string? email, string? organization)
     {
+        /* Neither query says MergedIntoId == null any more: the global query filter
+           on MsProfile says it for every query in the context, so repeating it here
+           would leave two places claiming the same rule and one of them free to
+           drift. */
         var key = IdentityKey.For(email, name, organization);
         var exact = await db.MsProfiles
-            .FirstOrDefaultAsync(p => p.IdentityKey == key && p.MergedIntoId == null);
+            .FirstOrDefaultAsync(p => p.IdentityKey == key);
 
         var normalised = IdentityKey.Normalize(name);
         var suspected = await db.MsProfiles
-            .Where(p => p.MergedIntoId == null && p.IdentityKey != key && p.Name.ToLower() == normalised)
+            .Where(p => p.IdentityKey != key && p.Name.ToLower() == normalised)
             .ToListAsync();
 
         return new MatchResult(exact, suspected);

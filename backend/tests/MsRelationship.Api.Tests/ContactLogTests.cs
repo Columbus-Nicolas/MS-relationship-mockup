@@ -33,6 +33,9 @@ public class ContactLogTests
         // actor is not the owner, and registers anyway
         var entry = await new ContactService(db, new FakeCurrentUser(actor.Id)).RegisterAsync(p.Id);
 
+        // RegisterAsync returns null for a profile that is gone or merged away;
+        // p is neither, so a null here would be the guard firing wrongly.
+        Assert.NotNull(entry);
         Assert.Equal(actor.Id, entry.RegisteredByUserId);
     }
 

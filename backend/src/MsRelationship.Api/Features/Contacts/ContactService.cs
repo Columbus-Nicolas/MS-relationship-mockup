@@ -9,9 +9,18 @@ public class ContactService(AppDbContext db, ICurrentUser me)
 {
     /// Anyone signed in may register a contact, not only the owner: it is a fact
     /// about the relationship, not the owner's property (FR-44).
-    public async Task<ContactEntry> RegisterAsync(Guid msProfileId, DateOnly? on = null)
+    ///
+    /// Null when there is no such person to have contacted — no row, or one
+    /// merged away. Like RelationWriter.SetAsync, and for the same reason: a
+    /// contact logged against a tombstone would never surface, because the merge
+    /// that would have moved it to the survivor has already run. Nothing else
+    /// here queries MsProfiles, so the global query filter does not reach this
+    /// path on its own.
+    public async Task<ContactEntry?> RegisterAsync(Guid msProfileId, DateOnly? on = null)
     {
         var actor = me.Id ?? throw new InvalidOperationException("A contact needs somebody to attribute it to.");
+        if (!await db.MsProfiles.AnyAsync(p => p.Id == msProfileId)) return null;
+
         var entry = new ContactEntry
         {
             MsProfileId = msProfileId,

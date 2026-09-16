@@ -12,9 +12,18 @@ namespace MsRelationship.Api.Features.Relations;
 /// holds to, not a guarantee the database or AppDbContext makes.
 public class RelationWriter(AppDbContext db, ICurrentUser me)
 {
+    /// Null when there is no such person to hold a relation to — either no row at
+    /// all, or one merged away. The global query filter on MsProfile makes those
+    /// the same query, and they deserve the same answer: a tombstone is nobody as
+    /// far as the product is concerned. Without this check the score would be
+    /// written and then never seen — the merge that would have moved it to the
+    /// survivor has already run, and every read path filters tombstones out. The
+    /// filter alone does not cover this path: nothing here would otherwise query
+    /// MsProfiles at all.
     public async Task<Relation?> SetAsync(Guid columbusUserId, Guid msProfileId, short score, string? note)
     {
         var actor = me.Id ?? throw new InvalidOperationException("A change needs somebody to attribute it to.");
+        if (!await db.MsProfiles.AnyAsync(p => p.Id == msProfileId)) return null;
 
         await using var tx = await db.Database.BeginTransactionAsync();
         var existing = await db.Relations
@@ -75,7 +84,11 @@ public class RelationWriter(AppDbContext db, ICurrentUser me)
         });
         db.Relations.Remove(existing);
 
-        var profile = await db.MsProfiles.FindAsync(msProfileId);
+        /* IgnoreQueryFilters, and an explicit query rather than FindAsync: removing
+           a relation must clear a stale owner whatever state the profile is in,
+           and neither a tombstone nor an untracked row should be able to skip it. */
+        var profile = await db.MsProfiles.IgnoreQueryFilters()
+            .FirstOrDefaultAsync(p => p.Id == msProfileId);
         if (profile is not null && profile.OwnerId == columbusUserId)
             profile.OwnerId = null;
 

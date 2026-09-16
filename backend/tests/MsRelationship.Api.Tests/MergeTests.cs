@@ -40,7 +40,13 @@ public class MergeTests
         Assert.True(await db.Relations.AnyAsync(r => r.MsProfileId == survivor.Id && r.ColumbusUserId == u.Id));
         Assert.True(await db.ContactEntries.AnyAsync(c => c.MsProfileId == survivor.Id));
         Assert.True(await db.MsProfileCustomers.AnyAsync(c => c.MsProfileId == survivor.Id));
-        Assert.Equal(survivor.Id, (await db.MsProfiles.FindAsync(duplicate.Id))!.MergedIntoId);
+        // IgnoreQueryFilters, on a fresh context: the duplicate is now a tombstone,
+        // which the global query filter hides. FindAsync on db would have hidden
+        // the change of subject too — it hands back the tracked instance without
+        // querying, so this would have asserted against memory, not Postgres.
+        await using var check = _pg.NewContext();
+        Assert.Equal(survivor.Id, (await check.MsProfiles.IgnoreQueryFilters()
+            .SingleAsync(p => p.Id == duplicate.Id)).MergedIntoId);
     }
 
     [Fact]
@@ -187,8 +193,12 @@ public class MergeTests
 
         Assert.False(result.Merged);
         Assert.NotNull(result.Refused);
-        // c must not have been silently moved onto the tombstoned b
-        Assert.Null((await db.MsProfiles.FindAsync(c.Id))!.MergedIntoId);
+        // c must not have been silently moved onto the tombstoned b. Read back
+        // through a fresh context, and past the query filter, so this is what
+        // Postgres holds rather than what the merger left tracked.
+        await using var check = _pg.NewContext();
+        Assert.Null((await check.MsProfiles.IgnoreQueryFilters()
+            .SingleAsync(p => p.Id == c.Id)).MergedIntoId);
     }
 
     // The brief's first test names relations, contacts and customers; domain

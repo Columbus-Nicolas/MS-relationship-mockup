@@ -46,6 +46,16 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         {
             e.HasIndex(x => x.IdentityKey).IsUnique();
             e.Property(x => x.Cadence).HasConversion<string>();
+            /* A profile merged away is not a person the product has any more, so
+               it is not one this context hands out. The rule was previously
+               spelled out at each read path and at none of the write paths, which
+               let a relation, a contact or an owner be written onto a tombstone —
+               invisible in the product, because the merge that would have moved
+               it to the survivor has already run, but sitting in the table.
+               Written once here instead, so no call site has to remember it.
+               MsProfileMerger must see tombstones to find and write them, and
+               says IgnoreQueryFilters() where it does. */
+            e.HasQueryFilter(x => x.MergedIntoId == null);
             e.HasOne<MsGroup>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne<MsSource>().WithMany().HasForeignKey(x => x.SourceId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne<ColumbusUser>().WithMany().HasForeignKey(x => x.OwnerId).OnDelete(DeleteBehavior.Restrict);

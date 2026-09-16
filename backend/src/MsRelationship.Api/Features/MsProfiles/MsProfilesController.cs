@@ -12,9 +12,12 @@ public class MsProfilesController(AppDbContext db) : ControllerBase
     /// contact date, the dashboards the person's domains belong to, and their
     /// scores. Statistics stay on the client, so the production numbers are the
     /// mockup's arithmetic on the mockup's shapes — see §4.4 of the plan.
+    ///
+    /// Profiles merged away are excluded by the global query filter on MsProfile,
+    /// not by a Where here — the rule belongs in one place, and this list is no
+    /// longer the only path that has to remember it.
     [HttpGet]
     public async Task<IActionResult> List() => Ok(await db.MsProfiles
-        .Where(p => p.MergedIntoId == null)
         .OrderBy(p => p.Name)
         .Select(p => new
         {
