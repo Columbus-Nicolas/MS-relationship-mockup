@@ -8,9 +8,10 @@ namespace MsRelationship.Api.Features.MsProfiles;
 [Route("api/ms-profiles")]
 public class MsProfilesController(AppDbContext db) : ControllerBase
 {
-    /// Raw rows plus the two derived values the list needs. Statistics stay on
-    /// the client, so the production numbers are the mockup's arithmetic on the
-    /// mockup's shapes — see §4.4 of the plan.
+    /// Raw rows plus the four derived values the list needs: owner name, last
+    /// contact date, the dashboards the person's domains belong to, and their
+    /// scores. Statistics stay on the client, so the production numbers are the
+    /// mockup's arithmetic on the mockup's shapes — see §4.4 of the plan.
     [HttpGet]
     public async Task<IActionResult> List() => Ok(await db.MsProfiles
         .Where(p => p.MergedIntoId == null)
@@ -23,6 +24,7 @@ public class MsProfilesController(AppDbContext db) : ControllerBase
                 .OrderByDescending(c => c.ContactedOn).Select(c => (DateOnly?)c.ContactedOn).FirstOrDefault(),
             Dashboards = db.MsProfileDomains.Where(x => x.MsProfileId == p.Id)
                 .Join(db.Domains, x => x.DomainId, d => d.Id, (x, d) => d.DashboardId)
+                .Where(d => d != null)
                 .Distinct().ToList(),
             Scores = db.Relations.Where(r => r.MsProfileId == p.Id).Select(r => r.Score).ToList()
         })

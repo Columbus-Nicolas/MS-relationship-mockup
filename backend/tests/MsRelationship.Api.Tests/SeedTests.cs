@@ -32,6 +32,15 @@ public class SeedTests : IClassFixture<WebApplicationFactory<Program>>
         Assert.Equal(70, await db.Customers.CountAsync());
         Assert.Equal(2, await db.Dashboards.CountAsync());
         Assert.Equal(17, await db.Domains.CountAsync());
+
+        // Decision 6: seeding writes relations directly and must produce no
+        // history. Decision 7: the mockup has no customer links and logs no
+        // contact. Decision 8: exactly one domain ("Unmarked") is dashboard-less
+        // — the (DashboardId, Name) index would not stop a second one.
+        Assert.Equal(0, await db.RelationHistory.CountAsync());
+        Assert.Equal(0, await db.MsProfileCustomers.CountAsync());
+        Assert.Equal(0, await db.ContactEntries.CountAsync());
+        Assert.Equal(1, await db.Domains.CountAsync(d => d.DashboardId == null));
     }
 
     [Fact]

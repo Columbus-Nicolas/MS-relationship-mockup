@@ -157,7 +157,10 @@ public class MockupSeeder(AppDbContext db)
 
         /* Owners are set last, because the rule is that an owner must already
            hold a relation — and the relations only exist once the line above
-           has run (FR-43). */
+           has run (FR-43). None of the 102 mockup profiles carries an ownerId,
+           so the Where below matches nothing and this loop's body never runs
+           for today's data; the logic stays so a seed file that does name
+           owners is handled correctly without changes here. */
         foreach (var p in seed.MsProfiles.Where(p => !string.IsNullOrEmpty(p.OwnerId)))
         {
             if (!userId.TryGetValue(p.OwnerId!, out var owner)) continue;
