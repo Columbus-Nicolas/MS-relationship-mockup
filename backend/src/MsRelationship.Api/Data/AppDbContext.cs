@@ -38,12 +38,36 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
            later reordering of the enum members can't silently remap existing rows. */
         b.Entity<ColumbusUser>().Property(x => x.Role).HasConversion<string>();
         b.Entity<ColumbusUser>().Property(x => x.Status).HasConversion<string>();
+        b.Entity<ColumbusUser>()
+            .HasOne(u => u.Department).WithMany()
+            .HasForeignKey(u => u.DepartmentId).OnDelete(DeleteBehavior.Restrict);
 
-        b.Entity<MsProfile>().HasIndex(x => x.IdentityKey).IsUnique();
-        b.Entity<MsProfile>().Property(x => x.Cadence).HasConversion<string>();
+        b.Entity<MsProfile>(e =>
+        {
+            e.HasIndex(x => x.IdentityKey).IsUnique();
+            e.Property(x => x.Cadence).HasConversion<string>();
+            e.HasOne<MsGroup>().WithMany().HasForeignKey(x => x.GroupId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<MsSource>().WithMany().HasForeignKey(x => x.SourceId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<ColumbusUser>().WithMany().HasForeignKey(x => x.OwnerId).OnDelete(DeleteBehavior.Restrict);
+            /* Self-referencing: a tombstone points at the profile it was merged
+               into, so the old id still resolves to a live person (Task 13). */
+            e.HasOne<MsProfile>().WithMany().HasForeignKey(x => x.MergedIntoId).OnDelete(DeleteBehavior.Restrict);
+        });
 
-        b.Entity<MsProfileDomain>().HasKey(x => new { x.MsProfileId, x.DomainId });
-        b.Entity<MsProfileCustomer>().HasKey(x => new { x.MsProfileId, x.CustomerId });
+        b.Entity<MsProfileDomain>(e =>
+        {
+            e.HasKey(x => new { x.MsProfileId, x.DomainId });
+            e.HasOne<MsProfile>().WithMany().HasForeignKey(x => x.MsProfileId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<Domain>().WithMany().HasForeignKey(x => x.DomainId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        b.Entity<MsProfileCustomer>(e =>
+        {
+            e.HasKey(x => new { x.MsProfileId, x.CustomerId });
+            e.HasOne<MsProfile>().WithMany().HasForeignKey(x => x.MsProfileId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<Customer>().WithMany().HasForeignKey(x => x.CustomerId).OnDelete(DeleteBehavior.Restrict);
+        });
+
         b.Entity<Customer>().HasIndex(x => x.Name).IsUnique();
         b.Entity<Customer>().Property(x => x.Type).HasConversion<string>();
 
@@ -51,13 +75,50 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         {
             e.HasIndex(x => new { x.ColumbusUserId, x.MsProfileId }).IsUnique();
             e.ToTable(t => t.HasCheckConstraint("ck_relations_score_range", "score BETWEEN -3 AND 3"));
+            e.HasOne<ColumbusUser>().WithMany().HasForeignKey(x => x.ColumbusUserId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<MsProfile>().WithMany().HasForeignKey(x => x.MsProfileId).OnDelete(DeleteBehavior.Restrict);
         });
+
+        b.Entity<ContactEntry>(e =>
+        {
+            e.HasOne<MsProfile>().WithMany().HasForeignKey(x => x.MsProfileId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<ColumbusUser>().WithMany().HasForeignKey(x => x.RegisteredByUserId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        /* Every relationship above is declared without a navigation property, using
+           HasOne<T>().WithMany(). The constraint is what is wanted here — the model
+           could not keep its own invariants with two foreign keys in it — but the
+           object graph is not: the merge in Task 13 rewrites MsProfileId directly on
+           relation, contact and link rows, and navigations would invite EF to fix up
+           an in-memory graph underneath that.
+
+           DeleteBehavior.Restrict throughout, mirroring FR-26: deleting something
+           another row still points at is refused, never cascaded and never quietly
+           nulled. EF's convention for an optional foreign key is ClientSetNull, which
+           would do exactly the quiet nulling — so every one of these says Restrict
+           out loud rather than relying on a default.
+
+           relation_history is deliberately absent from this list and must stay that
+           way. It has no foreign keys — not on MsProfileId, not on ColumbusUserId,
+           not on ChangedByUserId — because history has to outlive what it describes:
+           a row must still say what a score was and who set it after the profile,
+           the user, or the relation it refers to is gone. Adding foreign keys here
+           would make the record deletable by proxy, which is the one thing an
+           append-only table must not be. */
 
         /* Stored as text like every other enum here, and doubly so for this table:
            relation_history exists to answer "what changed" by reading the database
            directly, and a bare 0/1/2 defeats that. It also means a later reordering
            of the enum members can't silently reinterpret rows nothing can correct. */
         b.Entity<RelationHistory>().Property(x => x.ChangeType).HasConversion<string>();
+
+        /* The only lookup index the foreign keys above do not already provide.
+           Every other hot column is either a foreign key (EF indexes those) or the
+           leading column of an existing key — relations(columbus_user_id) leads the
+           unique pair, and both link tables' ms_profile_id leads their primary key.
+           relation_history has no foreign keys to index it, and reading one
+           person's history newest-first is what Stage 2's undo will do. */
+        b.Entity<RelationHistory>().HasIndex(x => new { x.MsProfileId, x.ChangedAt });
     }
 
     /* DbContext exposes four public virtual save entry points, not two: SaveChanges()
