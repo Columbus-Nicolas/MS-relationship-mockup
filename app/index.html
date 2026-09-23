@@ -6,10 +6,10 @@
 <title>Columbus &middot; Microsoft Relationship Map</title>
 <style>
 /* ============================================================
-   Columbus - Microsoft Relationship Map (UI mockup)
-   Single-file mockup. No dependencies, no backend.
-   The Microsoft contacts are the real intake list. Every score, note and
-   Columbus user in here is placeholder data for the UI - not real intelligence.
+   Columbus - Microsoft Relationship Map
+   The app's one page: it renders everything, and every piece of data comes
+   from the server (app/server.js, Postgres). The design reference it was
+   copied from is the mockup, index.html at the repo root.
    ============================================================ */
 
 :root{
@@ -1211,7 +1211,7 @@ function sidebar(route){
   return '<aside class="sidebar">' +
     '<div class="sidebar__logo"><strong>COLUMBUS</strong><small>Microsoft Relationship Map</small></div>' +
     '<nav class="nav">' + nav + '</nav>' +
-    '<div class="sidebar__foot">UI mockup &middot; placeholder scores<br>Version 0.1</div>' +
+    '<div class="sidebar__foot">Version 0.1</div>' +
     '</aside>';
 }
 
@@ -1234,7 +1234,7 @@ function topbar(route){
 }
 
 /* ============================================================
-   5. PAGE 1 - LOGIN  (placeholder: any input signs you in)
+   5. PAGE 1 - LOGIN  (development sign-in: you are DEV_USER_EMAIL)
    ============================================================ */
 
 function viewLogin(){
@@ -1251,7 +1251,7 @@ function viewLogin(){
           '<li><i>&#9679;</i><span>Keep the knowledge when people change roles or leave.</span></li>' +
         '</ul>' +
       '</div>' +
-      '<div style="position:relative;z-index:1;color:#7e97b1;font-size:12px">Mockup &middot; placeholder scores &middot; not connected to any system</div>' +
+      '<div style="position:relative;z-index:1;color:#7e97b1;font-size:12px">Development version &middot; sign-in is not secured yet</div>' +
     '</div>' +
     '<div class="login__form"><form class="login__card" data-action="login">' +
       '<h2>Sign in</h2>' +
@@ -1265,8 +1265,8 @@ function viewLogin(){
         '<input id="loginmail" type="email" placeholder="firstname.lastname@columbusglobal.com" autocomplete="off"></div>' +
       '<div style="height:14px"></div>' +
       '<button type="submit" class="btn btn--primary" style="width:100%;justify-content:center">Continue</button>' +
-      '<div class="login__note"><b>Mockup:</b> authentication is not implemented. Any e-mail - or none at all - signs you in as ' +
-        esc(me().name) + ' with the <b>Admin</b> role. In the real app this is Microsoft Entra ID, restricted to Columbus mail addresses.</div>' +
+      '<div class="login__note"><b>Development sign-in:</b> any e-mail - or none at all - signs you in as ' +
+        esc(me().name) + ' with the <b>' + esc(roleName(state.me.role)) + '</b> role. Before go-live this becomes Microsoft Entra ID, restricted to Columbus mail addresses.</div>' +
     '</form></div>' +
   '</div>';
 }
@@ -3322,7 +3322,7 @@ function modalMarkup(m){
     return shellModal('The reminder mail',
       'One mail per owner, first Monday of the month - next on ' + when + '.',
       '<div class="up-mail">' + boxes + '</div>' +
-      '<div class="mockflag" style="margin:14px 0 0">Mockup - no mail is actually sent. This is what would go out, ' +
+      '<div class="mockflag" style="margin:14px 0 0">No mail is sent yet. This is what would go out, ' +
       'built from the people who are overdue or due within ten days.</div>',
       '<button class="btn btn--primary" data-action="close-layer">Close</button>');
   }
@@ -3668,7 +3668,7 @@ document.addEventListener('click', function(e){
     case 'ms-delete':
       var mp = ms(id);
       pendingConfirm = function(){ deleteMsProfile(id); };
-      openModal({ type:'confirm', title:'Delete Microsoft profile', sub:'This cannot be undone in the mockup.',
+      openModal({ type:'confirm', title:'Delete Microsoft profile', sub:'This cannot be undone.',
         body:'Delete <b>' + esc(mp ? mp.name : '') + '</b>? ' + msStats(id).count +
              ' registered relation(s) will be removed as well.', okLabel:'Delete', danger:true });
       break;
@@ -3730,7 +3730,7 @@ document.addEventListener('click', function(e){
         return;
       }
       pendingConfirm = function(){ deleteBoard(id); };
-      openModal({ type:'confirm', title:'Delete dashboard', sub:'This cannot be undone in the mockup.',
+      openModal({ type:'confirm', title:'Delete dashboard', sub:'This cannot be undone.',
         body:'Delete <b>' + esc(db.label) + '</b>? It holds no domains, so no Microsoft profile or ' +
              'relationship is affected - only the two pages disappear from the menu.',
         okLabel:'Delete', danger:true });
@@ -3799,7 +3799,7 @@ document.addEventListener('click', function(e){
     case 'cb-delete':
       var cp = cb(id);
       pendingConfirm = function(){ deleteColumbusUser(id); };
-      openModal({ type:'confirm', title:'Delete Columbus user', sub:'This cannot be undone in the mockup.',
+      openModal({ type:'confirm', title:'Delete Columbus user', sub:'This cannot be undone.',
         body:'Delete <b>' + esc(cp ? cp.name : '') + '</b>? ' + cbStats(id).count +
              ' relation(s) will be removed with them.', okLabel:'Delete', danger:true });
       break;
