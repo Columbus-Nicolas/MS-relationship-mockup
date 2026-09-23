@@ -1,0 +1,28 @@
+services:
+  db:
+    build: ./db                               # postgres:18-alpine + schema.sql
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-app}
+      POSTGRES_DB: app
+    volumes:
+      - pgdata:/var/lib/postgresql           # the 18 image keeps PGDATA under here
+    healthcheck:
+      test: pg_isready -U app -d app
+      interval: 2s
+      retries: 30
+
+  app:
+    build: ./app
+    environment:
+      DATABASE_URL: postgres://app:${POSTGRES_PASSWORD:-app}@db:5432/app
+      # Dev sign-in: the app acts as this user. Mette is who the mockup signs in as.
+      DEV_USER_EMAIL: ${DEV_USER_EMAIL:-mette.kirkegaard@columbusglobal.example}
+    ports:
+      - "127.0.0.1:8080:8080"                # localhost only: dev sign-in has no security
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
