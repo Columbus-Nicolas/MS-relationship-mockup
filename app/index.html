@@ -3181,12 +3181,18 @@ function drawerMs(id){
   var custs = customersOf(p), keep = upkeepOf(p), owner = ownerOf(p);
   var log = contactsFor(p.id);
   var rs = relationsForMs(id).slice().sort(function(a,b){ return b.score - a.score; });
+  /* A Standard user is sent only their own relations, so the drawer shows theirs
+     and says so, rather than counting them as everybody's. */
+  var ownOnly = state.me.role === 'standard';
   var conns = rs.length ? rs.map(function(r){
     var person = cb(r.columbusId);
     return '<tr><td>' + personCell(person ? person.name : '?', person ? person.title : '') + '</td>' +
            '<td style="width:60px">' + scoreChip(r.score) + '</td>' +
            '<td style="color:var(--text-muted)">' + esc(r.note) + '</td></tr>';
-  }).join('') : '<tr><td colspan="3"><div class="empty" style="padding:22px"><b>No connections yet</b>Nobody at Columbus has registered a relationship with this person.</div></td></tr>';
+  }).join('') : '<tr><td colspan="3"><div class="empty" style="padding:22px">' + (ownOnly
+      ? '<b>No relation of yours</b>With the Standard role you only see your own relations.'
+      : '<b>No connections yet</b>Nobody at Columbus has registered a relationship with this person.') +
+    '</div></td></tr>';
 
   return '<div class="drawer"><div class="drawer__bg" data-action="close-layer"></div><div class="drawer__panel">' +
     '<div class="drawer__head"><div>' + personCell(p.name, p.title) +
@@ -3194,11 +3200,11 @@ function drawerMs(id){
 
       '<div style="margin-left:auto"><button class="btn btn--sm btn--ghost" data-action="close-layer">&#10005;</button></div></div>' +
     '<div class="drawer__body">' +
-      '<div class="stats" style="margin:0;grid-template-columns:1fr 1fr">' +
+      (ownOnly ? '' : '<div class="stats" style="margin:0;grid-template-columns:1fr 1fr">' +
         '<div class="stat"><b>' + s.count + '</b><span>Columbus connections</span></div>' +
         '<div class="stat"><b>' + (s.count ? fmtScore(s.mean) : '&ndash;') + '</b><span>Mean score</span>' +
           '<em>' + (s.count ? 'median ' + fmtScore(s.median) + ' \u00b7 sum ' + signed(s.sum) : 'no connections yet') + '</em></div>' +
-      '</div>' +
+      '</div>') +
       '<dl class="kv">' +
         '<dt>Dashboards</dt><dd>' + (boardsOfProfile(p).length
           ? '<div class="chips">' + boardsOfProfile(p).map(function(b){
@@ -3235,7 +3241,7 @@ function drawerMs(id){
             }).join('') + '</tbody></table>'
           : '') +
       '</div>' +
-      '<div><h4 style="font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);margin-bottom:10px">Who knows them at Columbus</h4>' +
+      '<div><h4 style="font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);margin-bottom:10px">' + (ownOnly ? 'Your relation' : 'Who knows them at Columbus') + '</h4>' +
         '<table class="minitable"><tbody>' + conns + '</tbody></table></div>' +
       '<div><button class="btn btn--primary" data-action="ms-edit" data-id="' + p.id + '"' + (canEdit() ? '' : ' disabled') + '>Edit profile</button></div>' +
     '</div></div></div>';

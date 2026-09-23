@@ -54,7 +54,10 @@ async function state(me) {
                    join customers c on c.id = x.customer_id where x.ms_profile_id = p.id), '{}'::text[]) as customer_ids
        from ms_profiles p order by p.seq`),
     q('select * from columbus_profiles order by seq'),
-    q('select * from relations order by seq')
+    // Standard users have no page that shows other people's scores, so they are
+    // not sent any: only their own relations. Upkeep (owners, contact log) stays shared.
+    q('select * from relations where $1::text is null or columbus_id = $1 order by seq',
+      [me.role === 'standard' ? me.userId : null])
   ]);
   return { today, me, customers, contacts, boards, domains, msProfiles, columbusProfiles, relations };
 }
