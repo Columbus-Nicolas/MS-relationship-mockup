@@ -612,6 +612,9 @@ td.actions{text-align:right;white-space:nowrap}
 .eco--ring .eco-panel{position:absolute}
 .eco--flow .eco-panel{width:auto!important;min-height:0!important;left:auto!important;top:auto!important}
 .eco-panel.is-dim{opacity:.7}
+/* Every panel is its own stacking context, so a popover (strength picker, role
+   tip) could not rise above the next panel or the hub. The panel in use is lifted. */
+.eco-panel:has(.ppick),.eco-panel:hover{z-index:4}
 
 .eco-panel__head{display:flex;align-items:flex-start;gap:9px;margin-bottom:9px}
 .eco-ico{
@@ -3847,7 +3850,8 @@ document.addEventListener('keydown', function(e){
 // Hovering a group panel highlights its spoke and dims the rest of the board.
 var ecoHot = null;
 document.addEventListener('mouseover', function(e){
-  if (state.ui.route !== 'dashboard' || !e.target.closest) return;
+  // Any board, not only the one whose route happens to be called "dashboard".
+  if (!document.getElementById('eco') || !e.target.closest) return;
   var p = e.target.closest('[data-panel]');
   var id = p ? p.getAttribute('data-panel') : null;
   if (id === ecoHot) return;
