@@ -1,4 +1,6 @@
--- Runs once, on the first start of an empty database volume.
+-- Migration 001: the starting schema. The app applies each file in
+-- app/migrations once, in name order, on start-up (migrate() in server.js).
+-- Never edit a file that has been applied - add the next number instead.
 -- Text ids so the mockup's seed ids (m1, c1, d0, data-ai) survive; `seq` keeps
 -- insertion order, which the app relies on (boards[0] is the landing board, the
 -- people on a panel follow the profile order).

@@ -144,9 +144,28 @@ async function body(req) {
   try { return JSON.parse(raw) || {}; } catch { fail(400, 'Invalid JSON'); }
 }
 
+/* Schema changes are numbered files in migrations/ (001_schema.sql, 002_...),
+   each applied once, in name order, in its own transaction, and recorded in
+   schema_migrations. A failed one rolls back and the server does not start. */
+// ponytail: no lock, one app container; take pg_advisory_lock first if it ever runs as several.
+async function migrate() {
+  await pool.query(`create table if not exists schema_migrations (
+    name text primary key, applied_at timestamptz not null default now())`);
+  const done = new Set((await pool.query('select name from schema_migrations')).rows.map(r => r.name));
+  const dir = path.join(__dirname, 'migrations');
+  for (const f of fs.readdirSync(dir).filter(f => f.endsWith('.sql')).sort()) {
+    if (done.has(f)) continue;
+    await tx(async c => {
+      await c.query(fs.readFileSync(path.join(dir, f), 'utf8'));
+      await c.query('insert into schema_migrations (name) values ($1)', [f]);
+    });
+    console.log('applied migration', f);
+  }
+}
+
 const PG_STATUS = { '23505': 409, '23503': 409, '23514': 400, '23502': 400, '22P02': 400 };
 
-http.createServer(async (req, res) => {
+const server = http.createServer(async (req, res) => {
   const send = (status, data, type = 'application/json') => {
     res.writeHead(status, { 'content-type': type });
     res.end(type === 'application/json' ? JSON.stringify(data) : data);
@@ -167,4 +186,8 @@ http.createServer(async (req, res) => {
     if (status === 500) console.error(e);
     send(status, { error: status === 500 ? 'Something went wrong' : e.code === '23514' ? e.message : e.detail || e.message });
   }
-}).listen(process.env.PORT || 8080, () => console.log('listening on', process.env.PORT || 8080));
+});
+
+migrate().then(
+  () => server.listen(process.env.PORT || 8080, () => console.log('listening on', process.env.PORT || 8080)),
+  e => { console.error('migration failed, not starting:', e.message); process.exit(1); });

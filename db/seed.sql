@@ -1,4 +1,5 @@
--- The mockup's data. Run by hand into an empty database:
+-- The mockup's data. Run by hand into an empty database, after the app has
+-- started once (it creates the schema):
 --   docker compose exec -T db psql -U app -d app -v ON_ERROR_STOP=1 < db/seed.sql
 -- Generated once from the root index.html (the mockup). The Columbus users,
 -- every score and every note are placeholders.

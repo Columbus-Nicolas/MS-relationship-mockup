@@ -1,6 +1,6 @@
 services:
   db:
-    build: ./db                               # postgres:18-alpine + schema.sql
+    image: postgres:18-alpine                 # the app creates the schema (app/migrations)
     environment:
       POSTGRES_USER: app
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-app}
