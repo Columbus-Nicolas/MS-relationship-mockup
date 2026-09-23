@@ -24,5 +24,36 @@ services:
       db:
         condition: service_healthy
 
+  # A dump at start-up and then every 24 hours, kept 14 days in the `backups`
+  # volume. Old dumps are only pruned after a new one has succeeded.
+  # ponytail: on the same machine as the database - guards against mistakes, not
+  # against losing the machine. Copy dumps off it (README), or use a managed database.
+  backup:
+    image: postgres:18-alpine
+    environment:
+      PGHOST: db
+      PGUSER: app
+      PGPASSWORD: ${POSTGRES_PASSWORD:-app}
+      PGDATABASE: app
+    volumes:
+      - backups:/backups
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        while true; do
+          f=/backups/app-$$(date +%F-%H%M).dump
+          if pg_dump -Fc -f /backups/.partial && mv /backups/.partial "$$f"; then
+            echo "backup: $$f"
+            find /backups -name 'app-*.dump' -mtime +14 -delete
+          else
+            echo "BACKUP FAILED" >&2
+          fi
+          sleep 86400
+        done
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   pgdata:
+  backups:
