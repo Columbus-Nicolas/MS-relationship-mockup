@@ -790,6 +790,7 @@ var PAGES = [
   { route:'ms-domains',        title:'Microsoft Domains',   sub:'Categories & mapping',        icon:'◆', section:'Administration', wide:true, roles:['admin','standard'] },
   { route:'ms-profiles',       title:'Microsoft Profiles',  sub:'Approved Microsoft contacts', icon:'●', section:'Administration', wide:true, roles:['admin','standard'] },
   { route:'history',           title:'History',             sub:'Every change, and undo',      icon:'\u21ba', section:'Administration', wide:true, roles:['admin','standard'] },
+  { route:'backups',           title:'Backups',             sub:'Whole-database copies',       icon:'\u25a4', section:'Administration', wide:true, roles:['admin'] },
   { route:'columbus-profiles', title:'Columbus Profiles',   sub:'Internal users & relations',  icon:'▲', section:'Administration', wide:true, roles:['admin','standard'] },
   { route:'my-relations',      title:'My Relations',        sub:'Your own Microsoft contacts', icon:'★', section:'Relations',              roles:['admin','standard'] }
 ];
@@ -1152,7 +1153,7 @@ function go(route){
 }
 function readHash(){
   var r = (location.hash || '').replace(/^#\/?/, '') || 'login';
-  if (r !== state.ui.route) { state.ui.gvDrill = null; state.ui.ugDrill = null; state.ui.hist = null; }   // they belong to one page
+  if (r !== state.ui.route) { state.ui.gvDrill = null; state.ui.ugDrill = null; state.ui.hist = null; state.ui.bk = null; }   // they belong to one page
   state.ui.route = r;
 }
 window.addEventListener('hashchange', function(){ readHash(); render(); });
@@ -1185,6 +1186,7 @@ function render(){
   else if (route === 'columbus-profiles') body = viewColumbusProfiles();
   else if (route === 'my-relations')      body = viewMyRelations();
   else if (route === 'history')           body = viewHistory();
+  else if (route === 'backups')           body = viewBackups();
 
   /* Prose reads better with a measured line length, so the page is capped by
      default - but the pages that carry a board or a wide table say so for
@@ -3318,6 +3320,49 @@ function viewHistory(){
 }
 
 /* ============================================================
+   PAGE - BACKUPS  (Admin only)
+   Whole-database copies: one a day, kept 14 days, plus any taken by hand or
+   just before a restore. Restoring one replaces everything; the server backs
+   up the current state first, so a restore can itself be reversed.
+   ============================================================ */
+
+function loadBackups(){
+  if (state.ui.bkLoading) return;
+  state.ui.bkLoading = true;
+  api('GET', '/api/backups').then(function(d){ state.ui.bk = d.backups; },
+    function(err){ state.ui.bk = []; toast(err.message, 'err'); })
+    .then(function(){ state.ui.bkLoading = false; render(); });
+}
+function fmtSize(n){ return n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB'; }
+function backupKind(name){
+  return /^app-manual-/.test(name) ? 'Taken by hand'
+       : /^app-before-restore-/.test(name) ? 'Taken just before a restore' : 'Daily';
+}
+
+function viewBackups(){
+  if (!state.ui.bk) loadBackups();
+  var rows = (state.ui.bk || []).map(function(f){
+    return '<tr><td style="white-space:nowrap">' + esc(histWhen(f.at)) + '</td>' +
+      '<td>' + esc(backupKind(f.name)) + '</td>' +
+      '<td class="num">' + esc(fmtSize(f.size)) + '</td>' +
+      '<td class="hint">' + esc(f.name) + '</td>' +
+      '<td class="actions"><button class="btn btn--sm btn--danger" data-action="bk-restore" data-id="' + esc(f.name) +
+        '" data-at="' + esc(f.at) + '">Restore</button></td></tr>';
+  }).join('');
+  var empty = state.ui.bk ? 'No backups yet' : 'Loading…';
+  return '<div class="page__head"><div><h2>Backups</h2>' +
+      '<p>A copy of the whole database is taken every day and kept for 14 days. Restoring one puts ' +
+      'everything back as it was then - everybody’s changes since are replaced. A backup of the ' +
+      'current state is taken first, so a restore can itself be reversed. To undo a single change, ' +
+      'use <a href="#/history">History</a> instead.</p></div>' +
+      '<div class="page__actions"><button class="btn btn--primary" data-action="bk-now">Back up now</button></div></div>' +
+    '<div class="card"><div class="tablewrap"><table><thead><tr>' +
+      '<th>Taken</th><th>Kind</th><th>Size</th><th>File</th><th></th></tr></thead><tbody>' +
+      (rows || '<tr><td colspan="5"><div class="empty"><b>' + empty + '</b></div></td></tr>') +
+    '</tbody></table></div></div>';
+}
+
+/* ============================================================
    12. DRAWER + MODALS
    ============================================================ */
 
@@ -3976,6 +4021,27 @@ document.addEventListener('click', function(e){
       state.ui.cbSort = ck; render(); break;
     case 'cb-reset': state.ui.cbSearch = ''; state.ui.cbDept = ''; state.ui.cbRole = ''; render(); break;
     case 'cb-toggle': state.ui.cbOpen = state.ui.cbOpen === id ? null : id; render(); break;
+
+    /* --- backups --- */
+    case 'bk-now':
+      el.disabled = true;
+      api('POST', '/api/backups', {}).then(function(d){ toast('Backed up: ' + d.name, 'ok'); state.ui.bk = null; render(); },
+        function(err){ toast(err.message, 'err'); el.disabled = false; });
+      break;
+    case 'bk-restore':
+      var bkAt = histWhen(el.getAttribute('data-at'));
+      pendingConfirm = function(){
+        toast('Restoring…');
+        write('POST', '/api/backups/' + encodeURIComponent(id) + '/restore', {}, function(){
+          toast('Restored the backup from ' + bkAt + '. The state before it is saved as a backup too.', 'ok');
+          state.ui.bk = null; state.ui.hist = null; state.ui.myDraft = null; render();
+        });
+      };
+      openModal({ type:'confirm', title:'Restore the whole database', sub:'Everything since ' + bkAt + ' is replaced.',
+        body:'All data goes back to how it was on <b>' + esc(bkAt) + '</b>, for everybody - every change made since is replaced. ' +
+             'A backup of the current state is taken first, so you can go back to it from this page.',
+        okLabel:'Restore', danger:true });
+      break;
 
     /* --- history --- */
     case 'hist-toggle': state.ui.histOpen = state.ui.histOpen === id ? null : id; render(); break;

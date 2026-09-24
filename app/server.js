@@ -4,6 +4,7 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const { AsyncLocalStorage } = require('node:async_hooks');
+const { execFile } = require('node:child_process');
 const pg = require('pg');
 
 pg.types.setTypeParser(1082, v => v);            // date stays 'YYYY-MM-DD', as the page expects
@@ -120,6 +121,43 @@ async function history(before) {
   return { changes: out };
 }
 
+/* Whole-database backups: the dumps in the `backups` volume, which the backup
+   service writes every day and the app writes on request. Admin only. */
+const DUMPS = '/backups', DUMP_NAME = /^app-[\w-]+\.dump$/;
+const stamp = () => new Date().toISOString().slice(0, 19).replace('T', '-').replace(/:/g, '');
+function sh(cmd, args) {
+  return new Promise((ok, no) => execFile(cmd, args, { maxBuffer: 64 << 20 }, (e, out, err) =>
+    e ? no(new HttpError(409, cmd + ' failed: ' + (String(err).trim().split('\n').pop() || e.message))) : ok(out)));
+}
+function backups() {
+  return { backups: fs.readdirSync(DUMPS).filter(f => DUMP_NAME.test(f)).map(f => {
+    const st = fs.statSync(path.join(DUMPS, f));
+    return { name: f, size: st.size, at: st.mtime.toISOString() };
+  }).sort((a, b) => (a.at < b.at ? 1 : -1)) };
+}
+async function backupNow(kind) {
+  const name = 'app-' + kind + '-' + stamp() + '.dump', file = path.join(DUMPS, name);
+  await sh('pg_dump', ['-Fc', '-f', file + '.partial', '-d', process.env.DATABASE_URL]);
+  fs.renameSync(file + '.partial', file);            // a half-written dump never looks like a backup
+  return { name };
+}
+/* Put the whole database back as a backup held it. Only a backup of this same
+   schema - `pg_restore --clean` would leave anything newer half in place. The
+   current state is dumped first, so the restore itself can be reversed; the
+   restore is one transaction, so it happens completely or not at all. */
+async function restoreBackup(name, me) {
+  const file = path.join(DUMPS, name);
+  if (!DUMP_NAME.test(name) || !fs.existsSync(file)) fail(404, 'There is no backup called ' + name);
+  const theirs = (await sh('pg_restore', ['-a', '-t', 'schema_migrations', '-f', '-', file])).match(/^\d{3}_\S+\.sql(?=\t)/gm) || [];
+  const ours = (await q('select name from schema_migrations order by name')).map(r => r.name);
+  if (theirs.sort().join() !== ours.join())
+    fail(409, 'That backup was made by an older version of the app - restore it on the command line (see the README)');
+  const before = (await backupNow('before-restore')).name;
+  await sh('pg_restore', ['--clean', '--if-exists', '--single-transaction', '--no-owner', '-d', process.env.DATABASE_URL, file]);
+  await q(`insert into history (tbl, op, new, actor) values ('backup', 'restore', $1, $2)`, [{ file: name, before }, me.email]);
+  return { before };
+}
+
 const ID = '([^/]+)';
 const ADM = { admin: true }, ONLY_ADMIN = { onlyAdmin: true }, ANY = {}, OPEN = { open: true };
 const routes = [
@@ -134,6 +172,10 @@ const routes = [
          list(b.skills || []), text(b.phone), me.email,
          ADMIN_EMAILS.includes(me.email.toLowerCase()) ? 'admin' : 'standard'])],
   ['GET', '/api/history', {}, (me, b, id, url) => history(url.searchParams.get('before'))],
+  // Outside a request transaction (`raw`): pg_dump and pg_restore are their own sessions.
+  ['GET', '/api/backups', ONLY_ADMIN, () => backups()],
+  ['POST', '/api/backups', { onlyAdmin: true, raw: true }, () => backupNow('manual')],
+  ['POST', '/api/backups/' + ID + '/restore', { onlyAdmin: true, raw: true }, (me, b, id) => restoreBackup(id, me)],
   ['POST', '/api/history/' + ID + '/undo', ONLY_ADMIN, (me, b, id) =>
       /^-?\d+$/.test(id) ? q('select undo_change($1::bigint)', [id]) : fail(400, 'Not a change')],
 

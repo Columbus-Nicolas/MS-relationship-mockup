@@ -17,6 +17,8 @@ services:
     environment:
       DATABASE_URL: postgres://app:${POSTGRES_PASSWORD:-app}@db:5432/app
       ADMIN_EMAILS: ${ADMIN_EMAILS:-}         # made Admin on their first sign-in
+    volumes:
+      - backups:/backups                     # the Backups page lists, takes and restores these
     # Not published: the only way in is through `auth`, which signs people in.
     depends_on:
       db:
@@ -68,6 +70,7 @@ services:
     entrypoint: ["sh", "-c"]
     command:
       - |
+        chown 1000:1000 /backups             # the app (user node) writes here too
         while true; do
           f=/backups/app-$$(date +%F-%H%M).dump
           if pg_dump -Fc -f /backups/.partial && mv /backups/.partial "$$f"; then
