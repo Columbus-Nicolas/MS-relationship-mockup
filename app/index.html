@@ -208,6 +208,7 @@ input[type=text],input[type=email],input[type=search],select,textarea{
   border:1px solid var(--border-strong);border-radius:6px;padding:8px 10px;background:#fff;font-size:13px;min-width:0;
 }
 input:focus,select:focus,textarea:focus{outline:2px solid rgba(21,80,127,.25);outline-offset:0;border-color:var(--navy-600)}
+input:disabled,select:disabled{background:#f3f5f8;color:var(--text-muted);cursor:not-allowed}
 .search input{width:270px}
 .toolbar .spacer{flex:1}
 .hint{font-size:12px;color:var(--text-faint)}
@@ -847,7 +848,7 @@ var CB_DEPARTMENTS = ['Executive','Alliances','Data & AI','Business Applications
 var state = {
   /* userId is always the server's; role is who you are "viewing as". */
   session: { userId:null, role:'admin' },
-  me: { userId:null, role:'admin', email:'' },    // who the server says you are
+  me: { userId:null, role:'admin', email:'', name:'' },    // who the server says you are
   today: '',
   customers: [], contacts: [], boards: [], domains: [],
   msProfiles: [], columbusProfiles: [], relations: [],
@@ -1158,7 +1159,9 @@ window.addEventListener('hashchange', function(){ readHash(); render(); });
 
 function render(){
   var route = state.me.email ? state.ui.route : 'login';   // not signed in: nothing but the login page
+  if (state.me.email && !state.me.userId) route = 'account';  // no profile yet: create it first
 
+  if (route === 'account') { document.getElementById('app').innerHTML = viewAccount(); return; }
   if (route === 'login') { document.getElementById('app').innerHTML = viewLogin(); return; }
 
   // Fall back to the first page the current role is allowed to see.
@@ -1243,10 +1246,9 @@ function topbar(route){
    5. PAGE 1 - LOGIN  (development sign-in: you are DEV_USER_EMAIL)
    ============================================================ */
 
-function viewLogin(){
-  return '' +
-  '<div class="login">' +
-    '<div class="login__brand">' +
+/* The left half of the login screen, shared with the account page. */
+function loginBrand(){
+  return '<div class="login__brand">' +
       '<div class="login__logo"><strong>COLUMBUS</strong><small>Microsoft Relationship Map</small></div>' +
       '<div>' +
         '<h1>Know exactly where we stand with Microsoft.</h1>' +
@@ -1258,7 +1260,12 @@ function viewLogin(){
         '</ul>' +
       '</div>' +
       '<div style="position:relative;z-index:1;color:#7e97b1;font-size:12px">Columbus internal &middot; @columbusglobal.com accounts only</div>' +
-    '</div>' +
+    '</div>';
+}
+
+function viewLogin(){
+  return '' +
+  '<div class="login">' + loginBrand() +
     '<div class="login__form"><form class="login__card" data-action="login">' +
       '<h2>Sign in</h2>' +
       '<p>Use your Columbus account to continue.</p>' +
@@ -1269,8 +1276,36 @@ function viewLogin(){
       '<div class="login__note">' + (state.me.dev
         ? '<b>Development sign-in:</b> no Microsoft sign-in - you are ' + esc(me().name) +
           ' with the <b>' + esc(roleName(state.me.role)) + '</b> role.'
-        : 'Only <b>@columbusglobal.com</b> accounts can sign in. The first time you do, you are ' +
-          'added to Columbus Profiles.') + '</div>' +
+        : 'Only <b>@columbusglobal.com</b> accounts can sign in. The first time you do, you ' +
+          'fill in your details to create your account.') + '</div>' +
+    '</form></div>' +
+  '</div>';
+}
+
+/* ============================================================
+   PAGE - CREATE YOUR ACCOUNT
+   The first time someone signs in they have no Columbus profile yet, and
+   the app shows nothing else until they fill it in. The e-mail is the one
+   they signed in with; the name comes pre-filled from their Microsoft account.
+   ============================================================ */
+function viewAccount(){
+  var depts = '<option value="">Choose your department</option>' + CB_DEPARTMENTS.map(function(d){
+    return '<option>' + esc(d) + '</option>'; }).join('');
+  function field(id, label, input){
+    return '<div class="field" style="margin-bottom:12px"><label for="' + id + '">' + label + '</label>' + input + '</div>';
+  }
+  return '' +
+  '<div class="login">' + loginBrand() +
+    '<div class="login__form"><form class="login__card" data-action="account">' +
+      '<h2>Create your account</h2>' +
+      '<p>This is your entry in Columbus Profiles, so colleagues can see who you are and what you know.</p>' +
+      field('a-email', 'E-mail', '<input type="email" id="a-email" value="' + esc(state.me.email) + '" disabled>') +
+      field('a-name', 'Full name', '<input type="text" id="a-name" value="' + esc(state.me.name) + '" required autocomplete="name">') +
+      field('a-title', 'Title', '<input type="text" id="a-title" required placeholder="e.g. Data & AI Consultant">') +
+      field('a-dept', 'Department', '<select id="a-dept" required>' + depts + '</select>') +
+      field('a-skills', 'Skills (comma separated)', '<input type="text" id="a-skills" placeholder="e.g. Fabric, Power BI">') +
+      field('a-phone', 'Phone', '<input type="text" inputmode="tel" id="a-phone" autocomplete="tel">') +
+      '<button type="submit" class="btn btn--primary" style="width:100%;justify-content:center;margin-top:4px">Create account</button>' +
     '</form></div>' +
   '</div>';
 }
@@ -2603,7 +2638,7 @@ function viewColumbusProfiles(){
 
   var body = rows.length ? rows.map(function(r){
     var open = u.cbOpen === r.id;
-    var roleCell = editable
+    var roleCell = editable && isAdmin()
       ? '<select data-action="cb-set-role" data-id="' + r.id + '">' + ROLES.map(function(x){
           return '<option value="' + x.id + '"' + (r.role === x.id ? ' selected' : '') + '>' + esc(x.name) + '</option>';
         }).join('') + '</select>'
@@ -2618,8 +2653,9 @@ function viewColumbusProfiles(){
       '<td class="num">' + r.count + '</td>' +
       '<td>' + scoreStat(cbStats(r.id)) + '</td>' +
       '<td class="actions">' +
+        '<button class="btn btn--sm" data-action="cb-edit" data-id="' + r.id + '"' + (editable ? '' : ' disabled') + '>Edit</button> ' +
         '<button class="btn btn--sm btn--danger" data-action="cb-delete" data-id="' + r.id + '"' +
-          (editable ? '' : ' disabled') + ' title="Delete user">Delete</button>' +
+          (isAdmin() ? '' : ' disabled') + ' title="' + (isAdmin() ? 'Delete user' : 'Only an Admin can delete users') + '">Delete</button>' +
       '</td></tr>';
 
     return tr + (open ? '<tr class="detailrow"><td colspan="9">' + cbDetail(r.id) + '</td></tr>' : '');
@@ -3485,15 +3521,22 @@ function modalMarkup(m){
       '<button class="btn btn--primary" data-action="dom-save" data-id="' + (m.id || '') + '">Save domain</button>');
   }
   if (m.type === 'cb') {
-    var c = m.id ? cb(m.id) : { name:'', title:'', email:'', department:CB_DEPARTMENTS[2], role:'standard', skills:[] };
+    var c = m.id ? cb(m.id) : { name:'', title:'', email:'', phone:'', department:CB_DEPARTMENTS[2], role:'standard', skills:[] };
+    /* The e-mail is how someone signs in, and the role what they may do: once
+       someone exists only an Admin changes those (the role from the table). */
+    var roles = isAdmin() ? ROLES : ROLES.filter(function(r){ return r.id === 'standard'; });
     return shellModal(m.id ? 'Edit Columbus user' : 'Add Columbus user',
-      'Internal user. They can register their own relations as soon as they sign in.',
+      m.id ? (isAdmin() ? 'Their e-mail is how they sign in - change it with care.'
+                        : 'Only an Admin can change the e-mail or the role.')
+           : 'They are matched by this e-mail when they first sign in, and skip creating an account.',
       '<div class="form-grid">' +
         inputField('f-cname', 'Full name', c.name, 'full') +
         inputField('f-ctitle', 'Title', c.title) +
-        inputField('f-cmail', 'E-mail', c.email) +
+        inputField('f-cmail', 'E-mail', c.email, '', m.id && !isAdmin()) +
         selField('f-cdept', 'Department', CB_DEPARTMENTS, c.department) +
-        selField('f-crole', 'Role', ROLES.map(function(r){ return r.name; }), roleName(c.role)) +
+        (m.id ? inputField('f-cphone', 'Phone', c.phone || '')
+              : selField('f-crole', 'Role', roles.map(function(r){ return r.name; }), roleName(c.role))) +
+        (m.id ? '' : inputField('f-cphone', 'Phone', '', 'full')) +
         inputField('f-cskills', 'Skills (comma separated)', c.skills.join(', '), 'full') +
       '</div>',
       '<button class="btn" data-action="close-layer">Cancel</button>' +
@@ -3508,9 +3551,9 @@ function shellModal(title, sub, body, foot){
     '<div class="modal__body">' + body + '</div>' +
     '<div class="modal__foot">' + foot + '</div></div></div>';
 }
-function inputField(id, label, value, cls){
+function inputField(id, label, value, cls, disabled){
   return '<div class="field ' + (cls||'') + '"><label for="' + id + '">' + esc(label) + '</label>' +
-         '<input type="text" id="' + id + '" value="' + esc(value) + '"></div>';
+         '<input type="text" id="' + id + '" value="' + esc(value) + '"' + (disabled ? ' disabled' : '') + '></div>';
 }
 /* Takes either plain strings or { id, label } pairs, so a select can carry an
    id that is not the text shown (the dashboard picker needs that). */
@@ -3664,6 +3707,16 @@ document.addEventListener('submit', function(e){
     if (!state.me.email) { location.href = '/oauth2/start?rd=' + encodeURIComponent('/' + location.hash); return; }
     enterApp();
   }
+});
+document.addEventListener('submit', function(e){
+  if (e.target.getAttribute('data-action') !== 'account') return;
+  e.preventDefault();
+  var btn = e.target.querySelector('button[type=submit]');
+  btn.disabled = true;
+  api('POST', '/api/account', { name:val('a-name'), title:val('a-title'), department:val('a-dept'), phone:val('a-phone'),
+    skills:val('a-skills').split(',').map(function(x){ return x.trim(); }).filter(Boolean) })
+    .then(load).then(function(){ toast('Welcome, ' + me().name, 'ok'); enterApp(); })
+    .catch(function(err){ toast(err.message, 'err'); btn.disabled = false; });
 });
 /* You are whoever the server says, with the role it says. */
 function enterApp(){
@@ -3939,16 +3992,19 @@ document.addEventListener('click', function(e){
         okLabel:'Undo' });
       break;
     case 'cb-new':  openModal({ type:'cb' }); break;
+    case 'cb-edit': openModal({ type:'cb', id:id }); break;
     case 'cb-save':
       var cn = val('f-cname');
       if (!cn) { toast('A name is required', 'err'); return; }
       var roleId = 'standard';
       ROLES.forEach(function(r){ if (r.name === val('f-crole')) roleId = r.id; });
       var skills = val('f-cskills').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+      var cpayload = { name:cn, title:val('f-ctitle'), department:val('f-cdept'), skills:skills, phone:val('f-cphone') };
+      if (!id || isAdmin()) cpayload.email = val('f-cmail');     // the server ignores it from anyone else
+      if (!id) cpayload.role = roleId;                          // an existing user's role changes in the table
       el.disabled = true;
-      write('POST', '/api/columbus-profiles', { name:cn, title:val('f-ctitle'), department:val('f-cdept'),
-        skills:skills, role:roleId, email:val('f-cmail') }, function(){
-        toast('Created ' + cn, 'ok');
+      write(id ? 'PUT' : 'POST', '/api/columbus-profiles' + (id ? '/' + id : ''), cpayload, function(){
+        toast((id ? 'Saved ' : 'Created ') + cn, 'ok');
         closeLayer();
       }).then(function(){ el.disabled = false; });
       break;

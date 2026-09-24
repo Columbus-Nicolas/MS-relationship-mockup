@@ -51,21 +51,14 @@ function tokenClaims(req) {
   catch { return {}; }
 }
 
-// The first sign-in creates the Columbus profile: Standard, or Admin for
-// ADMIN_EMAILS. A profile an admin added beforehand with the same e-mail is used as it is.
+// Someone without a Columbus profile yet gets userId null and fills in the
+// account page first (POST /api/account); `name` pre-fills it. A profile an
+// admin added beforehand with the same e-mail is used as it is.
 async function whoami(req) {
   const email = (DEV_EMAIL || text(req.headers['x-forwarded-email'])).trim();
   if (!email) fail(401, 'Not signed in');
-  const find = () => q("select id, role from columbus_profiles where email <> '' and lower(email) = lower($1)", [email]);
-  let [u] = await find();
-  if (!u) {
-    await q(`insert into columbus_profiles (name, email, role) values ($1, $2, $3)
-             on conflict (lower(email)) where email <> '' do nothing`,
-            [tokenClaims(req).name || email.split('@')[0], email,
-             ADMIN_EMAILS.includes(email.toLowerCase()) ? 'admin' : 'standard']);
-    [u] = await find();
-  }
-  return { userId: u.id, role: u.role, email, dev: !!DEV_EMAIL };
+  const [u] = await q("select id, role from columbus_profiles where email <> '' and lower(email) = lower($1)", [email]);
+  return { userId: u ? u.id : null, role: u ? u.role : null, email, name: tokenClaims(req).name || '', dev: !!DEV_EMAIL };
 }
 
 async function state(me) {
@@ -128,11 +121,18 @@ async function history(before) {
 }
 
 const ID = '([^/]+)';
-const ADM = { admin: true }, ONLY_ADMIN = { onlyAdmin: true }, ANY = {};
+const ADM = { admin: true }, ONLY_ADMIN = { onlyAdmin: true }, ANY = {}, OPEN = { open: true };
 const routes = [
-  ['GET', '/api/state', {}, me => state(me)],
+  ['GET', '/api/state', OPEN, me => state(me)],
   // Live updates ask this every 20 s: one indexed lookup, a few bytes back.
-  ['GET', '/api/version', {}, () => q('select coalesce(max(id), 0) as v from history').then(r => r[0])],
+  ['GET', '/api/version', OPEN, () => q('select coalesce(max(id), 0) as v from history').then(r => r[0])],
+  // The account page: your own profile, with your sign-in e-mail.
+  ['POST', '/api/account', OPEN, (me, b) => me.userId ? fail(409, 'You already have an account')
+    : q(`insert into columbus_profiles (name, title, department, skills, phone, email, role)
+         values ($1, $2, $3, $4, $5, $6, $7)`,
+        [need(b.name, 'Your name'), need(b.title, 'Your title'), need(b.department, 'Your department'),
+         list(b.skills || []), text(b.phone), me.email,
+         ADMIN_EMAILS.includes(me.email.toLowerCase()) ? 'admin' : 'standard'])],
   ['GET', '/api/history', {}, (me, b, id, url) => history(url.searchParams.get('before'))],
   ['POST', '/api/history/' + ID + '/undo', ONLY_ADMIN, (me, b, id) =>
       /^-?\d+$/.test(id) ? q('select undo_change($1::bigint)', [id]) : fail(400, 'Not a change')],
@@ -166,12 +166,22 @@ const routes = [
   ['PUT', '/api/ms-profiles/' + ID, ADM, (me, b, id) => tx(c => saveMs(c, id, b))],
   ['DELETE', '/api/ms-profiles/' + ID, ADM, (me, b, id) => q('delete from ms_profiles where id = $1', [id])],
 
-  ['POST', '/api/columbus-profiles', ADM, (me, b) => q(`insert into columbus_profiles (name, title, email, department, role, skills)
-      values ($1, $2, $3, $4, $5, $6)`,
-      [need(b.name, 'A name'), text(b.title), text(b.email), text(b.department), b.role || 'standard', list(b.skills || [])])],
-  ['PATCH', '/api/columbus-profiles/' + ID, ADM, (me, b, id) => q('update columbus_profiles set role = $2 where id = $1 returning id',
+  /* User management. Roles, e-mails (the sign-in identity) and deleting users
+     are Admin-only - otherwise anyone could make themselves Admin. */
+  ['POST', '/api/columbus-profiles', ADM, (me, b) => (b.role || 'standard') !== 'standard' && me.role !== 'admin'
+    ? fail(403, 'Only Admin can give the Admin role')
+    : q(`insert into columbus_profiles (name, title, email, department, role, skills, phone)
+         values ($1, $2, $3, $4, $5, $6, $7)`,
+        [need(b.name, 'A name'), text(b.title), text(b.email), text(b.department), b.role || 'standard',
+         list(b.skills || []), text(b.phone)])],
+  ['PUT', '/api/columbus-profiles/' + ID, ADM, (me, b, id) => q(`update columbus_profiles set name = $2, title = $3,
+      department = $4, skills = $5, phone = $6, email = case when $7 then $8 else email end where id = $1 returning id`,
+      [id, need(b.name, 'A name'), text(b.title), text(b.department), list(b.skills || []), text(b.phone),
+       me.role === 'admin' && b.email !== undefined, text(b.email)])
+      .then(r => found(r, 'That user no longer exists'))],
+  ['PATCH', '/api/columbus-profiles/' + ID, ONLY_ADMIN, (me, b, id) => q('update columbus_profiles set role = $2 where id = $1 returning id',
       [id, b.role]).then(r => found(r, 'That user no longer exists'))],
-  ['DELETE', '/api/columbus-profiles/' + ID, ADM, (me, b, id) => q('delete from columbus_profiles where id = $1', [id])],
+  ['DELETE', '/api/columbus-profiles/' + ID, ONLY_ADMIN, (me, b, id) => q('delete from columbus_profiles where id = $1', [id])],
 
   /* Item by item, never "replace all": callers send only what changed. An upsert,
      not delete + insert - deleting the owner's relation would drop the ownership. */
@@ -231,6 +241,7 @@ const server = http.createServer(async (req, res) => {
     // A cross-site form can post text/plain but never JSON, so writes must be JSON.
     if (req.method !== 'GET' && !/^application\/json/.test(req.headers['content-type'] || '')) fail(415, 'Send JSON');
     const me = await whoami(req);
+    if (!route.opts.open && !me.userId) fail(403, 'Create your account first');
     if (route.opts.admin && ADMIN.indexOf(me.role) === -1) fail(403, 'Only Admin can change this');
     if (route.opts.onlyAdmin && me.role !== 'admin') fail(403, 'Only Admin can do this');
     const id = decodeURIComponent(url.pathname.match(route.re)[1] || ''), b = await body(req);
