@@ -3641,12 +3641,36 @@ function load(){
   var n = load.n = (load.n || 0) + 1;
   return api('GET', '/api/state').then(function(data){
     if (n !== load.n) return;
-    ['today', 'me', 'customers', 'contacts', 'boards', 'domains', 'msProfiles', 'columbusProfiles', 'relations']
+    ['today', 'version', 'me', 'customers', 'contacts', 'boards', 'domains', 'msProfiles', 'columbusProfiles', 'relations']
       .forEach(function(k){ state[k] = data[k]; });
     state.session.userId = state.me.userId;
     render();
   });
 }
+/* Live updates. Every 20 s - and the moment the tab comes back into view - ask
+   the server whether anything changed (a few bytes back), and fetch the data
+   only when it did. A tab in the background asks nothing, so an app nobody is
+   looking at costs nothing and can be scaled to zero. */
+var LIVE_EVERY = 20000;
+function checkForChanges(){
+  if (document.hidden || !state.me.userId || checkForChanges.busy) return;
+  checkForChanges.busy = true;
+  api('GET', '/api/version').then(function(d){
+    if (String(d.v) !== String(state.version)) return liveReload();
+  }).catch(function(){ /* offline for a moment: the next check tries again */ })
+    .then(function(){ checkForChanges.busy = false; });
+}
+/* Somebody else changed something. Redraw without getting in the way: the
+   field you are typing in keeps its focus and cursor, an open form is left
+   alone, and an open profile drawer shows the new data. */
+function liveReload(){
+  var el = document.activeElement;
+  if (el && el.id && document.getElementById('app').contains(el))
+    state.ui.focus = { id:el.id, pos:typeof el.selectionStart === 'number' ? el.selectionStart : 0 };
+  state.ui.hist = null;                                      // History lists the new change too
+  return load().then(function(){ if (state.ui.msDetail && !state.ui.modal) renderLayer(); });
+}
+
 /* Write, reload, then do what the mockup did on success. On failure the form
    stays open with its input, the server's reason is shown, and the page is
    redrawn from the data it still has. Resolves either way. */
@@ -4205,6 +4229,8 @@ readHash();
 if (state.ui.route !== 'login' && !location.hash) location.hash = '#/login';
 /* The first render waits for the data: rendered empty, a page such as a board
    would fail its route guard and bounce a reloaded browser somewhere else. */
+setInterval(checkForChanges, LIVE_EVERY);
+document.addEventListener('visibilitychange', checkForChanges);
 load().then(function(){
   if (state.ui.route === 'login') enterApp();          // already signed in: skip the login page
 }, function(err){
