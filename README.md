@@ -34,11 +34,13 @@ docker compose exec -T db psql -U app -d app -v ON_ERROR_STOP=1 < db/seed.sql
 
 Microsoft Entra ID, Columbus Global directory, **@columbusglobal.com accounts
 only**. The `auth` service (oauth2-proxy) does the sign-in and is the only way
-in: the app itself has no published port. The first time someone signs in,
-they get a **Create your account** page - name, title, department, skills,
-phone - and nothing else works until it is filled in. That makes their entry in
-Columbus Profiles, as **Standard**, or **Admin** for the e-mails in
-`ADMIN_EMAILS`. A profile an admin added beforehand with the same e-mail is
+in: the app itself has no published port. You click *Sign in with Microsoft
+Entra ID* and pick your account at Microsoft (it always asks). The first time,
+you then land on a separate **Create your account** page (`#/create-account`) -
+name, title, department, skills picked from a dropdown (add one that is missing
+and it is offered to everybody), phone - and nothing else works until it is
+filled in. That makes your entry in Columbus Profiles, as **Standard**, or
+**Admin** for the e-mails in `ADMIN_EMAILS`. A profile an admin added beforehand with the same e-mail is
 used as it is, so that person skips the page.
 
 Two roles, **Admin** and **Standard**, with the same access to the data for
@@ -65,12 +67,14 @@ register apps in Columbus Global). What to ask for:
 - *Assignment required*: **No** - the proxy enforces the domain.
 - Add the app's maintainer as an **owner** of the registration.
 
-**Dev override** (`docker-compose.dev.yml`): no Microsoft sign-in; you are
-`DEV_USER_EMAIL` (default `dev.user@columbusglobal.com`), and create your
-account as Admin the first time. Be someone else:
+**Dev override** (`docker-compose.dev.yml`): no Microsoft sign-in. The login
+page asks for a work e-mail instead - any @columbusglobal.com address, no
+password - so you can be anybody; sign out to be someone else. The addresses in
+`ADMIN_EMAILS` (default `dev.user@columbusglobal.com`) become Admin when they
+create their account:
 
 ```sh
-DEV_USER_EMAIL=someone.else@columbusglobal.com docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d app
+ADMIN_EMAILS=you@columbusglobal.com docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d app
 ```
 
 ## Changing the schema

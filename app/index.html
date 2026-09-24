@@ -319,6 +319,15 @@ td.actions{text-align:right;white-space:nowrap}
 .form-grid .full{grid-column:1/-1}
 .checks{display:grid;grid-template-columns:1fr 1fr;gap:7px;border:1px solid var(--border);border-radius:var(--radius);padding:11px;max-height:180px;overflow-y:auto}
 .checks label{display:flex;gap:8px;align-items:center;font-size:13px;cursor:pointer}
+/* the skills dropdown: a <details> whose summary looks like the other drop-downs */
+.skillpick summary{list-style:none;cursor:pointer;position:relative;border:1px solid var(--border-strong);border-radius:6px;
+  padding:8px 28px 8px 10px;background:#fff;font-size:13px;min-height:36px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.skillpick summary::-webkit-details-marker{display:none}
+.skillpick summary::after{content:'\25BE';position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--text-muted)}
+.skillpick[open] summary{border-color:var(--navy-600)}
+.skillpick .checks{margin-top:6px;background:#fff}
+.skillpick__add{display:flex;gap:6px;margin-top:6px}
+.skillpick__add input{flex:1}
 
 /* score picker */
 .picker{display:inline-flex;border:1px solid var(--border-strong);border-radius:8px;overflow:hidden;background:#fff}
@@ -837,6 +846,13 @@ var CADENCES = [
 ];
 function cadence(id){ for (var i=0;i<CADENCES.length;i++){ if (CADENCES[i].id === id) return CADENCES[i]; } return CADENCES[0]; }
 
+/* The skills to pick from. Anything someone has added to a profile is offered
+   to everybody too (skillOptions), so the list grows as people use it. */
+var SKILLS = ['Adoption','AI','Alliances','Architecture','Azure','Bids','Campaigns','Co-sell','Compliance','Copilot',
+  'D365 CE','D365 F&O','Data platform','Delivery','Entra','ERP','Events','Fabric','Governance','Landing zones','M365',
+  'Migration','PMO','Power BI','Power Platform','Presales','Public sector','Public tenders','Sales','Security',
+  'Strategy','Teams'];
+
 var CB_DEPARTMENTS = ['Executive','Alliances','Data & AI','Business Applications','Cloud & Infrastructure','Modern Work','Sales','Marketing','Delivery'];
 
 /* ============================================================
@@ -1160,9 +1176,11 @@ window.addEventListener('hashchange', function(){ readHash(); render(); });
 
 function render(){
   var route = state.me.email ? state.ui.route : 'login';   // not signed in: nothing but the login page
-  if (state.me.email && !state.me.userId) route = 'account';  // no profile yet: create it first
+  // Signed in without a profile: the account page, and nothing else. With one: never the account page.
+  if (state.me.email && !state.me.userId && route !== 'create-account') { go('create-account'); return; }
+  if (state.me.userId && route === 'create-account') { go('dashboard'); return; }
 
-  if (route === 'account') { document.getElementById('app').innerHTML = viewAccount(); return; }
+  if (route === 'create-account') { document.getElementById('app').innerHTML = viewAccount(); return; }
   if (route === 'login') { document.getElementById('app').innerHTML = viewLogin(); return; }
 
   // Fall back to the first page the current role is allowed to see.
@@ -1266,20 +1284,26 @@ function loginBrand(){
 }
 
 function viewLogin(){
+  var dev = state.devSignIn || state.me.dev;
   return '' +
   '<div class="login">' + loginBrand() +
     '<div class="login__form"><form class="login__card" data-action="login">' +
       '<h2>Sign in</h2>' +
       '<p>Use your Columbus account to continue.</p>' +
-      '<button type="submit" class="entra">' +
-        '<span class="msgrid"><i style="background:#f25022"></i><i style="background:#7fba00"></i>' +
-        '<i style="background:#00a4ef"></i><i style="background:#ffb900"></i></span>' +
-        'Sign in with Microsoft Entra ID</button>' +
-      '<div class="login__note">' + (state.me.dev
-        ? '<b>Development sign-in:</b> no Microsoft sign-in - you are ' + esc(me().name) +
-          ' with the <b>' + esc(roleName(state.me.role)) + '</b> role.'
-        : 'Only <b>@columbusglobal.com</b> accounts can sign in. The first time you do, you ' +
-          'fill in your details to create your account.') + '</div>' +
+      (dev
+        ? '<div class="field"><label for="loginmail">Work e-mail</label>' +
+            '<input id="loginmail" type="email" placeholder="firstname.lastname@columbusglobal.com" autocomplete="email" required></div>' +
+          '<div style="height:14px"></div>' +
+          '<button type="submit" class="btn btn--primary" style="width:100%;justify-content:center">Continue</button>'
+        : '<button type="submit" class="entra">' +
+            '<span class="msgrid"><i style="background:#f25022"></i><i style="background:#7fba00"></i>' +
+            '<i style="background:#00a4ef"></i><i style="background:#ffb900"></i></span>' +
+            'Sign in with Microsoft Entra ID</button>') +
+      '<div class="login__note">' + (dev
+        ? '<b>Development sign-in:</b> any @columbusglobal.com address, no password. ' +
+          'Before go-live this is the Microsoft sign-in.'
+        : 'Only <b>@columbusglobal.com</b> accounts can sign in. You pick your account at Microsoft; ' +
+          'the first time, you then create your account here.') + '</div>' +
     '</form></div>' +
   '</div>';
 }
@@ -1300,14 +1324,17 @@ function viewAccount(){
   '<div class="login">' + loginBrand() +
     '<div class="login__form"><form class="login__card" data-action="account">' +
       '<h2>Create your account</h2>' +
-      '<p>This is your entry in Columbus Profiles, so colleagues can see who you are and what you know.</p>' +
+      '<p>Welcome' + (state.me.name ? ', ' + esc(state.me.name) : '') + '. One more step: this is your entry in ' +
+        'Columbus Profiles, so colleagues can see who you are and what you know.</p>' +
       field('a-email', 'E-mail', '<input type="email" id="a-email" value="' + esc(state.me.email) + '" disabled>') +
       field('a-name', 'Full name', '<input type="text" id="a-name" value="' + esc(state.me.name) + '" required autocomplete="name">') +
       field('a-title', 'Title', '<input type="text" id="a-title" required placeholder="e.g. Data & AI Consultant">') +
       field('a-dept', 'Department', '<select id="a-dept" required>' + depts + '</select>') +
-      field('a-skills', 'Skills (comma separated)', '<input type="text" id="a-skills" placeholder="e.g. Fabric, Power BI">') +
+      field('a-skills', 'Skills', skillPicker('a-skills', [])) +
       field('a-phone', 'Phone', '<input type="text" inputmode="tel" id="a-phone" autocomplete="tel">') +
       '<button type="submit" class="btn btn--primary" style="width:100%;justify-content:center;margin-top:4px">Create account</button>' +
+      '<p class="hint" style="margin:14px 0 0;text-align:center">Not ' + esc(state.me.email) + '? ' +
+        '<a href="#" data-action="logout">Sign out</a></p>' +
     '</form></div>' +
   '</div>';
 }
@@ -3582,7 +3609,7 @@ function modalMarkup(m){
         (m.id ? inputField('f-cphone', 'Phone', c.phone || '')
               : selField('f-crole', 'Role', roles.map(function(r){ return r.name; }), roleName(c.role))) +
         (m.id ? '' : inputField('f-cphone', 'Phone', '', 'full')) +
-        inputField('f-cskills', 'Skills (comma separated)', c.skills.join(', '), 'full') +
+        '<div class="field full"><label>Skills</label>' + skillPicker('f-cskills', c.skills) + '</div>' +
       '</div>',
       '<button class="btn" data-action="close-layer">Cancel</button>' +
       '<button class="btn btn--primary" data-action="cb-save" data-id="' + (m.id || '') + '">' +
@@ -3611,6 +3638,30 @@ function selField(id, label, options, value){
     }).join('') +
     '</select></div>';
 }
+/* A dropdown of skills: a native <details> that opens to checkboxes, with a box
+   underneath for a skill that is not in the list yet. */
+function skillOptions(chosen){
+  var seen = {}, out = [];
+  SKILLS.concat.apply(SKILLS, state.columbusProfiles.map(function(c){ return c.skills || []; })).concat(chosen)
+    .forEach(function(s){ var k = String(s).toLowerCase(); if (s && !seen[k]) { seen[k] = true; out.push(s); } });
+  return out.sort(function(a, b){ return a.toLowerCase() < b.toLowerCase() ? -1 : 1; });
+}
+function skillCheck(s, on){
+  return '<label><input type="checkbox" value="' + esc(s) + '"' + (on ? ' checked' : '') + '>' + esc(s) + '</label>';
+}
+function skillSummary(list){ return list.length ? esc(list.join(', ')) : '<span class="hint">Choose skills</span>'; }
+function skillPicker(id, chosen){
+  var mine = (chosen || []).map(function(s){ return s.toLowerCase(); });
+  return '<details class="skillpick" id="' + id + '"><summary>' + skillSummary(chosen || []) + '</summary>' +
+    '<div class="checks">' + skillOptions(chosen || []).map(function(s){
+      return skillCheck(s, mine.indexOf(s.toLowerCase()) !== -1); }).join('') + '</div>' +
+    '<div class="skillpick__add"><input type="text" data-skill-new placeholder="A skill that is not in the list">' +
+      '<button type="button" class="btn btn--sm" data-action="skill-add" data-id="' + id + '">Add</button></div>' +
+  '</details>';
+}
+function pickedSkills(id){
+  return Array.prototype.map.call(document.querySelectorAll('#' + id + ' .checks input:checked'), function(x){ return x.value; });
+}
 function val(id){ var el = document.getElementById(id); return el ? el.value.trim() : ''; }
 
 /* ============================================================
@@ -3627,7 +3678,7 @@ function api(method, path, body){
         if (res.status === 401 && state.me.email) location.reload();   // the session ran out: sign in again
         if (!res.ok) {
           var err = new Error(data.error || 'The server refused (' + res.status + ')');
-          err.status = res.status;
+          err.status = res.status; err.data = data;
           throw err;
         }
         return data;
@@ -3771,6 +3822,14 @@ function restoreFocus(){
 document.addEventListener('submit', function(e){
   if (e.target.getAttribute('data-action') === 'login') {
     e.preventDefault();
+    // Dev mode: the typed e-mail is who you are (kept in a cookie the server reads).
+    if (!state.me.email && state.devSignIn) {
+      var mail = val('loginmail');
+      if (!/@columbusglobal\.com$/i.test(mail)) { toast('Use your @columbusglobal.com address', 'err'); return; }
+      document.cookie = 'dev_email=' + encodeURIComponent(mail) + '; path=/; SameSite=Lax';
+      load().then(enterApp, function(err){ toast(err.message, 'err'); });
+      return;
+    }
     // Not signed in yet: Microsoft first, via the auth service, which brings you back
     // to the page you asked for.
     if (!state.me.email) { location.href = '/oauth2/start?rd=' + encodeURIComponent('/' + location.hash); return; }
@@ -3783,7 +3842,7 @@ document.addEventListener('submit', function(e){
   var btn = e.target.querySelector('button[type=submit]');
   btn.disabled = true;
   api('POST', '/api/account', { name:val('a-name'), title:val('a-title'), department:val('a-dept'), phone:val('a-phone'),
-    skills:val('a-skills').split(',').map(function(x){ return x.trim(); }).filter(Boolean) })
+    skills:pickedSkills('a-skills') })
     .then(load).then(function(){ toast('Welcome, ' + me().name, 'ok'); enterApp(); })
     .catch(function(err){ toast(err.message, 'err'); btn.disabled = false; });
 });
@@ -3791,7 +3850,7 @@ document.addEventListener('submit', function(e){
 function enterApp(){
   state.session = { userId:state.me.userId, role:state.me.role };
   state.ui.myDraft = null;
-  go('dashboard');
+  go(state.me.userId ? 'dashboard' : 'create-account');   // first time: create your account
 }
 
 document.addEventListener('input', function(e){
@@ -3818,6 +3877,8 @@ document.addEventListener('input', function(e){
 
 document.addEventListener('change', function(e){
   var el = e.target, a = el.getAttribute('data-action');
+  var pick = el.closest && el.closest('.skillpick');
+  if (pick) { pick.querySelector('summary').innerHTML = skillSummary(pickedSkills(pick.id)); return; }
   if (!a) return;
   if (a === 'set-role') {
     state.session.role = el.value;
@@ -3868,10 +3929,9 @@ document.addEventListener('click', function(e){
           encodeURIComponent(location.origin + '/'));
         break;
       }
-      state.ui.msDetail = null; state.ui.modal = null; state.ui.myDraft = null;
-      state.session.role = state.me.role;
-      renderLayer();
+      document.cookie = 'dev_email=; path=/; max-age=0';      // dev mode: forget who you said you were
       location.hash = '#/login';
+      location.reload();
       break;
     case 'close-layer': closeLayer(); break;
     case 'confirm-yes':
@@ -4083,12 +4143,23 @@ document.addEventListener('click', function(e){
       break;
     case 'cb-new':  openModal({ type:'cb' }); break;
     case 'cb-edit': openModal({ type:'cb', id:id }); break;
+    case 'skill-add': {
+      var box = document.getElementById(id), inp = box.querySelector('[data-skill-new]'), skill = inp.value.trim();
+      if (!skill) break;
+      var have = Array.prototype.filter.call(box.querySelectorAll('.checks input'), function(x){
+        return x.value.toLowerCase() === skill.toLowerCase(); })[0];
+      if (have) have.checked = true;
+      else box.querySelector('.checks').insertAdjacentHTML('beforeend', skillCheck(skill, true));
+      inp.value = '';
+      box.querySelector('summary').innerHTML = skillSummary(pickedSkills(id));
+      break;
+    }
     case 'cb-save':
       var cn = val('f-cname');
       if (!cn) { toast('A name is required', 'err'); return; }
       var roleId = 'standard';
       ROLES.forEach(function(r){ if (r.name === val('f-crole')) roleId = r.id; });
-      var skills = val('f-cskills').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+      var skills = pickedSkills('f-cskills');
       var cpayload = { name:cn, title:val('f-ctitle'), department:val('f-cdept'), skills:skills, phone:val('f-cphone') };
       if (!id || isAdmin()) cpayload.email = val('f-cmail');     // the server ignores it from anyone else
       if (!id) cpayload.role = roleId;                          // an existing user's role changes in the table
@@ -4144,6 +4215,9 @@ document.addEventListener('click', function(e){
 });
 
 document.addEventListener('keydown', function(e){
+  if (e.key === 'Enter' && e.target.hasAttribute && e.target.hasAttribute('data-skill-new')) {
+    e.preventDefault(); e.target.nextElementSibling.click(); return;
+  }
   if (e.key !== 'Escape') return;
   if (state.ui.ecoPick) { state.ui.ecoPick = null; render(); return; }
   if (state.ui.modal || state.ui.msDetail) closeLayer();
@@ -4234,6 +4308,7 @@ document.addEventListener('visibilitychange', checkForChanges);
 load().then(function(){
   if (state.ui.route === 'login') enterApp();          // already signed in: skip the login page
 }, function(err){
+  state.devSignIn = !!(err.data && err.data.dev);     // dev mode: sign in by typing an e-mail
   render();                                           // 401: not signed in, so the login page
   if (err.status !== 401) toast('Cannot reach the server: ' + err.message, 'err');
 });

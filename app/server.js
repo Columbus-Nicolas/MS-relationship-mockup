@@ -31,8 +31,8 @@ async function tx(fn) {
   finally { c.release(); }
 }
 
-class HttpError extends Error { constructor(status, msg) { super(msg); this.status = status; } }
-const fail = (status, msg) => { throw new HttpError(status, msg); };
+class HttpError extends Error { constructor(status, msg, extra) { super(msg); this.status = status; this.extra = extra; } }
+const fail = (status, msg, extra) => { throw new HttpError(status, msg, extra); };
 const text = v => v == null ? '' : String(v);
 const need = (v, what) => text(v).trim() || fail(400, what + ' is required');
 const list = v => Array.isArray(v) && v.every(x => typeof x === 'string') ? v : fail(400, 'Expected a list of ids');
@@ -43,8 +43,10 @@ const found = (rows, msg) => rows.length ? rows : fail(409, msg);
    is the only way to reach this server: the e-mail is its X-Forwarded-Email
    header, and the display name comes from the ID token it forwards. The token
    is only read, not verified - the proxy did that.
-   DEV_USER_EMAIL (docker-compose.dev.yml only) skips the proxy for local work. */
-const DEV_EMAIL = process.env.DEV_USER_EMAIL || '';
+   DEV_SIGN_IN (docker-compose.dev.yml only) skips the proxy for local work:
+   you type an e-mail on the login page, which keeps it in a dev_email cookie. */
+const DEV = process.env.DEV_SIGN_IN === 'true';
+const devEmail = req => { const m = /(?:^|;\s*)dev_email=([^;]+)/.exec(req.headers.cookie || ''); return m ? decodeURIComponent(m[1]) : ''; };
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').toLowerCase().split(',').map(s => s.trim()).filter(Boolean);
 
 function tokenClaims(req) {
@@ -56,10 +58,11 @@ function tokenClaims(req) {
 // account page first (POST /api/account); `name` pre-fills it. A profile an
 // admin added beforehand with the same e-mail is used as it is.
 async function whoami(req) {
-  const email = (DEV_EMAIL || text(req.headers['x-forwarded-email'])).trim();
-  if (!email) fail(401, 'Not signed in');
+  const email = (DEV ? devEmail(req) : text(req.headers['x-forwarded-email'])).trim();
+  if (!email) fail(401, 'Not signed in', DEV ? { dev: true } : undefined);   // dev: the login page asks for an e-mail
+  if (DEV && !/@columbusglobal\.com$/i.test(email)) fail(403, 'Only @columbusglobal.com accounts can sign in', { dev: true });
   const [u] = await q("select id, role from columbus_profiles where email <> '' and lower(email) = lower($1)", [email]);
-  return { userId: u ? u.id : null, role: u ? u.role : null, email, name: tokenClaims(req).name || '', dev: !!DEV_EMAIL };
+  return { userId: u ? u.id : null, role: u ? u.role : null, email, name: tokenClaims(req).name || '', dev: DEV };
 }
 
 async function state(me) {
@@ -295,7 +298,7 @@ const server = http.createServer(async (req, res) => {
   } catch (e) {
     const status = e.status || PG_STATUS[e.code] || 500;
     if (status === 500) console.error(e);
-    send(status, { error: status === 500 ? 'Something went wrong' : e.code === '23514' ? e.message : e.detail || e.message });
+    send(status, Object.assign({ error: status === 500 ? 'Something went wrong' : e.code === '23514' ? e.message : e.detail || e.message }, e.extra));
   }
 });
 

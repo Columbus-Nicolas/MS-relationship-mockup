@@ -1,10 +1,11 @@
-# Local work without Entra: the app acts as DEV_USER_EMAIL (Admin on an empty
-# database) and is published directly. Never use this where others can reach it.
+# Local work without Entra: the login page asks for an e-mail (any
+# @columbusglobal.com address, no password) and the app is published directly.
+# Never use this where others can reach it.
 #   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d db app backup
 services:
   app:
     environment:
-      DEV_USER_EMAIL: ${DEV_USER_EMAIL:-dev.user@columbusglobal.com}
-      ADMIN_EMAILS: ${DEV_USER_EMAIL:-dev.user@columbusglobal.com}
+      DEV_SIGN_IN: "true"
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-dev.user@columbusglobal.com}   # Admin when they create their account
     ports:
       - "127.0.0.1:8080:8080"
