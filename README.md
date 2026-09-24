@@ -21,9 +21,10 @@ use the dev override. It needs no `.env`:
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d db app backup
 ```
 
-The app starts **empty**. To load the mockup's data (the real Microsoft Denmark
-intake list; the Columbus users, scores and notes are placeholders), run once,
-into an empty database, after the app has started:
+The app starts **empty**. To load the starting data - the Microsoft Denmark
+intake list, the domains, the two boards and the customers; no Columbus people,
+they add themselves - run once, into an empty database, after the app has
+started:
 
 ```sh
 docker compose exec -T db psql -U app -d app -v ON_ERROR_STOP=1 < db/seed.sql
@@ -33,15 +34,23 @@ docker compose exec -T db psql -U app -d app -v ON_ERROR_STOP=1 < db/seed.sql
 
 Microsoft Entra ID, Columbus Global directory, **@columbusglobal.com accounts
 only**. The `auth` service (oauth2-proxy) does the sign-in and is the only way
-in: the app itself has no published port. It hands the signed-in user to the
-app, which adds them to Columbus Profiles on their first sign-in with the
-**Standard** role - or **Admin** for the e-mails in `ADMIN_EMAILS`. A profile an
-admin added beforehand with the same e-mail is used as it is, role and all.
+in: the app itself has no published port. The first time someone signs in,
+they get a **Create your account** page - name, title, department, skills,
+phone - and nothing else works until it is filled in. That makes their entry in
+Columbus Profiles, as **Standard**, or **Admin** for the e-mails in
+`ADMIN_EMAILS`. A profile an admin added beforehand with the same e-mail is
+used as it is, so that person skips the page.
 
-Two roles, **Admin** and **Standard**, with the same access for now: everyone
-who signs in sees every page and can change everything. To make some of it
+Two roles, **Admin** and **Standard**, with the same access to the data for
+now: everyone sees every page and can change everything. **Admin-only:**
+changing roles, changing someone's e-mail (it is how they sign in), deleting
+users, undoing changes in History, and the Backups page. To make more of it
 admin-only later, take `'standard'` out of `ADMIN` in `app/server.js` and
 `canEdit()` in `app/index.html`, and out of the pages' `roles` lists.
+
+Changes others make show up within 20 seconds: an open tab asks the server
+every 20 s whether anything changed (a few bytes) and only then reloads the
+data. A tab in the background asks nothing.
 
 **The app registration** is created by an Entra admin (ordinary users cannot
 register apps in Columbus Global). What to ask for:
@@ -57,26 +66,41 @@ register apps in Columbus Global). What to ask for:
 - Add the app's maintainer as an **owner** of the registration.
 
 **Dev override** (`docker-compose.dev.yml`): no Microsoft sign-in; you are
-`DEV_USER_EMAIL` (default Mette Kirkegaard, Admin in the seed data, and on an
-empty database). Try another role:
+`DEV_USER_EMAIL` (default `dev.user@columbusglobal.com`), and create your
+account as Admin the first time. Be someone else:
 
 ```sh
-DEV_USER_EMAIL=line.aagaard@columbusglobal.example docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d app
+DEV_USER_EMAIL=someone.else@columbusglobal.com docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d app
 ```
 
 ## Changing the schema
 
-Add the next numbered file to `app/migrations/` (`002_what_it_does.sql`, …) and
+Add the next numbered file to `app/migrations/` (`005_what_it_does.sql`, …) and
 rebuild the app. On start-up it applies each file it has not applied yet, in
 name order, each in its own transaction, and records it in `schema_migrations`.
 A failing file rolls back and the app does not start — `docker compose logs app`
 says why. Never edit a file that has already been applied.
+
+## History and undo
+
+Every change anybody makes is kept: the **History** page lists them newest
+first - who, when, what - and opens each to the fields it changed. An **Admin**
+can undo one. That puts back everything it did, a deleted profile with its
+relations and links included, but only if nothing in it has changed since and
+nothing added later depends on it; otherwise it says which to undo first. An
+undo is a change in History too, so it can be undone in turn.
 
 ## Backups
 
 The `backup` service dumps the database at start-up and every 24 hours into the
 `backups` volume, keeping 14 days. It is on the same machine as the database, so
 copy dumps somewhere else for anything that matters.
+
+**In the app** (Admin only), the **Backups** page lists the dumps, takes one on
+request, and restores one: it checks the dump was made by the same version of
+the app, backs up the current state first (so the restore can be reversed from
+the same page), restores in one transaction and notes it in History. A dump
+from an older version is refused there - restore it on the command line below.
 
 ```sh
 docker compose exec backup ls -l /backups                          # list
@@ -99,7 +123,9 @@ docker compose exec -T db psql -U app -d app -v ON_ERROR_STOP=1 < db/check.sql
 ```
 
 Asserts the rules the database enforces (owners, cascades, Unmarked, score
-range) inside a transaction it rolls back, so it is safe on real data.
+range) and that History and undo work (undo of a delete with its cascades,
+refused when changed since or depended on, never twice), inside a transaction
+it rolls back, so it is safe on real data.
 
 ## Reset
 
