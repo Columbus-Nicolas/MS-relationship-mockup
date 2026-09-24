@@ -123,13 +123,14 @@ docker compose start app
 ## Looking at the data with SQL
 
 In the dev setup the database is reachable from this machine only, on
-`localhost:5432`. Create the read-only login once (and again after `down -v`):
+`127.0.0.1:5432`. Create the read-only login once (and again after `down -v`):
 
 ```sh
 docker compose exec -T db psql -U app -d app -v ON_ERROR_STOP=1 < db/reader.sql
 ```
 
-Then connect any SQL tool with host `localhost`, port `5432`, database `app`,
+Then connect any SQL tool with host `127.0.0.1` (not `localhost`: on a Mac
+that is tried as IPv6 first, where nothing listens), port `5432`, database `app`,
 user `reader`, password `reader`. In VS Code with the PostgreSQL extension, a
 local `.vscode/settings.json` (not committed) already holds that connection as
 *MS Relationship Map (local, read-only)*. The login can read every table and
