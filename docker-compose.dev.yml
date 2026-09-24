@@ -4,7 +4,7 @@
 services:
   app:
     environment:
-      DEV_USER_EMAIL: ${DEV_USER_EMAIL:-mette.kirkegaard@columbusglobal.example}
-      ADMIN_EMAILS: ${DEV_USER_EMAIL:-mette.kirkegaard@columbusglobal.example}
+      DEV_USER_EMAIL: ${DEV_USER_EMAIL:-dev.user@columbusglobal.com}
+      ADMIN_EMAILS: ${DEV_USER_EMAIL:-dev.user@columbusglobal.com}
     ports:
       - "127.0.0.1:8080:8080"
