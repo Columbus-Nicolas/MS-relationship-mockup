@@ -853,7 +853,8 @@ var SKILLS = ['Adoption','AI','Alliances','Architecture','Azure','Bids','Campaig
   'Migration','PMO','Power BI','Power Platform','Presales','Public sector','Public tenders','Sales','Security',
   'Strategy','Teams'];
 
-var CB_DEPARTMENTS = ['Executive','Alliances','Data & AI','Business Applications','Cloud & Infrastructure','Modern Work','Sales','Marketing','Delivery'];
+// Columbus' departments in this app, for now just these two.
+var CB_DEPARTMENTS = ['Data & AI', 'Dynamics'];
 
 /* ============================================================
    2. DATA
@@ -3593,7 +3594,7 @@ function modalMarkup(m){
       '<button class="btn btn--primary" data-action="dom-save" data-id="' + (m.id || '') + '">Save domain</button>');
   }
   if (m.type === 'cb') {
-    var c = m.id ? cb(m.id) : { name:'', title:'', email:'', phone:'', department:CB_DEPARTMENTS[2], role:'standard', skills:[] };
+    var c = m.id ? cb(m.id) : { name:'', title:'', email:'', phone:'', department:CB_DEPARTMENTS[0], role:'standard', skills:[] };
     /* The e-mail is how someone signs in, and the role what they may do: once
        someone exists only an Admin changes those (the role from the table). */
     var roles = isAdmin() ? ROLES : ROLES.filter(function(r){ return r.id === 'standard'; });
