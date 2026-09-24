@@ -3,6 +3,7 @@
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
+const { AsyncLocalStorage } = require('node:async_hooks');
 const pg = require('pg');
 
 pg.types.setTypeParser(1082, v => v);            // date stays 'YYYY-MM-DD', as the page expects
@@ -15,12 +16,17 @@ const ADMIN = ['admin', 'standard'];
 
 const camel = row => Object.fromEntries(Object.entries(row).map(([k, v]) =>
   [k.replace(/_(.)/g, (_, c) => c.toUpperCase()), v]));
-const q = async (sql, args, db = pool) => (await db.query(sql, args)).rows.map(camel);
+/* A write request runs in one transaction (see the dispatcher): its connection
+   rides along in `request`, so q() and tx() inside it join that transaction -
+   which is what makes one request one change in the history. */
+const request = new AsyncLocalStorage();
+const q = async (sql, args) => (await (request.getStore() || pool).query(sql, args)).rows.map(camel);
 
 async function tx(fn) {
+  if (request.getStore()) return fn(request.getStore());
   const c = await pool.connect();
-  try { await c.query('begin'); const r = await fn(c); await c.query('commit'); return r; }
-  catch (e) { await c.query('rollback'); throw e; }
+  try { await c.query('begin'); const r = await request.run(c, () => fn(c)); await c.query('commit'); return r; }
+  catch (e) { await c.query('rollback').catch(() => {}); throw e; }
   finally { c.release(); }
 }
 
@@ -63,8 +69,8 @@ async function whoami(req) {
 }
 
 async function state(me) {
-  const [[{ today }], customers, contacts, boards, domains, msProfiles, columbusProfiles, relations] = await Promise.all([
-    q('select current_date as today'),
+  const [[{ today, version }], customers, contacts, boards, domains, msProfiles, columbusProfiles, relations] = await Promise.all([
+    q('select current_date as today, (select coalesce(max(id), 0) from history) as version'),
     q('select * from customers order by seq'),
     q('select * from contacts order by seq'),
     q('select * from boards order by seq'),
@@ -79,7 +85,7 @@ async function state(me) {
     q('select * from columbus_profiles order by seq'),
     q('select * from relations order by seq')
   ]);
-  return { today, me, customers, contacts, boards, domains, msProfiles, columbusProfiles, relations };
+  return { today, version, me, customers, contacts, boards, domains, msProfiles, columbusProfiles, relations };
 }
 
 async function saveMs(c, id, b) {
@@ -87,19 +93,49 @@ async function saveMs(c, id, b) {
                 text(b.source), text(b.notes), b.cadence || 'none', b.ownerId || null];
   if (id) found(await q(`update ms_profiles set name = $2, title = $3, email = $4, phone = $5, "group" = $6,
       source = $7, notes = $8, cadence = $9, owner_id = $10, updated_at = current_date
-      where id = $1 returning id`, [id, ...cols], c), 'That profile no longer exists');
+      where id = $1 returning id`, [id, ...cols]), 'That profile no longer exists');
   else [{ id }] = await q(`insert into ms_profiles (name, title, email, phone, "group", source, notes, cadence, owner_id)
-      values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning id`, cols, c);
-  await c.query('delete from profile_domains where ms_profile_id = $1', [id]);
-  await c.query('insert into profile_domains select $1, unnest($2::text[])', [id, list(b.domainIds)]);
-  await c.query('delete from profile_customers where ms_profile_id = $1', [id]);
-  await c.query('insert into profile_customers select $1, unnest($2::text[])', [id, list(b.customerIds)]);
+      values ($1, $2, $3, $4, $5, $6, $7, $8, $9) returning id`, cols);
+  // Only the links that changed, so the history shows what really happened.
+  const doms = list(b.domainIds), custs = list(b.customerIds);
+  await c.query('delete from profile_domains where ms_profile_id = $1 and domain_id <> all($2::text[])', [id, doms]);
+  await c.query('insert into profile_domains select $1, unnest($2::text[]) on conflict do nothing', [id, doms]);
+  await c.query('delete from profile_customers where ms_profile_id = $1 and customer_id <> all($2::text[])', [id, custs]);
+  await c.query('insert into profile_customers select $1, unnest($2::text[]) on conflict do nothing', [id, custs]);
+}
+
+/* The latest 50 changes before a history id, newest first, each with up to 50
+   of its lines and the total. */
+// ponytail: groups the whole table on every call; page by an index once it holds many thousand changes.
+async function history(before) {
+  const rows = await q(`with ev as (
+      select change, max(id) as last, count(*) as total from history
+      group by change having $1::bigint is null or max(id) < $1
+      order by last desc limit 50)
+    select ev.change, ev.last, ev.total, h.at, h.actor, h.tbl, h.op, h.old, h.new, h.undoes,
+           exists (select 1 from history u where u.undoes = ev.change) as undone
+      from ev cross join lateral (select * from history x where x.change = ev.change order by id limit 50) h
+     order by ev.last desc, h.id`, [before || null]);
+  const out = [];
+  for (const r of rows) {
+    let e = out[out.length - 1];
+    if (!e || e.change !== r.change) out.push(e = { change: r.change, last: r.last, total: r.total, at: r.at,
+      actor: r.actor, undone: r.undone, undoes: r.undoes, entries: [] });
+    e.at = r.at;
+    e.entries.push({ tbl: r.tbl, op: r.op, old: r.old, new: r.new });
+  }
+  return { changes: out };
 }
 
 const ID = '([^/]+)';
-const ADM = { admin: true }, ANY = {};
+const ADM = { admin: true }, ONLY_ADMIN = { onlyAdmin: true }, ANY = {};
 const routes = [
   ['GET', '/api/state', {}, me => state(me)],
+  // Live updates ask this every 20 s: one indexed lookup, a few bytes back.
+  ['GET', '/api/version', {}, () => q('select coalesce(max(id), 0) as v from history').then(r => r[0])],
+  ['GET', '/api/history', {}, (me, b, id, url) => history(url.searchParams.get('before'))],
+  ['POST', '/api/history/' + ID + '/undo', ONLY_ADMIN, (me, b, id) =>
+      /^-?\d+$/.test(id) ? q('select undo_change($1::bigint)', [id]) : fail(400, 'Not a change')],
 
   ['POST', '/api/boards', ADM, (me, b) => q(`insert into boards (id, label, dashboard, graphics, subtitle, owner, version, updated, system)
       values ($1, $2, $3, $4, $5, $6, $7, $8, not exists (select 1 from boards))`,
@@ -180,7 +216,7 @@ async function migrate() {
   }
 }
 
-const PG_STATUS = { '23505': 409, '23503': 409, '23514': 400, '23502': 400, '22P02': 400 };
+const PG_STATUS = { '23505': 409, '23503': 409, '23514': 400, '23502': 400, '22P02': 400, 'P0001': 409 };
 
 const server = http.createServer(async (req, res) => {
   const send = (status, data, type = 'application/json') => {
@@ -196,8 +232,12 @@ const server = http.createServer(async (req, res) => {
     if (req.method !== 'GET' && !/^application\/json/.test(req.headers['content-type'] || '')) fail(415, 'Send JSON');
     const me = await whoami(req);
     if (route.opts.admin && ADMIN.indexOf(me.role) === -1) fail(403, 'Only Admin can change this');
-    const id = (url.pathname.match(route.re)[1] || '');
-    const out = await route.fn(me, await body(req), decodeURIComponent(id));
+    if (route.opts.onlyAdmin && me.role !== 'admin') fail(403, 'Only Admin can do this');
+    const id = decodeURIComponent(url.pathname.match(route.re)[1] || ''), b = await body(req);
+    const run = () => route.fn(me, b, id, url);
+    // A write is one transaction, and the history records who made it.
+    const out = req.method === 'GET' || route.opts.raw ? await run()
+      : await tx(async c => { await c.query("select set_config('app.actor', $1, true)", [me.email]); return run(); });
     send(200, out && !Array.isArray(out) ? out : { ok: true });
   } catch (e) {
     const status = e.status || PG_STATUS[e.code] || 500;

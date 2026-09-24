@@ -788,6 +788,7 @@ var PAGES = [
   { route:'dashboards',        title:'Dashboards',          sub:'Boards & their panels',       icon:'▩', section:'Administration', wide:true, roles:['admin','standard'] },
   { route:'ms-domains',        title:'Microsoft Domains',   sub:'Categories & mapping',        icon:'◆', section:'Administration', wide:true, roles:['admin','standard'] },
   { route:'ms-profiles',       title:'Microsoft Profiles',  sub:'Approved Microsoft contacts', icon:'●', section:'Administration', wide:true, roles:['admin','standard'] },
+  { route:'history',           title:'History',             sub:'Every change, and undo',      icon:'\u21ba', section:'Administration', wide:true, roles:['admin','standard'] },
   { route:'columbus-profiles', title:'Columbus Profiles',   sub:'Internal users & relations',  icon:'▲', section:'Administration', wide:true, roles:['admin','standard'] },
   { route:'my-relations',      title:'My Relations',        sub:'Your own Microsoft contacts', icon:'★', section:'Relations',              roles:['admin','standard'] }
 ];
@@ -1150,7 +1151,7 @@ function go(route){
 }
 function readHash(){
   var r = (location.hash || '').replace(/^#\/?/, '') || 'login';
-  if (r !== state.ui.route) { state.ui.gvDrill = null; state.ui.ugDrill = null; }   // they belong to one page
+  if (r !== state.ui.route) { state.ui.gvDrill = null; state.ui.ugDrill = null; state.ui.hist = null; }   // they belong to one page
   state.ui.route = r;
 }
 window.addEventListener('hashchange', function(){ readHash(); render(); });
@@ -1180,6 +1181,7 @@ function render(){
   else if (route === 'ms-domains')        body = viewMsDomains();
   else if (route === 'columbus-profiles') body = viewColumbusProfiles();
   else if (route === 'my-relations')      body = viewMyRelations();
+  else if (route === 'history')           body = viewHistory();
 
   /* Prose reads better with a measured line length, so the page is capped by
      default - but the pages that carry a board or a wide table say so for
@@ -3159,6 +3161,127 @@ function viewMyRelations(){
     '<div style="display:grid;gap:12px;margin-top:18px">' + (cards || '<div class="card"><div class="empty"><b>You have no relations yet</b>Add a Microsoft contact above to get started.</div></div>') + removed + '</div>';
 }
 /* ============================================================
+   PAGE - HISTORY
+   Every change anyone made, newest first, as one line per action. The rows
+   are the database's own (snake_case), read straight from /api/history.
+   An Admin can undo a change; the server only does it if nothing in it has
+   changed since, and nothing added later depends on it.
+   ============================================================ */
+
+var HIST_KIND = { boards:'dashboard', domains:'domain', customers:'customer', columbus_profiles:'Columbus user',
+  ms_profiles:'Microsoft profile', relations:'relation', contacts:'contact',
+  profile_domains:'domain placement', profile_customers:'customer link' };
+var HIST_ORDER = ['boards', 'domains', 'ms_profiles', 'columbus_profiles', 'customers', 'relations', 'contacts',
+                  'profile_domains', 'profile_customers'];
+var HIST_VERB = { insert:'added', update:'changed', delete:'deleted' };
+var HIST_SKIP = ['seq', 'updated_at'];     // fields that change on their own
+
+/* Restores are Admin-only; this follows "Viewing as". The server checks the real role. */
+function isAdmin(){ return state.session.role === 'admin'; }
+
+function loadHistory(more){
+  if (state.ui.histLoading) return;
+  var list = state.ui.hist || [], before = more && list.length ? list[list.length - 1].last : '';
+  state.ui.histLoading = true;
+  api('GET', '/api/history' + (before ? '?before=' + before : '')).then(function(d){
+    state.ui.hist = (more ? list : []).concat(d.changes);
+    state.ui.histMore = d.changes.length === 50;
+  }, function(err){ state.ui.hist = list; toast(err.message, 'err'); }).then(function(){
+    state.ui.histLoading = false; render();
+  });
+}
+
+/* A name for a row the change touched: from the current data, or from the
+   change itself when the row is gone. */
+function histRef(tbl, id, names){
+  var list = { columbus_profiles:state.columbusProfiles, ms_profiles:state.msProfiles,
+               domains:state.domains, customers:state.customers, boards:state.boards }[tbl];
+  var hit = list && byId(list, id);
+  return (hit && (hit.name || hit.label)) || names[tbl + ':' + id] || id || '?';
+}
+function histName(tbl, r, names){
+  if (tbl === 'relations')         return histRef('columbus_profiles', r.columbus_id, names) + ' → ' + histRef('ms_profiles', r.ms_profile_id, names);
+  if (tbl === 'profile_domains')   return histRef('ms_profiles', r.ms_profile_id, names) + ' in ' + histRef('domains', r.domain_id, names);
+  if (tbl === 'profile_customers') return histRef('ms_profiles', r.ms_profile_id, names) + ' covers ' + histRef('customers', r.customer_id, names);
+  if (tbl === 'contacts')          return 'with ' + histRef('ms_profiles', r.ms_profile_id, names);
+  return r.name || r.label || r.id;
+}
+function histNames(ev){
+  var names = {};
+  ev.entries.forEach(function(e){ var r = e.new || e.old; if (r && r.id) names[e.tbl + ':' + r.id] = r.name || r.label; });
+  return names;
+}
+function histLine(e, names){
+  var r = e.new || e.old;
+  if (e.tbl === 'relations' && e.op === 'update' && e.old.score !== e.new.score)
+    return 'changed the score of ' + histName(e.tbl, r, names) + ' from ' + signed(e.old.score) + ' to ' + signed(e.new.score);
+  return HIST_VERB[e.op] + ' ' + HIST_KIND[e.tbl] + ' ' + histName(e.tbl, r, names);
+}
+function histSummary(ev){
+  if (ev.entries[0].tbl === 'backup') return 'restored the backup ' + esc((ev.entries[0].new || {}).file || '');
+  var main = ev.entries.slice().sort(function(a, b){ return HIST_ORDER.indexOf(a.tbl) - HIST_ORDER.indexOf(b.tbl); })[0];
+  var rest = ev.total - 1;
+  return (ev.undoes ? 'undid a change: ' : '') + esc(histLine(main, histNames(ev))) +
+    (rest > 0 ? ' <span class="hint">and ' + rest + ' more change' + (rest === 1 ? '' : 's') + '</span>' : '');
+}
+function histValue(v){
+  var t = v === null || v === undefined || v === '' ? '—' : typeof v === 'object' ? JSON.stringify(v) : String(v);
+  return t.length > 60 ? t.slice(0, 57) + '…' : t;
+}
+function histDetail(ev){
+  var names = histNames(ev);
+  var rows = ev.entries.map(function(e){
+    var fields = '';
+    if (e.op === 'update') fields = Object.keys(e.new).filter(function(k){
+      return HIST_SKIP.indexOf(k) === -1 && JSON.stringify(e.old[k]) !== JSON.stringify(e.new[k]);
+    }).map(function(k){
+      return '<div><b>' + esc(k.replace(/_/g, ' ')) + ':</b> ' + esc(histValue(e.old[k])) + ' → ' + esc(histValue(e.new[k])) + '</div>';
+    }).join('');
+    return '<tr><td style="width:40%">' + esc(histLine(e, names)) + '</td><td style="color:var(--text-muted)">' + fields + '</td></tr>';
+  }).join('');
+  var more = ev.total > ev.entries.length ? '<p class="hint">… and ' + (ev.total - ev.entries.length) + ' more.</p>' : '';
+  return '<div class="inner"><table class="minitable"><tbody>' + rows + '</tbody></table>' + more + '</div>';
+}
+function histActor(a){
+  if (a === 'database') return 'The system';
+  var hit = state.columbusProfiles.filter(function(c){ return c.email && c.email.toLowerCase() === String(a).toLowerCase(); })[0];
+  return hit ? hit.name : a;
+}
+function histWhen(iso){
+  var d = new Date(iso), two = function(n){ return (n < 10 ? '0' : '') + n; };
+  return d.getDate() + ' ' + MONTHS[d.getMonth()] + ' ' + d.getFullYear() + ', ' + two(d.getHours()) + ':' + two(d.getMinutes());
+}
+
+function viewHistory(){
+  if (!state.ui.hist) { loadHistory(); }
+  var list = state.ui.hist || [];
+  var head = '<div class="page__head"><div><h2>History</h2>' +
+    '<p>Every change, newest first. Open one to see what it changed.' +
+    (isAdmin() ? ' As an Admin you can undo a change, as long as nothing in it has changed since.' : ' Admins can undo a change.') +
+    '</p></div></div>';
+
+  var rows = list.map(function(ev){
+    var open = state.ui.histOpen === ev.change, backup = ev.entries[0].tbl === 'backup';
+    var status = ev.undone ? '<span class="chip chip--muted">Undone</span>' : '';
+    var undo = isAdmin() && !ev.undone && !backup
+      ? '<button class="btn btn--sm" data-action="hist-undo" data-id="' + esc(ev.change) + '">Undo</button>' : '';
+    return '<tr class="clickable ' + (open ? 'is-open' : '') + '" data-action="hist-toggle" data-id="' + esc(ev.change) + '">' +
+      '<td style="white-space:nowrap">' + esc(histWhen(ev.at)) + '</td>' +
+      '<td>' + esc(histActor(ev.actor)) + '</td>' +
+      '<td>' + histSummary(ev) + ' ' + status + '</td>' +
+      '<td class="actions">' + undo + '</td></tr>' +
+      (open ? '<tr class="detailrow"><td colspan="4">' + histDetail(ev) + '</td></tr>' : '');
+  }).join('');
+  var empty = state.ui.hist ? 'Nothing has changed yet.' : 'Loading…';
+
+  return head + '<div class="card"><div class="tablewrap"><table><thead><tr>' +
+      '<th>When</th><th>Who</th><th>What</th><th></th></tr></thead><tbody>' +
+      (rows || '<tr><td colspan="4"><div class="empty"><b>' + empty + '</b></div></td></tr>') +
+    '</tbody></table></div></div>' +
+    (state.ui.histMore ? '<div style="margin-top:14px"><button class="btn" data-action="hist-more">Show older</button></div>' : '');
+}
+
+/* ============================================================
    12. DRAWER + MODALS
    ============================================================ */
 
@@ -3800,6 +3923,21 @@ document.addEventListener('click', function(e){
       state.ui.cbSort = ck; render(); break;
     case 'cb-reset': state.ui.cbSearch = ''; state.ui.cbDept = ''; state.ui.cbRole = ''; render(); break;
     case 'cb-toggle': state.ui.cbOpen = state.ui.cbOpen === id ? null : id; render(); break;
+
+    /* --- history --- */
+    case 'hist-toggle': state.ui.histOpen = state.ui.histOpen === id ? null : id; render(); break;
+    case 'hist-more':   loadHistory(true); break;
+    case 'hist-undo':
+      pendingConfirm = function(){
+        write('POST', '/api/history/' + id + '/undo', {}, function(){
+          toast('Undone', 'ok');
+          state.ui.hist = null; render();
+        });
+      };
+      openModal({ type:'confirm', title:'Undo this change', sub:'Everything it changed is put back as it was.',
+        body:'This only works if nothing in it has changed since. The undo shows up in History as a change of its own.',
+        okLabel:'Undo' });
+      break;
     case 'cb-new':  openModal({ type:'cb' }); break;
     case 'cb-save':
       var cn = val('f-cname');
