@@ -765,11 +765,12 @@ var SCORE_LEVELS = [
 ];
 function scoreLevel(v){ for (var i=0;i<SCORE_LEVELS.length;i++){ if (SCORE_LEVELS[i].v === v) return SCORE_LEVELS[i]; } return SCORE_LEVELS[3]; }
 
+/* Highest first - "Viewing as" offers your own role and the ones after it.
+   For now both roles have the same access; the roles lists below and canEdit()
+   are where that would change. */
 var ROLES = [
-  { id:'superadmin', name:'Super Admin' },
-  { id:'admin',      name:'Admin' },
-  { id:'moderator',  name:'Moderator' },
-  { id:'standard',   name:'Standard' }
+  { id:'admin',    name:'Admin' },
+  { id:'standard', name:'Standard' }
 ];
 function roleName(id){ for (var i=0;i<ROLES.length;i++){ if (ROLES[i].id===id) return ROLES[i].name; } return id; }
 
@@ -783,26 +784,26 @@ var NAV_SECTIONS = ['Dashboards', 'Administration', 'Relations'];
 var PAGES = [
   /* `wide` drops the reading-width cap: the boards and the administration tables
      are wide by nature and were leaving a strip of empty page on a large screen. */
-  { route:'upkeep',            title:'Relationship Upkeep', sub:'Who reaches out, and when',   icon:'◷', section:'Administration', wide:true, roles:['superadmin','admin','moderator','standard'] },
-  { route:'dashboards',        title:'Dashboards',          sub:'Boards & their panels',       icon:'▩', section:'Administration', wide:true, roles:['superadmin','admin'] },
-  { route:'ms-domains',        title:'Microsoft Domains',   sub:'Categories & mapping',        icon:'◆', section:'Administration', wide:true, roles:['superadmin','admin'] },
-  { route:'ms-profiles',       title:'Microsoft Profiles',  sub:'Approved Microsoft contacts', icon:'●', section:'Administration', wide:true, roles:['superadmin','admin','moderator'] },
-  { route:'columbus-profiles', title:'Columbus Profiles',   sub:'Internal users & relations',  icon:'▲', section:'Administration', wide:true, roles:['superadmin','admin','moderator'] },
-  { route:'my-relations',      title:'My Relations',        sub:'Your own Microsoft contacts', icon:'★', section:'Relations',              roles:['superadmin','admin','moderator','standard'] }
+  { route:'upkeep',            title:'Relationship Upkeep', sub:'Who reaches out, and when',   icon:'◷', section:'Administration', wide:true, roles:['admin','standard'] },
+  { route:'dashboards',        title:'Dashboards',          sub:'Boards & their panels',       icon:'▩', section:'Administration', wide:true, roles:['admin','standard'] },
+  { route:'ms-domains',        title:'Microsoft Domains',   sub:'Categories & mapping',        icon:'◆', section:'Administration', wide:true, roles:['admin','standard'] },
+  { route:'ms-profiles',       title:'Microsoft Profiles',  sub:'Approved Microsoft contacts', icon:'●', section:'Administration', wide:true, roles:['admin','standard'] },
+  { route:'columbus-profiles', title:'Columbus Profiles',   sub:'Internal users & relations',  icon:'▲', section:'Administration', wide:true, roles:['admin','standard'] },
+  { route:'my-relations',      title:'My Relations',        sub:'Your own Microsoft contacts', icon:'★', section:'Relations',              roles:['admin','standard'] }
 ];
 function allPages(){
   var out = [];
   state.boards.forEach(function(b){
     out.push({ route:b.dashboard, title:'Dashboard - ' + b.label, sub:'Overview', icon:'\u25a6',
-               section:'Dashboards', wide:true, roles:['superadmin','admin','moderator'] });
+               section:'Dashboards', wide:true, roles:['admin','standard'] });
     out.push({ route:b.graphics, title:'Graphics - ' + b.label, sub:'Numbers & breakdowns', icon:'\u25c8',
-               section:'Dashboards', child:true, wide:true, roles:['superadmin','admin','moderator'] });
+               section:'Dashboards', child:true, wide:true, roles:['admin','standard'] });
   });
   /* The upkeep graphics belong with the other boards, even though the table they
      summarise is an administration page. */
   out.push({ route:'upkeep-graphics', title:'Graphics - Upkeep', sub:'Who is keeping in touch',
              icon:'\u25c8', section:'Dashboards', wide:true,
-             roles:['superadmin','admin','moderator','standard'] });
+             roles:['admin','standard'] });
   return out.concat(PAGES);
 }
 function pageFor(route){
@@ -811,8 +812,9 @@ function pageFor(route){
   return null;
 }
 function canOpen(route, role){ var p = pageFor(route); return !!p && p.roles.indexOf(role) !== -1; }
-// Only Admin / Super Admin may change data. Moderator is read-only (spec, page 3+4).
-function canEdit(){ return state.session.role === 'admin' || state.session.role === 'superadmin'; }
+// ponytail: both roles may change data for now. Take 'standard' out to make it
+// admin-only again (and the same in ADMIN in app/server.js).
+function canEdit(){ return ['admin', 'standard'].indexOf(state.session.role) !== -1; }
 
 var MS_GROUPS  = ['Leadership','Account Team','Technical Specialist','Partner Development','Marketing'];
 var MS_SOURCES = ['Ayla\'s list','Microsoft DK leadership page','LinkedIn / MS Pulse','LinkedIn / Thomas\' deck','Microsoft DK org chart','Manual entry','Unconfirmed'];
@@ -1265,8 +1267,8 @@ function viewLogin(){
       '<div class="login__note">' + (state.me.dev
         ? '<b>Development sign-in:</b> no Microsoft sign-in - you are ' + esc(me().name) +
           ' with the <b>' + esc(roleName(state.me.role)) + '</b> role.'
-        : 'Only <b>@columbusglobal.com</b> accounts can sign in. The first time you do, you get the ' +
-          '<b>Standard</b> role; an admin can give you more.') + '</div>' +
+        : 'Only <b>@columbusglobal.com</b> accounts can sign in. The first time you do, you are ' +
+          'added to Columbus Profiles.') + '</div>' +
     '</form></div>' +
   '</div>';
 }
@@ -2352,7 +2354,7 @@ function viewMsProfiles(){
       '<div class="page__actions">' +
         '<button class="btn btn--primary" data-action="ms-new"' + (editable ? '' : ' disabled') + '>+ Add Microsoft profile</button>' +
       '</div></div>' +
-    (editable ? '' : '<div class="readonly-note"><b>Moderator view:</b> you can see and filter everything, but adding, editing and deleting is reserved for Admin.</div>');
+    (editable ? '' : '<div class="readonly-note"><b>Read-only view:</b> you can see and filter everything, but adding, editing and deleting is reserved for Admin.</div>');
 
   var stats =
     '<div class="stats">' +
@@ -2483,7 +2485,7 @@ function viewDashboards(){
       'from two dashboards appears on both, with one shared score.</p></div>' +
       '<div class="page__actions"><button class="btn btn--primary" data-action="board-new"' +
         (editable ? '' : ' disabled') + '>+ Add dashboard</button></div></div>' +
-    (editable ? '' : '<div class="readonly-note"><b>Moderator view:</b> you can see the dashboards, but adding and editing is reserved for Admin.</div>') +
+    (editable ? '' : '<div class="readonly-note"><b>Read-only view:</b> you can see the dashboards, but adding and editing is reserved for Admin.</div>') +
     '<div class="card"><div class="tablewrap"><table><thead><tr>' +
       '<th>Dashboard</th><th>Pages</th><th>Process owner</th><th>Domains</th><th>Panels</th>' +
       '<th>Profiles</th><th>Relations</th><th>Mean score</th><th></th>' +
@@ -2584,7 +2586,7 @@ function viewColumbusProfiles(){
       '<div class="page__actions">' +
         '<button class="btn btn--primary" data-action="cb-new"' + (editable ? '' : ' disabled') + '>+ Add user</button>' +
       '</div></div>' +
-    (editable ? '' : '<div class="readonly-note"><b>Moderator view:</b> read-only. Role changes and user management are Admin actions.</div>');
+    (editable ? '' : '<div class="readonly-note"><b>Read-only view:</b> role changes and user management are Admin actions.</div>');
 
   var toolbar =
     '<div class="toolbar">' +
@@ -2598,13 +2600,12 @@ function viewColumbusProfiles(){
     '</div>';
 
   var body = rows.length ? rows.map(function(r){
-    var locked = r.role === 'superadmin';
     var open = u.cbOpen === r.id;
-    var roleCell = editable && !locked
+    var roleCell = editable
       ? '<select data-action="cb-set-role" data-id="' + r.id + '">' + ROLES.map(function(x){
           return '<option value="' + x.id + '"' + (r.role === x.id ? ' selected' : '') + '>' + esc(x.name) + '</option>';
         }).join('') + '</select>'
-      : '<span class="chip chip--role">' + (locked ? '&#128274; ' : '') + esc(roleName(r.role)) + '</span>';
+      : '<span class="chip chip--role">' + esc(roleName(r.role)) + '</span>';
 
     var tr = '<tr class="clickable ' + (open ? 'is-open' : '') + '" data-action="cb-toggle" data-id="' + r.id + '">' +
       '<td>' + personCell(r.name, r.email) + '</td>' +
@@ -2616,7 +2617,7 @@ function viewColumbusProfiles(){
       '<td>' + scoreStat(cbStats(r.id)) + '</td>' +
       '<td class="actions">' +
         '<button class="btn btn--sm btn--danger" data-action="cb-delete" data-id="' + r.id + '"' +
-          (editable && !locked ? '' : ' disabled') + ' title="' + (locked ? 'The Super Admin profile cannot be deleted' : 'Delete user') + '">Delete</button>' +
+          (editable ? '' : ' disabled') + ' title="Delete user">Delete</button>' +
       '</td></tr>';
 
     return tr + (open ? '<tr class="detailrow"><td colspan="9">' + cbDetail(r.id) + '</td></tr>' : '');
@@ -3181,18 +3182,12 @@ function drawerMs(id){
   var custs = customersOf(p), keep = upkeepOf(p), owner = ownerOf(p);
   var log = contactsFor(p.id);
   var rs = relationsForMs(id).slice().sort(function(a,b){ return b.score - a.score; });
-  /* A Standard user is sent only their own relations, so the drawer shows theirs
-     and says so, rather than counting them as everybody's. */
-  var ownOnly = state.me.role === 'standard';
   var conns = rs.length ? rs.map(function(r){
     var person = cb(r.columbusId);
     return '<tr><td>' + personCell(person ? person.name : '?', person ? person.title : '') + '</td>' +
            '<td style="width:60px">' + scoreChip(r.score) + '</td>' +
            '<td style="color:var(--text-muted)">' + esc(r.note) + '</td></tr>';
-  }).join('') : '<tr><td colspan="3"><div class="empty" style="padding:22px">' + (ownOnly
-      ? '<b>No relation of yours</b>With the Standard role you only see your own relations.'
-      : '<b>No connections yet</b>Nobody at Columbus has registered a relationship with this person.') +
-    '</div></td></tr>';
+  }).join('') : '<tr><td colspan="3"><div class="empty" style="padding:22px"><b>No connections yet</b>Nobody at Columbus has registered a relationship with this person.</div></td></tr>';
 
   return '<div class="drawer"><div class="drawer__bg" data-action="close-layer"></div><div class="drawer__panel">' +
     '<div class="drawer__head"><div>' + personCell(p.name, p.title) +
@@ -3200,11 +3195,11 @@ function drawerMs(id){
 
       '<div style="margin-left:auto"><button class="btn btn--sm btn--ghost" data-action="close-layer">&#10005;</button></div></div>' +
     '<div class="drawer__body">' +
-      (ownOnly ? '' : '<div class="stats" style="margin:0;grid-template-columns:1fr 1fr">' +
+      '<div class="stats" style="margin:0;grid-template-columns:1fr 1fr">' +
         '<div class="stat"><b>' + s.count + '</b><span>Columbus connections</span></div>' +
         '<div class="stat"><b>' + (s.count ? fmtScore(s.mean) : '&ndash;') + '</b><span>Mean score</span>' +
           '<em>' + (s.count ? 'median ' + fmtScore(s.median) + ' \u00b7 sum ' + signed(s.sum) : 'no connections yet') + '</em></div>' +
-      '</div>') +
+      '</div>' +
       '<dl class="kv">' +
         '<dt>Dashboards</dt><dd>' + (boardsOfProfile(p).length
           ? '<div class="chips">' + boardsOfProfile(p).map(function(b){
@@ -3241,7 +3236,7 @@ function drawerMs(id){
             }).join('') + '</tbody></table>'
           : '') +
       '</div>' +
-      '<div><h4 style="font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);margin-bottom:10px">' + (ownOnly ? 'Your relation' : 'Who knows them at Columbus') + '</h4>' +
+      '<div><h4 style="font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);margin-bottom:10px">Who knows them at Columbus</h4>' +
         '<table class="minitable"><tbody>' + conns + '</tbody></table></div>' +
       '<div><button class="btn btn--primary" data-action="ms-edit" data-id="' + p.id + '"' + (canEdit() ? '' : ' disabled') + '>Edit profile</button></div>' +
     '</div></div></div>';

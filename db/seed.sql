@@ -102,10 +102,10 @@ insert into customers (id, name, type) values
 
 insert into columbus_profiles (id, name, title, department, skills, role, email, phone, from_deck) values
   ('c1', 'Mette Kirkegaard', 'Partner Alliance Manager', 'Alliances', array['Alliances', 'Co-sell', 'Governance']::text[], 'admin', 'mette.kirkegaard@columbusglobal.example', '', false),
-  ('c2', 'Jesper Winther', 'Managing Director, Denmark', 'Executive', array['Strategy', 'Executive sponsor']::text[], 'superadmin', 'jesper.winther@columbusglobal.example', '', false),
+  ('c2', 'Jesper Winther', 'Managing Director, Denmark', 'Executive', array['Strategy', 'Executive sponsor']::text[], 'admin', 'jesper.winther@columbusglobal.example', '', false),
   ('c3', 'Sofie Bang', 'Business Applications Director', 'Business Applications', array['D365 F&O', 'ERP', 'Presales']::text[], 'admin', 'sofie.bang@columbusglobal.example', '', false),
-  ('c4', 'Jonas Ravn', 'Cloud Practice Lead', 'Cloud & Infrastructure', array['Azure', 'Migration', 'Architecture']::text[], 'moderator', 'jonas.ravn@columbusglobal.example', '', false),
-  ('c5', 'Rikke Dalsgaard', 'Security Lead', 'Cloud & Infrastructure', array['Security', 'Entra', 'Compliance']::text[], 'moderator', 'rikke.dalsgaard@columbusglobal.example', '', false),
+  ('c4', 'Jonas Ravn', 'Cloud Practice Lead', 'Cloud & Infrastructure', array['Azure', 'Migration', 'Architecture']::text[], 'standard', 'jonas.ravn@columbusglobal.example', '', false),
+  ('c5', 'Rikke Dalsgaard', 'Security Lead', 'Cloud & Infrastructure', array['Security', 'Entra', 'Compliance']::text[], 'standard', 'rikke.dalsgaard@columbusglobal.example', '', false),
   ('c6', 'Anders Holmgaard', 'Modern Work Consultant', 'Modern Work', array['M365', 'Teams', 'Adoption']::text[], 'standard', 'anders.holmgaard@columbusglobal.example', '', false),
   ('c7', 'Line Aagaard', 'Data & AI Consultant', 'Data & AI', array['Fabric', 'Power BI', 'Data platform']::text[], 'standard', 'line.aagaard@columbusglobal.example', '', false),
   ('c8', 'Peter Sandholm', 'Enterprise Account Manager', 'Sales', array['Sales', 'Public sector']::text[], 'standard', 'peter.sandholm@columbusglobal.example', '', false),

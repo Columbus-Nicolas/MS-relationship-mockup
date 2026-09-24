@@ -34,13 +34,14 @@ docker compose exec -T db psql -U app -d app -v ON_ERROR_STOP=1 < db/seed.sql
 Microsoft Entra ID, Columbus Global directory, **@columbusglobal.com accounts
 only**. The `auth` service (oauth2-proxy) does the sign-in and is the only way
 in: the app itself has no published port. It hands the signed-in user to the
-app, which creates their Columbus profile on the first sign-in with the
-**Standard** role - or **Super Admin** for the e-mails in `ADMIN_EMAILS`. A
-profile an admin added beforehand with the same e-mail is used as it is, role
-and all. Give someone more rights on Columbus Profiles.
+app, which adds them to Columbus Profiles on their first sign-in with the
+**Standard** role - or **Admin** for the e-mails in `ADMIN_EMAILS`. A profile an
+admin added beforehand with the same e-mail is used as it is, role and all.
 
-Admin and Super Admin change data; Moderator reads everything; Standard sees
-Upkeep and My Relations, and is sent only their own relations.
+Two roles, **Admin** and **Standard**, with the same access for now: everyone
+who signs in sees every page and can change everything. To make some of it
+admin-only later, take `'standard'` out of `ADMIN` in `app/server.js` and
+`canEdit()` in `app/index.html`, and out of the pages' `roles` lists.
 
 **The app registration** is created by an Entra admin (ordinary users cannot
 register apps in Columbus Global). What to ask for:
@@ -56,8 +57,8 @@ register apps in Columbus Global). What to ask for:
 - Add the app's maintainer as an **owner** of the registration.
 
 **Dev override** (`docker-compose.dev.yml`): no Microsoft sign-in; you are
-`DEV_USER_EMAIL` (default Mette Kirkegaard, Admin in the seed data; Super Admin
-on an empty database). Try another role:
+`DEV_USER_EMAIL` (default Mette Kirkegaard, Admin in the seed data, and on an
+empty database). Try another role:
 
 ```sh
 DEV_USER_EMAIL=line.aagaard@columbusglobal.example docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d app

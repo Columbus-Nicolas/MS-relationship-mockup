@@ -9,7 +9,9 @@ pg.types.setTypeParser(1082, v => v);            // date stays 'YYYY-MM-DD', as 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 pool.on('error', console.error);
 const PAGE = fs.readFileSync(path.join(__dirname, 'index.html'));
-const ADMIN = ['admin', 'superadmin'];
+// ponytail: both roles may do everything for now. Take 'standard' out to make the
+// ADM routes below admin-only again (and the same in canEdit() in index.html).
+const ADMIN = ['admin', 'standard'];
 
 const camel = row => Object.fromEntries(Object.entries(row).map(([k, v]) =>
   [k.replace(/_(.)/g, (_, c) => c.toUpperCase()), v]));
@@ -43,7 +45,7 @@ function tokenClaims(req) {
   catch { return {}; }
 }
 
-// The first sign-in creates the Columbus profile: Standard, or Super Admin for
+// The first sign-in creates the Columbus profile: Standard, or Admin for
 // ADMIN_EMAILS. A profile an admin added beforehand with the same e-mail is used as it is.
 async function whoami(req) {
   const email = (DEV_EMAIL || text(req.headers['x-forwarded-email'])).trim();
@@ -54,7 +56,7 @@ async function whoami(req) {
     await q(`insert into columbus_profiles (name, email, role) values ($1, $2, $3)
              on conflict (lower(email)) where email <> '' do nothing`,
             [tokenClaims(req).name || email.split('@')[0], email,
-             ADMIN_EMAILS.includes(email.toLowerCase()) ? 'superadmin' : 'standard']);
+             ADMIN_EMAILS.includes(email.toLowerCase()) ? 'admin' : 'standard']);
     [u] = await find();
   }
   return { userId: u.id, role: u.role, email, dev: !!DEV_EMAIL };
@@ -75,10 +77,7 @@ async function state(me) {
                    join customers c on c.id = x.customer_id where x.ms_profile_id = p.id), '{}'::text[]) as customer_ids
        from ms_profiles p order by p.seq`),
     q('select * from columbus_profiles order by seq'),
-    // Standard users have no page that shows other people's scores, so they are
-    // not sent any: only their own relations. Upkeep (owners, contact log) stays shared.
-    q('select * from relations where $1::text is null or columbus_id = $1 order by seq',
-      [me.role === 'standard' ? me.userId : null])
+    q('select * from relations order by seq')
   ]);
   return { today, me, customers, contacts, boards, domains, msProfiles, columbusProfiles, relations };
 }
@@ -134,12 +133,9 @@ const routes = [
   ['POST', '/api/columbus-profiles', ADM, (me, b) => q(`insert into columbus_profiles (name, title, email, department, role, skills)
       values ($1, $2, $3, $4, $5, $6)`,
       [need(b.name, 'A name'), text(b.title), text(b.email), text(b.department), b.role || 'standard', list(b.skills || [])])],
-  ['PATCH', '/api/columbus-profiles/' + ID, ADM, (me, b, id) => q(`update columbus_profiles set role = $2
-      where id = $1 and role <> 'superadmin' returning id`, [id, b.role])
-      .then(r => found(r, 'The Super Admin profile cannot be changed'))],
-  ['DELETE', '/api/columbus-profiles/' + ID, ADM, (me, b, id) => q(`delete from columbus_profiles
-      where id = $1 and role <> 'superadmin' returning id`, [id])
-      .then(r => found(r, 'The Super Admin profile cannot be deleted'))],
+  ['PATCH', '/api/columbus-profiles/' + ID, ADM, (me, b, id) => q('update columbus_profiles set role = $2 where id = $1 returning id',
+      [id, b.role]).then(r => found(r, 'That user no longer exists'))],
+  ['DELETE', '/api/columbus-profiles/' + ID, ADM, (me, b, id) => q('delete from columbus_profiles where id = $1', [id])],
 
   /* Item by item, never "replace all": callers send only what changed. An upsert,
      not delete + insert - deleting the owner's relation would drop the ownership. */

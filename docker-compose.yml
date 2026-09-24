@@ -16,7 +16,7 @@ services:
     build: ./app
     environment:
       DATABASE_URL: postgres://app:${POSTGRES_PASSWORD:-app}@db:5432/app
-      ADMIN_EMAILS: ${ADMIN_EMAILS:-}         # made Super Admin on their first sign-in
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-}         # made Admin on their first sign-in
     # Not published: the only way in is through `auth`, which signs people in.
     depends_on:
       db:
