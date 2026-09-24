@@ -7,8 +7,18 @@ from; it is kept untouched as the reference.
 
 ## Run it
 
+With Microsoft sign-in: copy `.env.example` to `.env`, fill in the values from
+the Entra app registration (see Sign-in), then
+
 ```sh
 docker compose up --build -d        # http://localhost:8080
+```
+
+Without Microsoft sign-in - local work, or before the app registration exists -
+use the dev override. It needs no `.env`:
+
+```sh
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d db app backup
 ```
 
 The app starts **empty**. To load the mockup's data (the real Microsoft Denmark
@@ -21,17 +31,37 @@ docker compose exec -T db psql -U app -d app -v ON_ERROR_STOP=1 < db/seed.sql
 
 ## Sign-in
 
-Development only: everyone is the Columbus user whose e-mail is
-`DEV_USER_EMAIL` (default Mette Kirkegaard, Admin), with that user's role.
-With no such user yet (an empty database) you act as Super Admin. The app only
-listens on localhost for this reason. Try another role:
-
-```sh
-DEV_USER_EMAIL=line.aagaard@columbusglobal.example docker compose up -d app
-```
+Microsoft Entra ID, Columbus Global directory, **@columbusglobal.com accounts
+only**. The `auth` service (oauth2-proxy) does the sign-in and is the only way
+in: the app itself has no published port. It hands the signed-in user to the
+app, which creates their Columbus profile on the first sign-in with the
+**Standard** role - or **Super Admin** for the e-mails in `ADMIN_EMAILS`. A
+profile an admin added beforehand with the same e-mail is used as it is, role
+and all. Give someone more rights on Columbus Profiles.
 
 Admin and Super Admin change data; Moderator reads everything; Standard sees
 Upkeep and My Relations, and is sent only their own relations.
+
+**The app registration** is created by an Entra admin (ordinary users cannot
+register apps in Columbus Global). What to ask for:
+
+- Name: *Columbus MS Relationship Mapping*; single tenant (Columbus Global only).
+- Platform **Web**, redirect URI `http://localhost:8080/oauth2/callback`
+  (add the Azure address once the app is deployed there).
+- A **client secret** (e.g. 12 months), handed over securely.
+- Microsoft Graph delegated permissions `openid`, `profile`, `email`
+  (plus the default `User.Read`), with **admin consent** granted.
+- Token configuration: optional claim **`email`** on the ID token.
+- *Assignment required*: **No** - the proxy enforces the domain.
+- Add the app's maintainer as an **owner** of the registration.
+
+**Dev override** (`docker-compose.dev.yml`): no Microsoft sign-in; you are
+`DEV_USER_EMAIL` (default Mette Kirkegaard, Admin in the seed data; Super Admin
+on an empty database). Try another role:
+
+```sh
+DEV_USER_EMAIL=line.aagaard@columbusglobal.example docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d app
+```
 
 ## Changing the schema
 
