@@ -120,6 +120,23 @@ docker compose exec backup sh -c 'dropdb --force app && createdb app && pg_resto
 docker compose start app
 ```
 
+## Looking at the data with SQL
+
+In the dev setup the database is reachable from this machine only, on
+`localhost:5432`. Create the read-only login once (and again after `down -v`):
+
+```sh
+docker compose exec -T db psql -U app -d app -v ON_ERROR_STOP=1 < db/reader.sql
+```
+
+Then connect any SQL tool with host `localhost`, port `5432`, database `app`,
+user `reader`, password `reader`. In VS Code with the PostgreSQL extension, a
+local `.vscode/settings.json` (not committed) already holds that connection as
+*MS Relationship Map (local, read-only)*. The login can read every table and
+change nothing. To change data on purpose, use
+`docker compose exec db psql -U app -d app`; History records such changes as
+"database".
+
 ## Checks
 
 ```sh

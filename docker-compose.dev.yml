@@ -3,6 +3,10 @@
 # Never use this where others can reach it.
 #   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d db app backup
 services:
+  # Reachable from this machine only, for an SQL tool (db/reader.sql, README).
+  db:
+    ports:
+      - "127.0.0.1:5432:5432"
   app:
     environment:
       DEV_SIGN_IN: "true"
