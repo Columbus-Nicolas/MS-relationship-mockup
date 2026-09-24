@@ -1154,7 +1154,7 @@ function readHash(){
 window.addEventListener('hashchange', function(){ readHash(); render(); });
 
 function render(){
-  var route = state.ui.route;
+  var route = state.me.email ? state.ui.route : 'login';   // not signed in: nothing but the login page
 
   if (route === 'login') { document.getElementById('app').innerHTML = viewLogin(); return; }
 
@@ -1218,7 +1218,9 @@ function sidebar(route){
 function topbar(route){
   var p = pageFor(route) || { title:'', sub:'' };
   var user = me();
-  var roleOpts = ROLES.map(function(r){
+  /* Preview the app as your own role or a lower one - never a higher one. */
+  var mine = ROLES.map(function(r){ return r.id; }).indexOf(state.me.role);
+  var roleOpts = ROLES.slice(mine < 0 ? ROLES.length - 1 : mine).map(function(r){
     return '<option value="' + r.id + '"' + (state.session.role === r.id ? ' selected' : '') + '>' + esc(r.name) + '</option>';
   }).join('');
 
@@ -1251,7 +1253,7 @@ function viewLogin(){
           '<li><i>&#9679;</i><span>Keep the knowledge when people change roles or leave.</span></li>' +
         '</ul>' +
       '</div>' +
-      '<div style="position:relative;z-index:1;color:#7e97b1;font-size:12px">Development version &middot; sign-in is not secured yet</div>' +
+      '<div style="position:relative;z-index:1;color:#7e97b1;font-size:12px">Columbus internal &middot; @columbusglobal.com accounts only</div>' +
     '</div>' +
     '<div class="login__form"><form class="login__card" data-action="login">' +
       '<h2>Sign in</h2>' +
@@ -1260,13 +1262,11 @@ function viewLogin(){
         '<span class="msgrid"><i style="background:#f25022"></i><i style="background:#7fba00"></i>' +
         '<i style="background:#00a4ef"></i><i style="background:#ffb900"></i></span>' +
         'Sign in with Microsoft Entra ID</button>' +
-      '<div class="login__divider">or</div>' +
-      '<div class="field"><label for="loginmail">Work e-mail</label>' +
-        '<input id="loginmail" type="email" placeholder="firstname.lastname@columbusglobal.com" autocomplete="off"></div>' +
-      '<div style="height:14px"></div>' +
-      '<button type="submit" class="btn btn--primary" style="width:100%;justify-content:center">Continue</button>' +
-      '<div class="login__note"><b>Development sign-in:</b> any e-mail - or none at all - signs you in as ' +
-        esc(me().name) + ' with the <b>' + esc(roleName(state.me.role)) + '</b> role. Before go-live this becomes Microsoft Entra ID, restricted to Columbus mail addresses.</div>' +
+      '<div class="login__note">' + (state.me.dev
+        ? '<b>Development sign-in:</b> no Microsoft sign-in - you are ' + esc(me().name) +
+          ' with the <b>' + esc(roleName(state.me.role)) + '</b> role.'
+        : 'Only <b>@columbusglobal.com</b> accounts can sign in. The first time you do, you get the ' +
+          '<b>Standard</b> role; an admin can give you more.') + '</div>' +
     '</form></div>' +
   '</div>';
 }
@@ -3418,7 +3418,12 @@ function api(method, path, body){
                        body: body === undefined ? undefined : JSON.stringify(body) })
     .then(function(res){
       return res.json().catch(function(){ return {}; }).then(function(data){
-        if (!res.ok) throw new Error(data.error || 'The server refused (' + res.status + ')');
+        if (res.status === 401 && state.me.email) location.reload();   // the session ran out: sign in again
+        if (!res.ok) {
+          var err = new Error(data.error || 'The server refused (' + res.status + ')');
+          err.status = res.status;
+          throw err;
+        }
         return data;
       });
     });
@@ -3536,12 +3541,18 @@ function restoreFocus(){
 document.addEventListener('submit', function(e){
   if (e.target.getAttribute('data-action') === 'login') {
     e.preventDefault();
-    // Dev sign-in: you are whoever the server says (DEV_USER_EMAIL), with their role.
-    state.session = { userId:state.me.userId, role:state.me.role };
-    state.ui.myDraft = null;
-    go('dashboard');
+    // Not signed in yet: Microsoft first, via the auth service, which brings you back
+    // to the page you asked for.
+    if (!state.me.email) { location.href = '/oauth2/start?rd=' + encodeURIComponent('/' + location.hash); return; }
+    enterApp();
   }
 });
+/* You are whoever the server says, with the role it says. */
+function enterApp(){
+  state.session = { userId:state.me.userId, role:state.me.role };
+  state.ui.myDraft = null;
+  go('dashboard');
+}
 
 document.addEventListener('input', function(e){
   var a = e.target.getAttribute('data-action');
@@ -3611,6 +3622,12 @@ document.addEventListener('click', function(e){
   switch (a) {
     /* --- shell --- */
     case 'logout':
+      if (!state.me.dev) {
+        location.href = '/oauth2/sign_out?rd=' + encodeURIComponent(
+          'https://login.microsoftonline.com/common/oauth2/v2.0/logout?post_logout_redirect_uri=' +
+          encodeURIComponent(location.origin + '/'));
+        break;
+      }
       state.ui.msDetail = null; state.ui.modal = null; state.ui.myDraft = null;
       state.session.role = state.me.role;
       renderLayer();
@@ -3933,7 +3950,12 @@ readHash();
 if (state.ui.route !== 'login' && !location.hash) location.hash = '#/login';
 /* The first render waits for the data: rendered empty, a page such as a board
    would fail its route guard and bounce a reloaded browser somewhere else. */
-load().catch(function(err){ render(); toast('Cannot reach the server: ' + err.message, 'err'); });
+load().then(function(){
+  if (state.ui.route === 'login') enterApp();          // already signed in: skip the login page
+}, function(err){
+  render();                                           // 401: not signed in, so the login page
+  if (err.status !== 401) toast('Cannot reach the server: ' + err.message, 'err');
+});
 </script>
 </body>
 </html>

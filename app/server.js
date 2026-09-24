@@ -29,14 +29,35 @@ const need = (v, what) => text(v).trim() || fail(400, what + ' is required');
 const list = v => Array.isArray(v) && v.every(x => typeof x === 'string') ? v : fail(400, 'Expected a list of ids');
 const found = (rows, msg) => rows.length ? rows : fail(409, msg);
 
-// ponytail: dev sign-in, everyone is DEV_USER_EMAIL. With Entra, read the
-// X-Forwarded-Email header set by oauth2-proxy instead.
-async function whoami() {
-  const email = process.env.DEV_USER_EMAIL || '';
-  const [u] = await q("select id, role from columbus_profiles where email <> '' and lower(email) = lower($1)", [email]);
-  // ponytail: no profile yet (empty database) acts as superadmin, so someone can
-  // create the first data. Goes away with Entra, where unknown users are refused.
-  return { userId: u ? u.id : null, role: u ? u.role : 'superadmin', email };
+/* Who is asking. Signed in through oauth2-proxy (the auth service), which has
+   already checked the Microsoft sign-in and the @columbusglobal.com rule, and
+   is the only way to reach this server: the e-mail is its X-Forwarded-Email
+   header, and the display name comes from the ID token it forwards. The token
+   is only read, not verified - the proxy did that.
+   DEV_USER_EMAIL (docker-compose.dev.yml only) skips the proxy for local work. */
+const DEV_EMAIL = process.env.DEV_USER_EMAIL || '';
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '').toLowerCase().split(',').map(s => s.trim()).filter(Boolean);
+
+function tokenClaims(req) {
+  try { return JSON.parse(Buffer.from((req.headers.authorization || '').split('.')[1], 'base64url')); }
+  catch { return {}; }
+}
+
+// The first sign-in creates the Columbus profile: Standard, or Super Admin for
+// ADMIN_EMAILS. A profile an admin added beforehand with the same e-mail is used as it is.
+async function whoami(req) {
+  const email = (DEV_EMAIL || text(req.headers['x-forwarded-email'])).trim();
+  if (!email) fail(401, 'Not signed in');
+  const find = () => q("select id, role from columbus_profiles where email <> '' and lower(email) = lower($1)", [email]);
+  let [u] = await find();
+  if (!u) {
+    await q(`insert into columbus_profiles (name, email, role) values ($1, $2, $3)
+             on conflict (lower(email)) where email <> '' do nothing`,
+            [tokenClaims(req).name || email.split('@')[0], email,
+             ADMIN_EMAILS.includes(email.toLowerCase()) ? 'superadmin' : 'standard']);
+    [u] = await find();
+  }
+  return { userId: u.id, role: u.role, email, dev: !!DEV_EMAIL };
 }
 
 async function state(me) {
@@ -77,7 +98,7 @@ async function saveMs(c, id, b) {
 }
 
 const ID = '([^/]+)';
-const ADM = { admin: true }, OWN = { profile: true };
+const ADM = { admin: true }, ANY = {};
 const routes = [
   ['GET', '/api/state', {}, me => state(me)],
 
@@ -122,7 +143,7 @@ const routes = [
 
   /* Item by item, never "replace all": callers send only what changed. An upsert,
      not delete + insert - deleting the owner's relation would drop the ownership. */
-  ['PUT', '/api/my-relations', OWN, (me, items) => tx(async c => {
+  ['PUT', '/api/my-relations', ANY, (me, items) => tx(async c => {
     if (!Array.isArray(items)) fail(400, 'Expected a list of relations');
     for (const d of items) {
       if (d.removed) await c.query('delete from relations where columbus_id = $1 and ms_profile_id = $2', [me.userId, d.msProfileId]);
@@ -133,7 +154,7 @@ const routes = [
     }
     await c.query('update ms_profiles set updated_at = current_date where id = any($1)', [items.map(d => d.msProfileId)]);
   })],
-  ['POST', '/api/contacts', OWN, (me, b) => q('insert into contacts (ms_profile_id, by_id) values ($1, $2)',
+  ['POST', '/api/contacts', ANY, (me, b) => q('insert into contacts (ms_profile_id, by_id) values ($1, $2)',
       [need(b.msProfileId, 'A profile'), me.userId])]
 ].map(([method, p, opts, fn]) => ({ method, re: new RegExp('^' + p + '$'), opts, fn }));
 
@@ -175,9 +196,10 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'GET' && url.pathname === '/') return send(200, PAGE, 'text/html; charset=utf-8');
     const route = routes.find(r => r.method === req.method && r.re.test(url.pathname));
     if (!route) fail(404, 'Not found');
-    const me = await whoami();
+    // A cross-site form can post text/plain but never JSON, so writes must be JSON.
+    if (req.method !== 'GET' && !/^application\/json/.test(req.headers['content-type'] || '')) fail(415, 'Send JSON');
+    const me = await whoami(req);
     if (route.opts.admin && ADMIN.indexOf(me.role) === -1) fail(403, 'Only Admin can change this');
-    if (route.opts.profile && !me.userId) fail(409, 'Add a Columbus profile with the e-mail ' + me.email + ' first');
     const id = (url.pathname.match(route.re)[1] || '');
     const out = await route.fn(me, await body(req), decodeURIComponent(id));
     send(200, out && !Array.isArray(out) ? out : { ok: true });

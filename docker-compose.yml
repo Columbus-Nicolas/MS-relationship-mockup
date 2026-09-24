@@ -16,13 +16,41 @@ services:
     build: ./app
     environment:
       DATABASE_URL: postgres://app:${POSTGRES_PASSWORD:-app}@db:5432/app
-      # Dev sign-in: the app acts as this user. Mette is who the mockup signs in as.
-      DEV_USER_EMAIL: ${DEV_USER_EMAIL:-mette.kirkegaard@columbusglobal.example}
-    ports:
-      - "127.0.0.1:8080:8080"                # localhost only: dev sign-in has no security
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-}         # made Super Admin on their first sign-in
+    # Not published: the only way in is through `auth`, which signs people in.
     depends_on:
       db:
         condition: service_healthy
+
+  # Sign-in with Microsoft Entra ID (Columbus Global directory), @columbusglobal.com
+  # accounts only. Passes the user on to the app as X-Forwarded-Email plus the ID
+  # token. The page itself (GET /) loads without a session so the login screen can
+  # show; the API answers 401 until you are signed in. Secrets come from .env.
+  auth:
+    image: quay.io/oauth2-proxy/oauth2-proxy:v7.15.4
+    environment:
+      OAUTH2_PROXY_PROVIDER: oidc
+      OAUTH2_PROXY_OIDC_ISSUER_URL: https://login.microsoftonline.com/21a72fff-b86b-492c-bb02-b09e6e0beab9/v2.0
+      OAUTH2_PROXY_CLIENT_ID: ${OAUTH2_PROXY_CLIENT_ID:-}
+      OAUTH2_PROXY_CLIENT_SECRET: ${OAUTH2_PROXY_CLIENT_SECRET:-}
+      OAUTH2_PROXY_COOKIE_SECRET: ${OAUTH2_PROXY_COOKIE_SECRET:-}
+      OAUTH2_PROXY_EMAIL_DOMAINS: columbusglobal.com
+      OAUTH2_PROXY_SCOPE: openid email profile
+      OAUTH2_PROXY_CODE_CHALLENGE_METHOD: S256
+      OAUTH2_PROXY_UPSTREAMS: http://app:8080/
+      OAUTH2_PROXY_HTTP_ADDRESS: 0.0.0.0:4180
+      OAUTH2_PROXY_REDIRECT_URL: http://localhost:8080/oauth2/callback
+      OAUTH2_PROXY_SKIP_PROVIDER_BUTTON: "true"
+      OAUTH2_PROXY_SKIP_AUTH_ROUTES: GET=^/$$
+      OAUTH2_PROXY_API_ROUTES: ^/api/
+      OAUTH2_PROXY_PASS_AUTHORIZATION_HEADER: "true"
+      OAUTH2_PROXY_WHITELIST_DOMAINS: login.microsoftonline.com
+      OAUTH2_PROXY_COOKIE_SECURE: "false"      # plain http on localhost; true once served over https
+      OAUTH2_PROXY_COOKIE_SAMESITE: lax
+    ports:
+      - "127.0.0.1:8080:4180"
+    depends_on:
+      - app
 
   # A dump at start-up and then every 24 hours, kept 14 days in the `backups`
   # volume. Old dumps are only pruned after a new one has succeeded.

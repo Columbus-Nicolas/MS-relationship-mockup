@@ -1,0 +1,10 @@
+# Local work without Entra: the app acts as DEV_USER_EMAIL (Super Admin on an empty
+# database) and is published directly. Never use this where others can reach it.
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d db app backup
+services:
+  app:
+    environment:
+      DEV_USER_EMAIL: ${DEV_USER_EMAIL:-mette.kirkegaard@columbusglobal.example}
+      ADMIN_EMAILS: ${DEV_USER_EMAIL:-mette.kirkegaard@columbusglobal.example}
+    ports:
+      - "127.0.0.1:8080:8080"
